@@ -9,9 +9,11 @@ Yeah you could look at the code and figure it out yourself, but here's a library
 - [x] Function to get park data
 - [x] Gather links to more info
 - [ ] Functions to handle data found from links (schedules, stations, etc.)
-- [ ] Park advisories
+- [x] Park advisories (returns in json)
 - [ ] Wait times obviously
 - [ ] Park IDs/Names
 - [ ] Ride IDs/Names
 - [ ] Restaurant IDs/Names
 - [ ] Ride types
+- [x] Today park hours
+- [ ] Other park hours
