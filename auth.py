@@ -3,7 +3,7 @@ import json
 from datetime import datetime, timedelta
 
 
-def Authenticaton():
+def Authentication():
     """Gets an authentication(access) token from Disney and returns it"""
 
     r = requests.get("https://disneyworld.disney.go.com/authentication/get-client-token")
@@ -21,7 +21,7 @@ def getHeaders():
     global access_token
 
     if time_of_expire == None or (datetime.now() > time_of_expire):
-        access_token, expires_in = Authenticaton()
+        access_token, expires_in = Authentication()
         time_of_expire = datetime.now() + timedelta(seconds=(expires_in-10))
         headers = {"Authorization":"BEARER {}".format(access_token)}
     else:
