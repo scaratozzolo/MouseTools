@@ -98,7 +98,9 @@ class Park(object):
 
     def getTodayParkHours(self):
         """
-        Gets the park hours and returns them as a datetime object
+        Gets the park hours and returns them as a datetime object.
+        Returns the park hours in the following order: operating open, operating close, Extra Magic open, Extra Magic close.
+        Extra Magic hours will return None if there are none for today.
         """
 
         s = requests.get("https://api.wdpro.disney.go.com/facility-service/schedules/{}?days=1".format(self.__id), headers=getHeaders())
