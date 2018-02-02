@@ -17,3 +17,6 @@ Yeah you could look at the code and figure it out yourself, but here's a library
 - [ ] Ride types
 - [x] Today park hours
 - [ ] Other park hours
+- [ ] Setting self variables to what they're related functions would return
+- [ ] Investigate destinations
+- [ ] Disneyland?
