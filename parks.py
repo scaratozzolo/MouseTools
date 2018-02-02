@@ -2,10 +2,10 @@ import requests
 import json
 import sys
 from datetime import datetime, timedelta
-from auth import Authentication, getHeaders
+from auth import getHeaders
 
 
-park_ids = {'Magic Kingdom Park':'80007944','Epcot':'80007838',"Disney's Animal Kingdom Theme Park":'80007823',"Disney's Hollywood Studios":'80007998'}
+park_ids = json.loads(requests.get("https://scaratozzolo.github.io/MouseTools/park_ids.json").content)
 
 class Park(object):
 
@@ -54,21 +54,27 @@ class Park(object):
         self.__id = id
 
         s = requests.get("https://api.wdpro.disney.go.com/facility-service/theme-parks/{}".format(self.__id), headers=getHeaders())
-        data = json.loads(s.content)
+        self.__data = json.loads(s.content)
 
-        self.__links = data['links']
-        self.__long_id = data['id']
-        self.__type = data['type']
-        self.__content_type = data['contentType']
-        self.__sub_type = data['subType']
-        self.__advisories = data['advisories']
-        self.__weblink = data['webLinks']['wdwDetail']['href']  #check if other parks have multiple
+        links = {}
+        for link in self.__data['links']:
+            links[link] = self.__data['links'][link]['href']
+        self.__links = json.dumps(links)
 
+        self.__long_id = self.__data['id']      #id;entityType=
+        self.__type = self.__data['type']
+        self.__content_type = self.__data['contentType']
+        self.__sub_type = self.__data['subType']
+        #advisories may update even when everything else doesn't. maybe create a seperate request to the data to get updated advisories
+        self.__advisories = self.__data['advisories']
+        self.__weblink = self.__data['webLinks']['wdwDetail']['href']  #check if other parks have multiple. If they do create array or json
+
+    def getParkIDS(self):
+        return park_ids
 
     def getLinks(self):
         """
-        Gets all the available links that reference other park data. Returns the links in json.
-        id and park_value are both optional, but you must pass at least one of them. The argument must be a string.
+        Gets all the available links that reference other park data. Returns the links in json {name:link}.
 
         Links gathered:
         - busStops
@@ -87,14 +93,7 @@ class Park(object):
         - monorailStations
         """
 
-        links = {}
-
-        for link in self.__links:
-            links[link] = data['links'][link]['href']
-
-        links = json.dumps(links)
-
-        return links
+        return self.__links
 
     def getTodayParkHours(self):
         """
@@ -128,7 +127,8 @@ class Park(object):
 
     def getParkAdvisories(self):
         """
-        Gets all the advisories for the park and returns them in json: {id:advisory}. Make take some time because it has to go to every link for each advisory.
+        Gets all the advisories for the park and returns them in json: {id:advisory}.
+        May take some time because it has to go to every link for each advisory.
         """
 
         print('May take some time. {} advisories to parse.'.format(len(self.__advisories)))
@@ -142,6 +142,22 @@ class Park(object):
         advisories = json.dumps(advisories)
 
         return advisories
+
+    def getCurrentWaitTimes(self):
+        """
+        Gets all current wait times for the park. Returns them in json {park:time in minutes}. May take some time as it goes through all attractions.
+        """
+
+        s = requests.get("https://api.wdpro.disney.go.com/facility-service/theme-parks/{}/wait-times".format(self.__id), headers=getHeaders())
+        loaded_times = json.loads(s.content)
+
+        times = {}
+        for i in range(len(loaded_times['entries'])):
+            if 'postedWaitMinutes' in loaded_times['entries'][i]['waitTime']:
+                times[loaded_times['entries'][i]['name']] = loaded_times['entries'][i]['waitTime']['postedWaitMinutes']
+
+        json_times = json.dumps(times)
+        return json_times
 
 
     def __formatDate(self, month, day):
@@ -157,7 +173,3 @@ class Park(object):
 
     def __str__(self):
         return 'Park object for {}'.format(self.park_name)
-
-# park = Park('80007944')
-# links = park.getParkData
-# print(links['links'])
