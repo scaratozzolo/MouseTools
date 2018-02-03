@@ -24,3 +24,4 @@ If you needs something specific from the API open a new issue with a "feature re
 - [ ] Setting self variables to what they're related functions would return
 - [x] Investigate destinations (web/json crawler currently running)
 - [ ] Disneyland?
+- [ ] Nice file for names and ids: attractions, entertainments, parks uploaded to github

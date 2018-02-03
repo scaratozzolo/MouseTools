@@ -13,11 +13,11 @@ class Park(object):
         """
         Constructor Function
         Gets all park data available and stores various elements into variables.
-        id and park_value are both optional, but you must pass at least one of them. The argument must be a string.
+        id and park_name are both optional, but you must pass at least one of them. The argument must be a string.
         """
 
         try:
-            """Making sure id and park_name are not null, are strings, and exist"""
+            """Making sure id and park_name are not None, are strings, and exist"""
             if id == None and park_name == None:
                 raise ValueError
             elif id != None and type(id) != str:
