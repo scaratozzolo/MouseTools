@@ -9,14 +9,16 @@ Yeah you could look at the code and figure it out yourself, but here's a library
 - [x] Function to get park data
 - [x] Gather links to more info
 - [ ] Functions to handle data found from links (schedules, stations, etc.)
-- [x] Park advisories (returns in json)
-- [ ] Wait times obviously
-- [ ] Park IDs/Names
-- [ ] Ride IDs/Names
+- [x] Park advisories (returns in json {id:advisory})
+- [x] Wait times obviously (returns json {ride:id})
+- [x] Park IDs/Names
+- [x] Attraction IDs/Names
 - [ ] Restaurant IDs/Names
-- [ ] Ride types
+- [ ] Return IDs somehow
+- [ ] Attraction types
 - [x] Today park hours
 - [ ] Other park hours
+- [ ] GPS Locations?
 - [ ] Setting self variables to what they're related functions would return
-- [ ] Investigate destinations
+- [x] Investigate destinations (web/json crawler currently running)
 - [ ] Disneyland?
