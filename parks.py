@@ -99,11 +99,11 @@ class Park(object):
         Extra Magic hours will return None if there are none for today.
         """
 
-        s = requests.get("https://api.wdpro.disney.go.com/facility-service/schedules/{}?days=1".format(self.__id), headers=getHeaders())
-        data = json.loads(s.content)
-
         YEAR = str(datetime.today().year)
         MONTH, DAY = self.__formatDate(str(datetime.today().month), str(datetime.today().day))
+
+        s = requests.get("https://api.wdpro.disney.go.com/facility-service/schedules/{}?date={}-{}-{}".format(self.__id, YEAR, MONTH, DAY), headers=getHeaders())
+        data = json.loads(s.content)
 
         operating_hours_start = None
         operating_hours_end = None
@@ -111,14 +111,13 @@ class Park(object):
         extra_hours_end = None
 
         for i in range(len(data['schedules'])):
-            if data['schedules'][i]['date'] == '{}-{}-{}'.format(YEAR, MONTH, DAY):
-                if data['schedules'][i]['type'] == 'Operating':
-                    operating_hours_start = datetime(int(YEAR), int(MONTH), int(DAY), int(data['schedules'][i]['startTime'][0:2]), int(data['schedules'][i]['startTime'][3:5]))
-                    operating_hours_end = datetime(int(YEAR), int(MONTH), int(DAY), int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
+            if data['schedules'][i]['type'] == 'Operating':
+                operating_hours_start = datetime(int(YEAR), int(MONTH), int(DAY), int(data['schedules'][i]['startTime'][0:2]), int(data['schedules'][i]['startTime'][3:5]))
+                operating_hours_end = datetime(int(YEAR), int(MONTH), int(DAY), int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
 
-                if data['schedules'][i]['type'] == 'Extra Magic Hours':
-                    extra_hours_start = datetime(int(YEAR), int(MONTH), int(DAY), int(data['schedules'][i]['startTime'][0:2]), int(data['schedules'][i]['startTime'][3:5]))
-                    extra_hours_end = datetime(int(YEAR), int(MONTH), int(DAY), int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
+            if data['schedules'][i]['type'] == 'Extra Magic Hours':
+                extra_hours_start = datetime(int(YEAR), int(MONTH), int(DAY), int(data['schedules'][i]['startTime'][0:2]), int(data['schedules'][i]['startTime'][3:5]))
+                extra_hours_end = datetime(int(YEAR), int(MONTH), int(DAY), int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
 
         return operating_hours_start, operating_hours_end, extra_hours_start, extra_hours_end
 
@@ -135,11 +134,11 @@ class Park(object):
         day = int dd
         """
 
-        s = requests.get("https://api.wdpro.disney.go.com/facility-service/schedules/{}".format(self.__id), headers=getHeaders())
-        data = json.loads(s.content)
-
         YEAR = str(year)
         MONTH, DAY = self.__formatDate(str(month), str(day))
+
+        s = requests.get("https://api.wdpro.disney.go.com/facility-service/schedules/{}?date={}-{}-{}".format(self.__id, YEAR, MONTH, DAY), headers=getHeaders())
+        data = json.loads(s.content)
 
         operating_hours_start = None
         operating_hours_end = None
@@ -147,14 +146,13 @@ class Park(object):
         extra_hours_end = None
 
         for i in range(len(data['schedules'])):
-            if data['schedules'][i]['date'] == '{}-{}-{}'.format(YEAR, MONTH, DAY):
-                if data['schedules'][i]['type'] == 'Operating':
-                    operating_hours_start = datetime(int(YEAR), int(MONTH), int(DAY), int(data['schedules'][i]['startTime'][0:2]), int(data['schedules'][i]['startTime'][3:5]))
-                    operating_hours_end = datetime(int(YEAR), int(MONTH), int(DAY), int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
+            if data['schedules'][i]['type'] == 'Operating':
+                operating_hours_start = datetime(int(YEAR), int(MONTH), int(DAY), int(data['schedules'][i]['startTime'][0:2]), int(data['schedules'][i]['startTime'][3:5]))
+                operating_hours_end = datetime(int(YEAR), int(MONTH), int(DAY), int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
 
-                if data['schedules'][i]['type'] == 'Extra Magic Hours':
-                    extra_hours_start = datetime(int(YEAR), int(MONTH), int(DAY), int(data['schedules'][i]['startTime'][0:2]), int(data['schedules'][i]['startTime'][3:5]))
-                    extra_hours_end = datetime(int(YEAR), int(MONTH), int(DAY), int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
+            if data['schedules'][i]['type'] == 'Extra Magic Hours':
+                extra_hours_start = datetime(int(YEAR), int(MONTH), int(DAY), int(data['schedules'][i]['startTime'][0:2]), int(data['schedules'][i]['startTime'][3:5]))
+                extra_hours_end = datetime(int(YEAR), int(MONTH), int(DAY), int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
 
         return operating_hours_start, operating_hours_end, extra_hours_start, extra_hours_end
 
@@ -195,6 +193,7 @@ class Park(object):
 
     def getParkIDS(self):
         """
+        To be removed
         Returns the dictionary of {park name: id} formatted to json
         """
         return park_ids
