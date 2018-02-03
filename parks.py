@@ -69,11 +69,9 @@ class Park(object):
         self.__advisories = self.__data['advisories']
         self.__weblink = self.__data['webLinks']['wdwDetail']['href']  #check if other parks have multiple. If they do create array or json
 
-    def getParkIDS(self):
-        return park_ids
-
     def getLinks(self):
         """
+        to be removed once all links are handled
         Gets all the available links that reference other park data. Returns the links in json {name:link}.
 
         Links gathered:
@@ -107,6 +105,7 @@ class Park(object):
 
         YEAR = str(datetime.today().year)
         MONTH, DAY = self.__formatDate(str(datetime.today().month), str(datetime.today().day))
+
         operating_hours_start = None
         operating_hours_end = None
         extra_hours_start = None
@@ -123,6 +122,43 @@ class Park(object):
                     extra_hours_end = datetime(int(YEAR), int(MONTH), int(DAY), int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
 
         return operating_hours_start, operating_hours_end, extra_hours_start, extra_hours_end
+
+    def getParkHours(self, year, month, day):
+        """
+        Gets the park hours on a specific day and returns them as a datetime object.
+        Returns the park hours in the following order: operating open, operating close, Extra Magic open, Extra Magic close.
+        Extra Magic hours will return None if there are none for today.
+
+        If all hours are None then Disney has no hours for that day.
+
+        year = int yyyy
+        month = int mm
+        day = int dd
+        """
+
+        s = requests.get("https://api.wdpro.disney.go.com/facility-service/schedules/{}".format(self.__id), headers=getHeaders())
+        data = json.loads(s.content)
+
+        YEAR = str(year)
+        MONTH, DAY = self.__formatDate(str(month), str(day))
+
+        operating_hours_start = None
+        operating_hours_end = None
+        extra_hours_start = None
+        extra_hours_end = None
+
+        for i in range(len(data['schedules'])):
+            if data['schedules'][i]['date'] == '{}-{}-{}'.format(YEAR, MONTH, DAY):
+                if data['schedules'][i]['type'] == 'Operating':
+                    operating_hours_start = datetime(int(YEAR), int(MONTH), int(DAY), int(data['schedules'][i]['startTime'][0:2]), int(data['schedules'][i]['startTime'][3:5]))
+                    operating_hours_end = datetime(int(YEAR), int(MONTH), int(DAY), int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
+
+                if data['schedules'][i]['type'] == 'Extra Magic Hours':
+                    extra_hours_start = datetime(int(YEAR), int(MONTH), int(DAY), int(data['schedules'][i]['startTime'][0:2]), int(data['schedules'][i]['startTime'][3:5]))
+                    extra_hours_end = datetime(int(YEAR), int(MONTH), int(DAY), int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
+
+        return operating_hours_start, operating_hours_end, extra_hours_start, extra_hours_end
+
 
     def getParkAdvisories(self):
         """
@@ -158,6 +194,23 @@ class Park(object):
         json_times = json.dumps(times)
         return json_times
 
+    def getParkIDS(self):
+        """
+        Returns the dictionary of {park name: id} formatted to json
+        """
+        return park_ids
+
+    def getAncestorResortArea(self):
+        """
+        Returns ancestor resort area.
+        """
+        return self.__data['links']['ancestorResortArea']['title']
+
+    def getParkName(self):
+        """
+        Returns the true park name; the park name as referenced by Disney.
+        """
+        return self.__park_name
 
     def __formatDate(self, month, day):
         """
