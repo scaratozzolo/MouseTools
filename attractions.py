@@ -43,7 +43,7 @@ class Attraction(object):
 
         except KeyError:
             print('That attraction or ID is not available. Current options are:')
-            print('Full list of attractions and their ID\'s can be found here: insert link')
+            print('Full list of attractions and their ID\'s can be found here: https://scaratozzolo.github.io/MouseTools/attractions.txt')
             sys.exit()
         except ValueError:
             print('Attraction object expects an id value or attraction_name value. Must be passed as string.\n Usage: Attraction(id = None, attraction_name = None)')
@@ -94,7 +94,7 @@ class Entertainment(object):
 
         except KeyError:
             print('That entertainment or ID is not available. Current options are:')
-            print('Full list of entertainments and their ID\'s can be found here: insert link')
+            print('Full list of entertainments and their ID\'s can be found here: https://scaratozzolo.github.io/MouseTools/entertainments.txt')
             sys.exit()
         except ValueError:
             print('Entertainment object expects an id value or entertainment_name value. Must be passed as string.\n Usage: Entertainment(id = None, entertainment_name = None)')

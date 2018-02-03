@@ -41,8 +41,7 @@ class Park(object):
 
         except KeyError:
             print('That park or ID is not available. Current options are:')
-            for park in park_ids:
-                print('{}:{}'.format(park, park_ids[park]))
+            print('Full list of entertainments and their ID\'s can be found here: https://scaratozzolo.github.io/MouseTools/parks.txt')
             sys.exit()
         except ValueError:
             print('Park object expects an id value or park_name value. Must be passed as string.\n Usage: Park(id = None, park_name = None)')
