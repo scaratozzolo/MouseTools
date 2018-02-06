@@ -204,6 +204,12 @@ class Park(object):
         """
         return self.__data['links']['ancestorResortArea']['title']
 
+    def getParkID(self):
+        """
+        Returns the ID of the park
+        """
+        return self.__id
+
     def getParkName(self):
         """
         Returns the true park name; the park name as referenced by Disney.
