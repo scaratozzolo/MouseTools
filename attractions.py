@@ -52,6 +52,41 @@ class Attraction(object):
             print('Attraction object expects a string argument.')
             sys.exit()
 
+        self.__id = id
+
+        s = requests.get("https://api.wdpro.disney.go.com/facility-service/attractions/{}".format(self.__id), headers=getHeaders())
+        self.__data = json.loads(s.content)
+
+    def getAncestorDestination(self):
+        """
+        Returns the ancestor destination of the attraction.
+        """
+
+        return self.__data['ancestorDestination']['links']['self']['title']
+
+    def getAncestorThemePark(self):
+        """
+        Returns the ancestor theme park of the attraction.
+        """
+        return self.__data['links']['ancestorThemePark']['title']
+
+    def getAncestorResortArea(self):
+        """
+        Returns the ancestor resort area of the attraction.
+        """
+        return self.__data['links']['ancestorResortArea']['title']
+
+    def getAttractionName(self):
+        """
+        Returns the name of the attraction
+        """
+        return self.__attraction_name
+
+    def getAttractionID(self):
+        """
+        Returns the ID of the attraction
+        """
+        return self.__id
 
 
     def __str__(self):
