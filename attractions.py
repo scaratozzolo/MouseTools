@@ -183,9 +183,9 @@ class Attraction(object):
 
         return data['waitTime']['postedWaitMinutes']
 
-    def getAttractionRollUpWaitTimeMessage(self):
+    def getAttractionWaitTimeMessage(self):
         """
-        Returns the current wait time message of the attraction as reported by Disney
+        Returns the current roll up wait time message of the attraction as reported by Disney
         """
         s = requests.get("https://api.wdpro.disney.go.com/facility-service/attractions/{}/wait-times".format(self.__id), headers=getHeaders())
         data = json.loads(s.content)
