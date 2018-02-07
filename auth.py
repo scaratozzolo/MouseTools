@@ -7,7 +7,7 @@ def Authentication():
     """Gets an authentication(access) token from Disney and returns it"""
 
     r = requests.get("https://disneyworld.disney.go.com/authentication/get-client-token")
-    auth = json.loads(r.text)
+    auth = json.loads(r.content)
     return auth['access_token'], auth['expires_in']
 
 
