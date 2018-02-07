@@ -57,6 +57,14 @@ class Attraction(object):
         s = requests.get("https://api.wdpro.disney.go.com/facility-service/attractions/{}".format(self.__id), headers=getHeaders())
         self.__data = json.loads(s.content)
 
+        self.__type = self.__data['type']
+
+    def getType(self):
+        """
+        Returns the attraction type, which should just be "Attraction". But if you need it returned for whatever reason.
+        """
+        return self.__type
+
     def getAncestorDestination(self):
         """
         Returns the ancestor destination of the attraction.
