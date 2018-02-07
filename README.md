@@ -16,12 +16,12 @@ If you needs something specific from the API open a new issue with a "feature re
 - [x] Park IDs/Names
 - [x] Attraction IDs/Names
 - [ ] Restaurant IDs/Names
-- [ ] Return IDs somehow
+- [x] Return IDs somehow...Github link
 - [ ] Attraction types
 - [x] Today park hours
 - [ ] Other park hours
 - [ ] GPS Locations?
-- [ ] Setting self variables to what they're related functions would return
+- [ ] Creating some docs
 - [x] Investigate destinations (web/json crawler currently running)
-- [ ] Disneyland?
+- [x] Disneyland?
 - [x] Nice file for names and ids: attractions, entertainments, parks uploaded to github
