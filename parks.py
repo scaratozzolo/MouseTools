@@ -17,7 +17,7 @@ class Park(object):
         """
 
         try:
-            """Making sure id and park_name are not None, are strings, and exist"""
+            #Making sure id and attraction_name are not None, are strings, and exist
             if id == None and park_name == None:
                 raise ValueError
             elif id != None and type(id) != str:
@@ -110,15 +110,17 @@ class Park(object):
         extra_hours_start = None
         extra_hours_end = None
 
-        for i in range(len(data['schedules'])):
-            if data['schedules'][i]['type'] == 'Operating':
-                operating_hours_start = datetime(int(YEAR), int(MONTH), int(DAY), int(data['schedules'][i]['startTime'][0:2]), int(data['schedules'][i]['startTime'][3:5]))
-                operating_hours_end = datetime(int(YEAR), int(MONTH), int(DAY), int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
+        try:
+            for i in range(len(data['schedules'])):
+                if data['schedules'][i]['type'] == 'Operating':
+                    operating_hours_start = datetime(int(YEAR), int(MONTH), int(DAY), int(data['schedules'][i]['startTime'][0:2]), int(data['schedules'][i]['startTime'][3:5]))
+                    operating_hours_end = datetime(int(YEAR), int(MONTH), int(DAY), int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
 
-            if data['schedules'][i]['type'] == 'Extra Magic Hours':
-                extra_hours_start = datetime(int(YEAR), int(MONTH), int(DAY), int(data['schedules'][i]['startTime'][0:2]), int(data['schedules'][i]['startTime'][3:5]))
-                extra_hours_end = datetime(int(YEAR), int(MONTH), int(DAY), int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
-
+                if data['schedules'][i]['type'] == 'Extra Magic Hours':
+                    extra_hours_start = datetime(int(YEAR), int(MONTH), int(DAY), int(data['schedules'][i]['startTime'][0:2]), int(data['schedules'][i]['startTime'][3:5]))
+                    extra_hours_end = datetime(int(YEAR), int(MONTH), int(DAY), int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
+        except KeyError:
+            pass
         return operating_hours_start, operating_hours_end, extra_hours_start, extra_hours_end
 
     def getParkHours(self, year, month, day):
@@ -145,15 +147,17 @@ class Park(object):
         extra_hours_start = None
         extra_hours_end = None
 
-        for i in range(len(data['schedules'])):
-            if data['schedules'][i]['type'] == 'Operating':
-                operating_hours_start = datetime(int(YEAR), int(MONTH), int(DAY), int(data['schedules'][i]['startTime'][0:2]), int(data['schedules'][i]['startTime'][3:5]))
-                operating_hours_end = datetime(int(YEAR), int(MONTH), int(DAY), int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
+        try:
+            for i in range(len(data['schedules'])):
+                if data['schedules'][i]['type'] == 'Operating':
+                    operating_hours_start = datetime(int(YEAR), int(MONTH), int(DAY), int(data['schedules'][i]['startTime'][0:2]), int(data['schedules'][i]['startTime'][3:5]))
+                    operating_hours_end = datetime(int(YEAR), int(MONTH), int(DAY), int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
 
-            if data['schedules'][i]['type'] == 'Extra Magic Hours':
-                extra_hours_start = datetime(int(YEAR), int(MONTH), int(DAY), int(data['schedules'][i]['startTime'][0:2]), int(data['schedules'][i]['startTime'][3:5]))
-                extra_hours_end = datetime(int(YEAR), int(MONTH), int(DAY), int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
-
+                if data['schedules'][i]['type'] == 'Extra Magic Hours':
+                    extra_hours_start = datetime(int(YEAR), int(MONTH), int(DAY), int(data['schedules'][i]['startTime'][0:2]), int(data['schedules'][i]['startTime'][3:5]))
+                    extra_hours_end = datetime(int(YEAR), int(MONTH), int(DAY), int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
+        except KeyError:
+            pass
         return operating_hours_start, operating_hours_end, extra_hours_start, extra_hours_end
 
 
