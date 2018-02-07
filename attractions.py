@@ -19,7 +19,7 @@ class Attraction(object):
         """
 
         try:
-            """Making sure id and attraction_name are not None, are strings, and exist"""
+            #Making sure id and attraction_name are not None, are strings, and exist
             if id == None and attraction_name == None:
                 raise ValueError
             elif id != None and type(id) != str:
@@ -76,6 +76,12 @@ class Attraction(object):
         """
         return self.__data['links']['ancestorResortArea']['title']
 
+    def getAncestorLand(self):
+        """
+        Retuns the ancestor land of the attracion.
+        """
+        return self.__data['links']['ancestorLand']['title']
+
     def getAttractionName(self):
         """
         Returns the name of the attraction
@@ -88,6 +94,127 @@ class Attraction(object):
         """
         return self.__id
 
+
+    def getTodayAttractionHours(self):
+        """
+        Gets the attraction hours and returns them as a datetime object.
+        Returns the attraction hours in the following order: operating open, operating close, Extra Magic open, Extra Magic close.
+        Extra Magic hours will return None if there are none for today.
+        """
+
+        YEAR = str(datetime.today().year)
+        MONTH, DAY = self.__formatDate(str(datetime.today().month), str(datetime.today().day))
+
+        s = requests.get("https://api.wdpro.disney.go.com/facility-service/schedules/{}?date={}-{}-{}".format(self.__id, YEAR, MONTH, DAY), headers=getHeaders())
+        data = json.loads(s.content)
+
+        operating_hours_start = None
+        operating_hours_end = None
+        extra_hours_start = None
+        extra_hours_end = None
+
+        try:
+            for i in range(len(data['schedules'])):
+                if data['schedules'][i]['type'] == 'Operating':
+                    operating_hours_start = datetime(int(YEAR), int(MONTH), int(DAY), int(data['schedules'][i]['startTime'][0:2]), int(data['schedules'][i]['startTime'][3:5]))
+                    operating_hours_end = datetime(int(YEAR), int(MONTH), int(DAY), int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
+
+                if data['schedules'][i]['type'] == 'Extra Magic Hours':
+                    extra_hours_start = datetime(int(YEAR), int(MONTH), int(DAY), int(data['schedules'][i]['startTime'][0:2]), int(data['schedules'][i]['startTime'][3:5]))
+                    extra_hours_end = datetime(int(YEAR), int(MONTH), int(DAY), int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
+        except KeyError:
+            pass
+        return operating_hours_start, operating_hours_end, extra_hours_start, extra_hours_end
+
+    def getAttractionHours(self, year, month, day):
+        """
+        Gets the attraction hours on a specific day and returns them as a datetime object.
+        Returns the attraction hours in the following order: operating open, operating close, Extra Magic open, Extra Magic close.
+        Extra Magic hours will return None if there are none for today.
+
+        If all hours are None then Disney has no hours for that day.
+
+        year = int yyyy
+        month = int mm
+        day = int dd
+        """
+
+        YEAR = str(year)
+        MONTH, DAY = self.__formatDate(str(month), str(day))
+
+        s = requests.get("https://api.wdpro.disney.go.com/facility-service/schedules/{}?date={}-{}-{}".format(self.__id, YEAR, MONTH, DAY), headers=getHeaders())
+        data = json.loads(s.content)
+
+        operating_hours_start = None
+        operating_hours_end = None
+        extra_hours_start = None
+        extra_hours_end = None
+
+        try:
+            for i in range(len(data['schedules'])):
+                if data['schedules'][i]['type'] == 'Operating':
+                    operating_hours_start = datetime(int(YEAR), int(MONTH), int(DAY), int(data['schedules'][i]['startTime'][0:2]), int(data['schedules'][i]['startTime'][3:5]))
+                    operating_hours_end = datetime(int(YEAR), int(MONTH), int(DAY), int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
+
+                if data['schedules'][i]['type'] == 'Extra Magic Hours':
+                    extra_hours_start = datetime(int(YEAR), int(MONTH), int(DAY), int(data['schedules'][i]['startTime'][0:2]), int(data['schedules'][i]['startTime'][3:5]))
+                    extra_hours_end = datetime(int(YEAR), int(MONTH), int(DAY), int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
+        except KeyError:
+            pass
+        return operating_hours_start, operating_hours_end, extra_hours_start, extra_hours_end
+
+    def getAttractionStatus(self):
+        """
+        Returns the current status of the attraction as reported by Disney
+        """
+        s = requests.get("https://api.wdpro.disney.go.com/facility-service/attractions/{}/wait-times".format(self.__id), headers=getHeaders())
+        data = json.loads(s.content)
+
+        return data['waitTime']['status']
+
+    def getAttractionWaitTime(self):
+        """
+        Returns the current wait time of the attraction as reported by Disney, in minutes
+        TODO: test all attractions for a wait time
+
+        """
+        s = requests.get("https://api.wdpro.disney.go.com/facility-service/attractions/{}/wait-times".format(self.__id), headers=getHeaders())
+        data = json.loads(s.content)
+
+        return data['waitTime']['postedWaitMinutes']
+
+    def getAttractionRollUpWaitTimeMessage(self):
+        """
+        Returns the current wait time message of the attraction as reported by Disney
+        """
+        s = requests.get("https://api.wdpro.disney.go.com/facility-service/attractions/{}/wait-times".format(self.__id), headers=getHeaders())
+        data = json.loads(s.content)
+
+        return data['waitTime']['rollUpWaitTimeMessage']
+
+    def getAttractionFastPassAvailable(self):
+        """
+        Returns boolean of whether fast pass is available
+        """
+        s = requests.get("https://api.wdpro.disney.go.com/facility-service/attractions/{}/wait-times".format(self.__id), headers=getHeaders())
+        data = json.loads(s.content)
+
+        if data['waitTime']['fastPass']['available'] == 'true':
+            return True
+        else:
+            return False
+
+    #associated characters research
+
+    def __formatDate(self, month, day):
+        """
+        Formats month and day into proper format
+        """
+        if len(month) < 2:
+            month = '0'+month
+        if len(day) < 2:
+            day = '0'+day
+        return month, day
 
     def __str__(self):
         return 'Attraction object for {}'.format(self.__attraction_name)
