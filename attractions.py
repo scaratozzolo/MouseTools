@@ -69,7 +69,6 @@ class Attraction(object):
         """
         Returns the ancestor destination of the attraction.
         """
-
         return self.__data['ancestorDestination']['links']['self']['title']
 
     def getAncestorThemePark(self):
@@ -212,7 +211,41 @@ class Attraction(object):
         else:
             return False
 
-    #associated characters research
+    def checkAssociatedCharacters(self):
+        """
+        Checks if an attracion has any associated characters
+        """
+        s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType=Attraction".format(self.__id), headers=getHeaders())
+        data = json.loads(s.content)
+
+        if data['total'] > 0:
+            return True
+        else:
+            return False
+
+    def getNumberAssociatedCharacters(self):
+        """
+        Gets the total number of characters associated with the attraction_name
+        """
+        s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType=Attraction".format(self.__id), headers=getHeaders())
+        data = json.loads(s.content)
+
+        return data['total']
+
+    def getAssociatedCharacters(self):
+        """
+        Returns a list of associated characters IDs (maybe Character class in future)
+        """
+        charIDs = []
+
+        s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType=Attraction".format(self.__id), headers=getHeaders())
+        data = json.loads(s.content)
+
+        for i in range(len(data['entries'])):
+            charIDs.append(data['entries'][i]['links']['self']['href'].split('/')[-1])
+
+        return charIDs
+
 
     def __formatDate(self, month, day):
         """
@@ -273,7 +306,76 @@ class Entertainment(object):
             print('Entertainment object expects a string argument.')
             sys.exit()
 
+        self.__id = id
 
+        s = requests.get("https://api.wdpro.disney.go.com/facility-service/entertainments/{}".format(self.__id), headers=getHeaders())
+        self.__data = json.loads(s.content)
+
+        self.__type = self.__data['type']
+        self.__subType = self.__data['subType']
+
+    def getEntertainmentSubType(self):
+        """
+        Returns the Entertainment Sub Type
+        """
+        return self.__subType
+    
+    def getEntertainmentFastPassAvailable(self):
+        """
+        Returns boolean of whether fast pass is available
+        """
+        s = requests.get("https://api.wdpro.disney.go.com/facility-service/entertainments/{}".format(self.__id), headers=getHeaders())
+        data = json.loads(s.content)
+
+        if data['fastPass'] == 'true':
+            return True
+        else:
+            return False
+
+    def checkAssociatedCharacters(self):
+        """
+        Checks if an attracion has any associated characters
+        """
+        s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType=Entertainment".format(self.__id), headers=getHeaders())
+        data = json.loads(s.content)
+
+        if data['total'] > 0:
+            return True
+        else:
+            return False
+
+    def getNumberAssociatedCharacters(self):
+        """
+        Gets the total number of characters associated with the attraction_name
+        """
+        s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType=Entertainment".format(self.__id), headers=getHeaders())
+        data = json.loads(s.content)
+
+        return data['total']
+
+    def getAssociatedCharacters(self):
+        """
+        Returns a list of associated characters IDs (maybe Character class in future)
+        """
+        charIDs = []
+
+        s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType=Entertainment".format(self.__id), headers=getHeaders())
+        data = json.loads(s.content)
+
+        for i in range(len(data['entries'])):
+            charIDs.append(data['entries'][i]['links']['self']['href'].split('/')[-1])
+
+        return charIDs
+
+    def __formatDate(self, month, day):
+        """
+        Formats month and day into proper format
+        """
+        if len(month) < 2:
+            month = '0'+month
+        if len(day) < 2:
+            day = '0'+day
+        return month, day
 
     def __str__(self):
         return 'Entertainment object for {}'.format(self.__entertainment_name)
