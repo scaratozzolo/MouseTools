@@ -17,11 +17,14 @@ If you needs something specific from the API open a new issue with a "feature re
 - [x] Attraction IDs/Names
 - [ ] Restaurant IDs/Names
 - [x] Return IDs somehow...Github link
-- [ ] Attraction types
+- [x] Attraction types
 - [x] Today park hours
-- [ ] Other park hours
+- [x] Other park hours
 - [ ] GPS Locations?
 - [ ] Creating some docs
 - [x] Investigate destinations (web/json crawler currently running)
 - [x] Disneyland?
 - [x] Nice file for names and ids: attractions, entertainments, parks uploaded to github
+- [ ] Characters/Character IDs (txt file)
+- [ ] Associated Characters Entertainment/events
+- [ ] Entertainment Start/End/Duration
