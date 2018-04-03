@@ -15,7 +15,7 @@ If you needs something specific from the API open a new issue with a "feature re
 - [x] Wait times obviously (returns json {ride:id})
 - [x] Park IDs/Names
 - [x] Attraction IDs/Names
-- [ ] Restaurant IDs/Names
+- [ ] Restaurant IDs/Names txt file
 - [x] Return IDs somehow...Github link
 - [x] Attraction types
 - [x] Today park hours
@@ -27,4 +27,5 @@ If you needs something specific from the API open a new issue with a "feature re
 - [x] Nice file for names and ids: attractions, entertainments, parks uploaded to github
 - [ ] Characters/Character IDs (txt file)
 - [ ] Associated Characters Entertainment/events
-- [ ] Entertainment Start/End/Duration
+- [x] Entertainment Start/End/Duration
+- [ ] Entertainment classifications
