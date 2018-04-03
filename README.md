@@ -29,3 +29,5 @@ If you needs something specific from the API open a new issue with a "feature re
 - [ ] Associated Characters Entertainment/events
 - [x] Entertainment Start/End/Duration
 - [ ] Entertainment classifications
+- [ ] Entertain ancestors places (point of interest links)
+- [ ] Points of interest
