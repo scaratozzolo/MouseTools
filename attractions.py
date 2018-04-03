@@ -401,6 +401,59 @@ class Entertainment(object):
         dur = self.__data['duration'].split(':')
         return int(self.getDurationMinutes())*60
 
+    def getFastPassAvailable(self):
+        """
+        Returns True if fast pass is available
+        """
+        bool = self.__data['fastPass']
+        if bool == 'true':
+            return True
+        else:
+            return False
+
+    def getFastPassPlusAvailable(self):
+        """
+        Returns True if fast pass plus is available
+        """
+        bool = self.__data['fastPassPlus']
+        if bool == 'true':
+            return True
+        else:
+            return False
+
+    def getAncestorDestination(self):
+        """
+        Returns the Ancestor Destination of the entertainment
+        """
+        return self.__data['ancestorDestination']['links']['self']['title']
+        
+    def getAncestorResortArea(self):
+        """
+        Returns the Ancestor Resort Area for the Entertainment
+        """
+        s = requests.get(self.__data['relatedLocations']['primaryLocations'][0]['links']['self']['href'], headers=getHeaders())
+        data = json.loads(s.content)
+
+        return data['links']['ancestorResortArea']['title']
+
+    def getAncestorThemePark(self):
+        """
+        Returns the Ancestor Theme Park for the Entertainment
+        """
+        s = requests.get(self.__data['relatedLocations']['primaryLocations'][0]['links']['self']['href'], headers=getHeaders())
+        data = json.loads(s.content)
+
+        return data['links']['ancestorThemePark']['title']
+
+    def getAncestorLand(self):
+        """
+        Returns the Ancestor Land for the Entertainment
+        """
+        s = requests.get(self.__data['relatedLocations']['primaryLocations'][0]['links']['self']['href'], headers=getHeaders())
+        data = json.loads(s.content)
+
+        return data['links']['ancestorLand']['title']
+
     def __formatDate(self, month, day):
         """
         Formats month and day into proper format
