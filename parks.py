@@ -52,8 +52,15 @@ class Park(object):
 
         self.__id = id
 
-        s = requests.get("https://api.wdpro.disney.go.com/facility-service/theme-parks/{}".format(self.__id), headers=getHeaders())
-        self.__data = json.loads(s.content)
+        try:
+            s = requests.get("https://api.wdpro.disney.go.com/facility-service/theme-parks/{}".format(self.__id), headers=getHeaders())
+            self.__data = json.loads(s.content)
+            if self.__data['errors'] != []:
+                s = requests.get("https://api.wdpro.disney.go.com/facility-service/water-parks/{}".format(self.__id), headers=getHeaders())
+                self.__data = json.loads(s.content)
+        except:
+            pass
+
 
         links = {}
         for link in self.__data['links']:
