@@ -319,7 +319,7 @@ class Entertainment(object):
         Returns the Entertainment Sub Type
         """
         return self.__subType
-    
+
     def getEntertainmentFastPassAvailable(self):
         """
         Returns boolean of whether fast pass is available
@@ -366,6 +366,40 @@ class Entertainment(object):
             charIDs.append(data['entries'][i]['links']['self']['href'].split('/')[-1])
 
         return charIDs
+
+    def getStartDate(self):
+        """
+        Gets the start date of the entertainment and returns it as a datetime object
+        """
+        date = self.__data['startDate'].split('-')
+        return datetime(int(date[0]), int(date[1]), int(date[2]))
+
+    def getEndDate(self):
+        """
+        Gets the start date of the entertainment and returns it as a datetime object
+        """
+        date = self.__data['endDate'].split('-')
+        return datetime(int(date[0]), int(date[1]), int(date[2]))
+
+    def getDuration(self):
+        """
+        Returns the string format of the duration of the entertainment as provided by Disney
+        """
+        return self.__data['duration']
+
+    def getDurationMinutes(self):
+        """
+        Returns the duration of the entertainment in minutes as a float
+        """
+        dur = self.__data['duration'].split(':')
+        return int(dur[0])*60 + int(dur[1]) + int(dur[2])/60
+
+    def getDurationSeconds(self):
+        """
+        Returns the duration of the entertainment in seconds as an integer
+        """
+        dur = self.__data['duration'].split(':')
+        return int(self.getDurationMinutes())*60
 
     def __formatDate(self, month, day):
         """
