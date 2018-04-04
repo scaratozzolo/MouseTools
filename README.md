@@ -23,7 +23,7 @@ If you needs something specific from the API open a new issue with a "feature re
 - [x] Other park hours
 - [ ] GPS Locations?
 - [ ] Creating some docs
-- [x] Investigate destinations (web/json crawler currently running)
+- [x] Investigate destinations (web/json crawler finished)
 - [x] Disneyland?
 - [x] Nice file for names and ids: attractions, entertainments, parks uploaded to github
 - [x] Characters/Character IDs (txt file)
@@ -31,4 +31,6 @@ If you needs something specific from the API open a new issue with a "feature re
 - [x] Entertainment Start/End/Duration
 - [ ] Entertainment classifications
 - [ ] Entertain ancestors places (point of interest links)
-- [ ] Points of interest
+- [ ] Points of interest (create class)
+- [ ] Character relatedLocations classes to handle their related areas (facility, attraction, point of interest)
+- [ ] character associated events
