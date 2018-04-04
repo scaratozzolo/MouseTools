@@ -14,6 +14,7 @@ If you needs something specific from the API open a new issue with a "feature re
 - [x] Park advisories (returns in json {id:advisory})
 - [x] Wait times obviously (returns json {ride:id})
 - [x] Park IDs/Names
+- [x] Water Parks
 - [x] Attraction IDs/Names
 - [ ] Restaurant IDs/Names txt file
 - [x] Return IDs somehow...Github link
@@ -25,8 +26,8 @@ If you needs something specific from the API open a new issue with a "feature re
 - [x] Investigate destinations (web/json crawler currently running)
 - [x] Disneyland?
 - [x] Nice file for names and ids: attractions, entertainments, parks uploaded to github
-- [ ] Characters/Character IDs (txt file)
-- [ ] Associated Characters Entertainment/events
+- [x] Characters/Character IDs (txt file)
+- [x] Associated Characters Entertainment/events
 - [x] Entertainment Start/End/Duration
 - [ ] Entertainment classifications
 - [ ] Entertain ancestors places (point of interest links)
