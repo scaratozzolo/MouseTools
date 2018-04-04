@@ -3,7 +3,8 @@ import json
 import sys
 from datetime import datetime, timedelta
 from auth import getHeaders
-from attractions import Attraction, Entertainment
+from attractions import Attraction
+from entertainments import Entertainment
 
 character_ids = json.loads(requests.get("https://scaratozzolo.github.io/MouseTools/character_ids.json").content)
 
@@ -91,11 +92,11 @@ class Character(object):
         """
         entertainments = []
 
-        try:
-            for entertainment in self.__data['associatedEvents']:
+        for entertainment in self.__data['associatedEvents']:
+            try:
                 entertainments.append(Entertainment(entertainment['links']['self']['href'].split('/')[-1]))
-        except:
-            pass
+            except:
+                pass
 
         return entertainments
 
