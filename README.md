@@ -34,3 +34,5 @@ If you needs something specific from the API open a new issue with a "feature re
 - [ ] Points of interest (create class)
 - [ ] Character relatedLocations classes to handle their related areas (facility, attraction, point of interest)
 - [ ] character associated events
+- [ ] recreate entertainments list, from sorted.json to get them all
+- [ ] handle entertainments without start or end date
