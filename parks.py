@@ -75,30 +75,6 @@ class Park(object):
         self.__advisories = self.__data['advisories']
         self.__weblink = self.__data['webLinks']['wdwDetail']['href']  #check if other parks have multiple. If they do create array or json
 
-    def getLinks(self):
-        """
-        to be removed once all links are handled
-        Gets all the available links that reference other park data. Returns the links in json {name:link}.
-
-        Links gathered:
-        - busStops
-        - waitTimes
-        - characterAppearances
-        - standardTicketProduct
-        - entertainments
-        - scheduleMax
-        - trainStations
-        - schedule
-        - ancestorResortArea
-        - ancestorThemePark
-        - self
-        - boatLaunches
-        - ancestorDestination
-        - monorailStations
-        """
-
-        return self.__links
-
     def getTodayParkHours(self):
         """
         Gets the park hours and returns them as a datetime object.
@@ -201,13 +177,6 @@ class Park(object):
 
         json_times = json.dumps(times)
         return json_times
-
-    def getParkIDS(self):
-        """
-        To be removed
-        Returns the dictionary of {park name: id} formatted to json
-        """
-        return park_ids
 
     def getAncestorResortArea(self):
         """

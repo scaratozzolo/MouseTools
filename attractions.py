@@ -314,6 +314,12 @@ class Entertainment(object):
         self.__type = self.__data['type']
         self.__subType = self.__data['subType']
 
+    def getEntertainmentName(self):
+        """
+        Returns the name of the entertainment
+        """
+        return self.__entertainment_name
+
     def getEntertainmentSubType(self):
         """
         Returns the Entertainment Sub Type
