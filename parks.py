@@ -40,7 +40,7 @@ class Park(object):
 
 
         except KeyError:
-            print('That park or ID is not available. Current options are:')
+            print('That park or ID is not available.')
             print('Full list of entertainments and their ID\'s can be found here: https://scaratozzolo.github.io/MouseTools/parks.txt')
             sys.exit()
         except ValueError:
@@ -239,4 +239,4 @@ class Park(object):
 
 
     def __str__(self):
-        return 'Park object for {}'.format(self.park_name)
+        return 'Park object for {}'.format(self.__park_name)

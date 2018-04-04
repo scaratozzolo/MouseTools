@@ -42,7 +42,7 @@ class Attraction(object):
 
 
         except KeyError:
-            print('That attraction or ID is not available. Current options are:')
+            print('That attraction or ID is not available.')
             print('Full list of attractions and their ID\'s can be found here: https://scaratozzolo.github.io/MouseTools/attractions.txt')
             sys.exit()
         except ValueError:
@@ -296,7 +296,7 @@ class Entertainment(object):
 
 
         except KeyError:
-            print('That entertainment or ID is not available. Current options are:')
+            print('That entertainment or ID is not available.')
             print('Full list of entertainments and their ID\'s can be found here: https://scaratozzolo.github.io/MouseTools/entertainments.txt')
             sys.exit()
         except ValueError:
@@ -319,18 +319,6 @@ class Entertainment(object):
         Returns the Entertainment Sub Type
         """
         return self.__subType
-
-    def getEntertainmentFastPassAvailable(self):
-        """
-        Returns boolean of whether fast pass is available
-        """
-        s = requests.get("https://api.wdpro.disney.go.com/facility-service/entertainments/{}".format(self.__id), headers=getHeaders())
-        data = json.loads(s.content)
-
-        if data['fastPass'] == 'true':
-            return True
-        else:
-            return False
 
     def checkAssociatedCharacters(self):
         """
@@ -401,7 +389,7 @@ class Entertainment(object):
         dur = self.__data['duration'].split(':')
         return int(self.getDurationMinutes())*60
 
-    def getFastPassAvailable(self):
+    def getEntertainmentFastPassAvailable(self):
         """
         Returns True if fast pass is available
         """
@@ -411,7 +399,7 @@ class Entertainment(object):
         else:
             return False
 
-    def getFastPassPlusAvailable(self):
+    def getEntertainmentFastPassPlusAvailable(self):
         """
         Returns True if fast pass plus is available
         """
@@ -426,7 +414,7 @@ class Entertainment(object):
         Returns the Ancestor Destination of the entertainment
         """
         return self.__data['ancestorDestination']['links']['self']['title']
-        
+
     def getAncestorResortArea(self):
         """
         Returns the Ancestor Resort Area for the Entertainment
