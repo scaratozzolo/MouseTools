@@ -34,5 +34,10 @@ If you needs something specific from the API open a new issue with a "feature re
 - [ ] Points of interest (create class)
 - [ ] Character relatedLocations classes to handle their related areas (facility, attraction, point of interest)
 - [ ] character associated events
-- [ ] recreate entertainments list, from sorted.json to get them all
+- [x] recreate entertainments list, from sorted.json to get them all
 - [ ] handle entertainments without start or end date
+- [ ] rewrite get ids (destinations - parks - attractions/entertainments - characters (find more things later?))
+- [ ] some ids are listed by Disney but don't exist? Do something about it.
+- [ ] Get related locations needs to be changed because some characters have multiple primary locations
+- [ ] Ancestor locations, return IDs
+- [ ] ancestor location classes?
