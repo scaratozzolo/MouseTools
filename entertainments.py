@@ -63,6 +63,12 @@ class Entertainment(object):
         """
         return self.__entertainment_name
 
+    def getEntertainmentID(self):
+        """
+        Returns the id of the entertainment
+        """
+        return self.__id
+
     def getEntertainmentSubType(self):
         """
         Returns the Entertainment Sub Type

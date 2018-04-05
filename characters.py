@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from auth import getHeaders
 from attractions import Attraction
 from entertainments import Entertainment
+from facilities import Facility
 
 character_ids = json.loads(requests.get("https://scaratozzolo.github.io/MouseTools/character_ids.json").content)
 
@@ -62,6 +63,12 @@ class Character(object):
         """
         return self.__character_name
 
+    def getCharacterID(self):
+        """
+        Returns the ID of the character
+        """
+        return self.__id
+
     def getRelatedLocationsType(self):
         """
         Returns the type of location related to the character
@@ -70,7 +77,7 @@ class Character(object):
 
     def getRelatedLocations(self):
         """
-        Gets the locations the character is realted to
+        Gets the locations the character is realted to. Alice:90003819
         """
         try:
             type = self.getRelatedLocationsType()
@@ -79,7 +86,7 @@ class Character(object):
             if type == 'Attraction':
                 return Attraction(loc_id)
             elif type == 'Facility':
-                print('no class for facility at this time')
+                return Facility(loc_id)
             else:
                 print('no class for {} at this time'.format(type))
 
@@ -88,7 +95,9 @@ class Character(object):
 
     def getAssociatedEvents(self):
         """
-        Returns a list of Entertainment objects of events associated with the character
+        Returns a list of Entertainment objects of events associated with the character.
+        Will print an error if the ID does not exist anymore. Unfortunately Disney, lists some events that don't exist, and thus will throw the error
+        when it tries to create the Entertainment object.
         """
         entertainments = []
 

@@ -75,6 +75,18 @@ class Park(object):
         self.__advisories = self.__data['advisories']
         self.__weblink = self.__data['webLinks']['wdwDetail']['href']  #check if other parks have multiple. If they do create array or json
 
+    def getParkID(self):
+        """
+        Returns the ID of the park
+        """
+        return self.__id
+
+    def getParkName(self):
+        """
+        Returns the true park name; the park name as referenced by Disney.
+        """
+        return self.__park_name
+
     def getTodayParkHours(self):
         """
         Gets the park hours and returns them as a datetime object.
@@ -183,18 +195,6 @@ class Park(object):
         Returns ancestor resort area.
         """
         return self.__data['links']['ancestorResortArea']['title']
-
-    def getParkID(self):
-        """
-        Returns the ID of the park
-        """
-        return self.__id
-
-    def getParkName(self):
-        """
-        Returns the true park name; the park name as referenced by Disney.
-        """
-        return self.__park_name
 
     def __formatDate(self, month, day):
         """

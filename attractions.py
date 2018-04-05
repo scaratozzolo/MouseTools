@@ -56,6 +56,18 @@ class Attraction(object):
 
         self.__type = self.__data['type']
 
+    def getAttractionName(self):
+        """
+        Returns the name of the attraction
+        """
+        return self.__attraction_name
+
+    def getAttractionID(self):
+        """
+        Returns the ID of the attraction
+        """
+        return self.__id
+
     def getType(self):
         """
         Returns the attraction type, which should just be "Attraction". But if you need it returned for whatever reason.
@@ -85,19 +97,6 @@ class Attraction(object):
         Retuns the ancestor land of the attracion.
         """
         return self.__data['links']['ancestorLand']['title']
-
-    def getAttractionName(self):
-        """
-        Returns the name of the attraction
-        """
-        return self.__attraction_name
-
-    def getAttractionID(self):
-        """
-        Returns the ID of the attraction
-        """
-        return self.__id
-
 
     def getTodayAttractionHours(self):
         """
