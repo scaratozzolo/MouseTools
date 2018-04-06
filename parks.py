@@ -5,75 +5,58 @@ from datetime import datetime, timedelta
 from auth import getHeaders
 
 
-park_ids = json.loads(requests.get("https://scaratozzolo.github.io/MouseTools/park_ids.json").content)
-
 class Park(object):
 
-    def __init__(self, id = None, park_name = None):
+    def __init__(self, id = None):
         """
         Constructor Function
         Gets all park data available and stores various elements into variables.
-        id and park_name are both optional, but you must pass at least one of them. The argument must be a string.
+        ID must be a string
         """
 
         try:
             #Making sure id and attraction_name are not None, are strings, and exist
-            if id == None and park_name == None:
+            if id == None or id == '':
                 raise ValueError
             elif id != None and type(id) != str:
                 raise TypeError
-            elif park_name != None and type(park_name) != str:
-                raise TypeError
+
+            self.__id = id
+            try:
+                s = requests.get("https://api.wdpro.disney.go.com/facility-service/theme-parks/{}".format(self.__id), headers=getHeaders())
+                self.__data = json.loads(s.content)
+                if self.__data['errors'] != []:
+                    s = requests.get("https://api.wdpro.disney.go.com/facility-service/water-parks/{}".format(self.__id), headers=getHeaders())
+                    self.__data = json.loads(s.content)
+            except:
+                pass
+
+            self.__park_name = self.__data['name'].replace(u"\u2019", "'").replace(u"\u2013", "-").replace(u"\u2122", "").replace(u"\u2022", "-").replace(u"\u00ae", "").replace(u"\u2014", "-").replace(u"\u00a1", "").replace(u"\u00ee", "i").strip()
+
+            links = {}
+            for link in self.__data['links']:
+                links[link] = self.__data['links'][link]['href']
+            self.__links = json.dumps(links)
+
+            self.__long_id = self.__data['id']      #id;entityType=
+            self.__type = self.__data['type']
+            self.__content_type = self.__data['contentType']
+            self.__sub_type = self.__data['subType']
+            #advisories may update even when everything else doesn't. maybe create a seperate request to the data to get updated advisories
+            self.__advisories = self.__data['advisories']
+            self.__weblink = self.__data['webLinks']['wdwDetail']['href']  #check if other parks have multiple. If they do create array or json
 
 
-            if park_name != None:
-                id = park_ids[park_name] #raises KeyError if park_name doesn't exist
-
-            found = False
-            for park in park_ids:
-                if id == park_ids[park]:
-                    self.__park_name = park
-                    found = True
-                    break
-            if found == False:
-                raise KeyError
-
-
-        except KeyError:
-            print('That park or ID is not available.')
-            print('Full list of entertainments and their ID\'s can be found here: https://scaratozzolo.github.io/MouseTools/parks.txt')
-            sys.exit()
         except ValueError:
-            print('Park object expects an id value or park_name value. Must be passed as string.\n Usage: Park(id = None, park_name = None)')
+            print('Park object expects an id value. Must be passed as string.\n Usage: Park(id = None)')
             sys.exit()
         except TypeError:
             print('Park object expects a string argument.')
             sys.exit()
-
-        self.__id = id
-
-        try:
-            s = requests.get("https://api.wdpro.disney.go.com/facility-service/theme-parks/{}".format(self.__id), headers=getHeaders())
-            self.__data = json.loads(s.content)
-            if self.__data['errors'] != []:
-                s = requests.get("https://api.wdpro.disney.go.com/facility-service/water-parks/{}".format(self.__id), headers=getHeaders())
-                self.__data = json.loads(s.content)
-        except:
-            pass
-
-
-        links = {}
-        for link in self.__data['links']:
-            links[link] = self.__data['links'][link]['href']
-        self.__links = json.dumps(links)
-
-        self.__long_id = self.__data['id']      #id;entityType=
-        self.__type = self.__data['type']
-        self.__content_type = self.__data['contentType']
-        self.__sub_type = self.__data['subType']
-        #advisories may update even when everything else doesn't. maybe create a seperate request to the data to get updated advisories
-        self.__advisories = self.__data['advisories']
-        self.__weblink = self.__data['webLinks']['wdwDetail']['href']  #check if other parks have multiple. If they do create array or json
+        except Exception:
+            print('That park or ID is not available.')
+            print('Full list of possible parks and their ID\'s can be found here: https://scaratozzolo.github.io/MouseTools/parks.txt')
+            sys.exit()
 
     def getParkID(self):
         """

@@ -4,57 +4,42 @@ import sys
 from datetime import datetime, timedelta
 from auth import getHeaders
 
-attraction_ids = json.loads(requests.get("https://scaratozzolo.github.io/MouseTools/attraction_ids.json").content)
 
 class Attraction(object):
 
-    def __init__(self, id = None, attraction_name = None):
+    def __init__(self, id = None):
         """
         Constructor Function
         Gets all attraction data available and stores various elements into variables.
-        id and attraction_name are both optional, but you must pass at least one of them. The argument must be a string.
+        Must pass id as string
         """
 
         try:
-            #Making sure id and attraction_name are not None, are strings, and exist
-            if id == None and attraction_name == None:
+
+            if id == None or id == '':
                 raise ValueError
             elif id != None and type(id) != str:
                 raise TypeError
-            elif attraction_name != None and type(attraction_name) != str:
-                raise TypeError
 
+            self.__id = id
 
-            if attraction_name != None:
-                id = attraction_ids[attraction_name] #raises KeyError if attraction_name doesn't exist
+            s = requests.get("https://api.wdpro.disney.go.com/facility-service/attractions/{}".format(self.__id), headers=getHeaders())
+            self.__data = json.loads(s.content)
 
-            found = False
-            for attraction in attraction_ids:
-                if id == attraction_ids[attraction]:
-                    self.__attraction_name = attraction
-                    found = True
-                    break
-            if found == False:
-                raise KeyError
+            self.__attraction_name = self.__data['name'].replace(u"\u2019", "'").replace(u"\u2013", "-").replace(u"\u2122", "").replace(u"\u2022", "-").replace(u"\u00ae", "").replace(u"\u2014", "-").replace(u"\u00a1", "").replace(u"\u00ee", "i").strip()
+            self.__type = self.__data['type']
 
-
-        except KeyError:
-            print('That attraction or ID is not available.')
-            print('Full list of attractions and their ID\'s can be found here: https://scaratozzolo.github.io/MouseTools/attractions.txt')
-            sys.exit()
         except ValueError:
-            print('Attraction object expects an id value or attraction_name value. Must be passed as string.\n Usage: Attraction(id = None, attraction_name = None)')
+            print('Attraction object expects an id value. Must be passed as string.\n Usage: Attraction(id = None)')
             sys.exit()
         except TypeError:
             print('Attraction object expects a string argument.')
             sys.exit()
+        except Exception:
+            print('That attraction or ID is not available.')
+            print('Full list of possible attractions and their ID\'s can be found here: https://scaratozzolo.github.io/MouseTools/attractions.txt')
+            sys.exit()
 
-        self.__id = id
-
-        s = requests.get("https://api.wdpro.disney.go.com/facility-service/attractions/{}".format(self.__id), headers=getHeaders())
-        self.__data = json.loads(s.content)
-
-        self.__type = self.__data['type']
 
     def getAttractionName(self):
         """

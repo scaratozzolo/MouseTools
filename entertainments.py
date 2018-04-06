@@ -4,58 +4,42 @@ import sys
 from datetime import datetime, timedelta
 from auth import getHeaders
 
-entertainment_ids = json.loads(requests.get("https://scaratozzolo.github.io/MouseTools/entertainment_ids.json").content)
 
 class Entertainment(object):
 
-    def __init__(self, id = None, entertainment_name = None):
+    def __init__(self, id = None):
         """
         Constructor Function
         Gets all entertainment data available and stores various elements into variables.
-        id and entertainment_name are both optional, but you must pass at least one of them. The argument must be a string.
+        ID must be a string.
         """
 
         try:
-            """Making sure id and entertainment_name are not None, are strings, and exist"""
-            if id == None and entertainment_name == None:
+
+            if id == None or id == '':
                 raise ValueError
             elif id != None and type(id) != str:
                 raise TypeError
-            elif entertainment_name != None and type(entertainment_name) != str:
-                raise TypeError
 
+            self.__id = id
 
-            if entertainment_name != None:
-                id = entertainment_ids[entertainment_name] #raises KeyError if entertainment_name doesn't exist
+            s = requests.get("https://api.wdpro.disney.go.com/facility-service/entertainments/{}".format(self.__id), headers=getHeaders())
+            self.__data = json.loads(s.content)
 
-            found = False
-            for entertainment in entertainment_ids:
-                if id == entertainment_ids[entertainment]:
-                    self.__entertainment_name = entertainment
-                    found = True
-                    break
-            if found == False:
-                raise KeyError
+            self.__entertainment_name = self.__data['name'].replace(u"\u2019", "'").replace(u"\u2013", "-").replace(u"\u2122", "").replace(u"\u2022", "-").replace(u"\u00ae", "").replace(u"\u2014", "-").replace(u"\u00a1", "").replace(u"\u00ee", "i").strip()
+            self.__type = self.__data['type']
+            self.__subType = self.__data['subType']
 
-
-        except KeyError:
-            print('That entertainment or ID is not available. {}'.format(id))
-            print('Full list of entertainments and their ID\'s can be found here: https://scaratozzolo.github.io/MouseTools/entertainments.txt')
-            sys.exit()
         except ValueError:
-            print('Entertainment object expects an id value or entertainment_name value. Must be passed as string.\n Usage: Entertainment(id = None, entertainment_name = None)')
+            print('Entertainment object expects an id value. Must be passed as string.\n Usage: Entertainment(id = None)')
             sys.exit()
         except TypeError:
             print('Entertainment object expects a string argument.')
             sys.exit()
-
-        self.__id = id
-
-        s = requests.get("https://api.wdpro.disney.go.com/facility-service/entertainments/{}".format(self.__id), headers=getHeaders())
-        self.__data = json.loads(s.content)
-
-        self.__type = self.__data['type']
-        self.__subType = self.__data['subType']
+        except Exception:
+            print('That entertainment or ID is not available. {}'.format(id))
+            print('Full list of possible entertainments and their ID\'s can be found here: https://scaratozzolo.github.io/MouseTools/entertainments.txt')
+            sys.exit()
 
     def getEntertainmentName(self):
         """

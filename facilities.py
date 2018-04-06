@@ -4,56 +4,42 @@ import sys
 from datetime import datetime, timedelta
 from auth import getHeaders
 
-facility_ids = json.loads(requests.get("https://scaratozzolo.github.io/MouseTools/facility_ids.json").content)
 
 class Facility(object):
 
-    def __init__(self, id = None, facility_name = None):
+    def __init__(self, id = None):
         """
         Constructor Function
         Gets all facility data available and stores various elements into variables.
-        id and facility_name are both optional, but you must pass at least one of them. The argument must be a string.
+        ID must be a string
         """
 
         try:
-            #Making sure id and facility_name are not None, are strings, and exist
-            if id == None and facility_name == None:
+
+            if id == None or id == '':
                 raise ValueError
             elif id != None and type(id) != str:
                 raise TypeError
-            elif facility_name != None and type(facility_name) != str:
-                raise TypeError
 
+            self.__id = id
 
-            if facility_name != None:
-                id = facility_ids[facility_name] #raises KeyError if facility_name doesn't exist
+            s = requests.get("https://api.wdpro.disney.go.com/facility-service/facilities/{}".format(self.__id), headers=getHeaders())
+            self.__data = json.loads(s.content)
 
-            found = False
-            for facility in facility_ids:
-                if id == facility_ids[facility]:
-                    self.__facility_name = facility
-                    found = True
-                    break
-            if found == False:
-                raise KeyError
+            self.__facility_name = self.__data['name'].replace(u"\u2019", "'").replace(u"\u2013", "-").replace(u"\u2122", "").replace(u"\u2022", "-").replace(u"\u00ae", "").replace(u"\u2014", "-").replace(u"\u00a1", "").replace(u"\u00ee", "i").strip()
+            self.__subType = self.__data['subType']
 
-
-        except KeyError:
-            print('That facility or ID is not available.')
-            print('Full list of facilities and their ID\'s can be found here: https://scaratozzolo.github.io/MouseTools/facility.txt')
-            sys.exit()
         except ValueError:
-            print('Facility object expects an id value or facility_name value. Must be passed as string.\n Usage: Facility(id = None, facility_name = None)')
+            print('Facility object expects an id value. Must be passed as string.\n Usage: Facility(id = None)')
             sys.exit()
         except TypeError:
             print('Facility object expects a string argument.')
             sys.exit()
+        except Exception:
+            print('That facility or ID is not available.')
+            print('Full list of possible facilities and their ID\'s can be found here: https://scaratozzolo.github.io/MouseTools/facility.txt')
+            sys.exit()
 
-        self.__id = id
-
-        s = requests.get("https://api.wdpro.disney.go.com/facility-service/facilities/{}".format(self.__id), headers=getHeaders())
-        self.__data = json.loads(s.content)
-        self.__subType = self.__data['subType']
 
     def getFacilityName(self):
         """

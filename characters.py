@@ -7,55 +7,43 @@ from attractions import Attraction
 from entertainments import Entertainment
 from facilities import Facility
 
-character_ids = json.loads(requests.get("https://scaratozzolo.github.io/MouseTools/character_ids.json").content)
 
 class Character(object):
 
-    def __init__(self, id = None, character_name = None):
+    def __init__(self, id = None):
         """
         Constructor Function
         Gets all character data available and stores various elements into variables.
-        id and character_name are both optional, but you must pass at least one of them. The argument must be a string.
+        ID must be a string
         """
 
         try:
             #Making sure id and character_name are not None, are strings, and exist
-            if id == None and character_name == None:
+            if id == None or id == '':
                 raise ValueError
             elif id != None and type(id) != str:
                 raise TypeError
-            elif character_name != None and type(character_name) != str:
-                raise TypeError
 
 
-            if character_name != None:
-                id = character_ids[character_name] #raises KeyError if character_name doesn't exist
+            self.__id = id
 
-            found = False
-            for character in character_ids:
-                if id == character_ids[character]:
-                    self.__character_name = character
-                    found = True
-                    break
-            if found == False:
-                raise KeyError
+            s = requests.get("https://api.wdpro.disney.go.com/facility-service/characters/{}".format(self.__id), headers=getHeaders())
+            self.__data = json.loads(s.content)
 
+            self.__character_name = self.__data['name'].replace(u"\u2019", "'").replace(u"\u2013", "-").replace(u"\u2122", "").replace(u"\u2022", "-").replace(u"\u00ae", "").replace(u"\u2014", "-").replace(u"\u00a1", "").replace(u"\u00ee", "i").strip()
 
-        except KeyError:
-            print('That character or ID is not available.')
-            print('Full list of characters and their ID\'s can be found here: https://scaratozzolo.github.io/MouseTools/characters.txt')
-            sys.exit()
         except ValueError:
-            print('Character object expects an id value or character_name value. Must be passed as string.\n Usage: Character(id = None, character_name = None)')
+            print('Character object expects an id value. Must be passed as string.\n Usage: Character(id = None)')
             sys.exit()
         except TypeError:
             print('Character object expects a string argument.')
             sys.exit()
+        except Exception:
+            print('That character or ID is not available.')
+            print('Full list of possible characters and their ID\'s can be found here: https://scaratozzolo.github.io/MouseTools/characters.txt')
+            sys.exit()
 
-        self.__id = id
 
-        s = requests.get("https://api.wdpro.disney.go.com/facility-service/characters/{}".format(self.__id), headers=getHeaders())
-        self.__data = json.loads(s.content)
 
     def getCharacterName(self):
         """
