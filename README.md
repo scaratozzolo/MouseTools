@@ -41,3 +41,6 @@ If you needs something specific from the API open a new issue with a "feature re
 - [ ] Get related locations needs to be changed because some characters have multiple primary locations
 - [ ] Ancestor locations, return IDs
 - [ ] ancestor location classes?
+- [x] rewrite id verifications to check id, remove name argument
+- [ ] remove json files, leave just text files as possible reference.
+- [ ] IDError
