@@ -7,7 +7,7 @@ from auth import getHeaders
 
 class Park(object):
 
-    def __init__(self, id = None):
+    def __init__(self, id = ''):
         """
         Constructor Function
         Gets all park data available and stores various elements into variables.
@@ -16,7 +16,7 @@ class Park(object):
 
         try:
             #Making sure id and attraction_name are not None, are strings, and exist
-            if id == None or id == '':
+            if id == '':
                 raise ValueError
             elif id != None and type(id) != str:
                 raise TypeError

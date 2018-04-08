@@ -10,7 +10,7 @@ from facilities import Facility
 
 class Character(object):
 
-    def __init__(self, id = None):
+    def __init__(self, id = ''):
         """
         Constructor Function
         Gets all character data available and stores various elements into variables.
@@ -19,7 +19,7 @@ class Character(object):
 
         try:
             #Making sure id and character_name are not None, are strings, and exist
-            if id == None or id == '':
+            if id == '':
                 raise ValueError
             elif id != None and type(id) != str:
                 raise TypeError

@@ -7,7 +7,7 @@ from auth import getHeaders
 
 class Attraction(object):
 
-    def __init__(self, id = None):
+    def __init__(self, id = ''):
         """
         Constructor Function
         Gets all attraction data available and stores various elements into variables.
@@ -16,7 +16,7 @@ class Attraction(object):
 
         try:
 
-            if id == None or id == '':
+            if id == '':
                 raise ValueError
             elif id != None and type(id) != str:
                 raise TypeError
