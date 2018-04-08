@@ -3,6 +3,7 @@ import json
 import sys
 from datetime import datetime, timedelta
 from auth import getHeaders
+from parks import Park
 
 
 class Attraction(object):
@@ -69,7 +70,19 @@ class Attraction(object):
         """
         Returns the ancestor theme park of the attraction.
         """
-        return self.__data['links']['ancestorThemePark']['title']
+        try:
+            return Park(self.__data['links']['ancestorThemePark']['href'].split('/')[-1])
+        except:
+            return self.getAncestorWaterPark()
+
+    def getAncestorWaterPark(self):
+        """
+        Returns the ancestor water park of the attraction.
+        """
+        try:
+            return Park(self.__data['links']['ancestorWaterPark']['href'].split('/')[-1])
+        except:
+            return self.getAncestorThemePark()
 
     def getAncestorResortArea(self):
         """
