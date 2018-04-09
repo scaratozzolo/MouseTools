@@ -3,6 +3,7 @@ import json
 import sys
 from datetime import datetime, timedelta
 from auth import getHeaders
+from pointsofinterest import PointOfInterest
 
 
 class Entertainment(object):
@@ -94,6 +95,44 @@ class Entertainment(object):
 
         return charIDs
 
+    def getEntertainmentStatus(self):
+        """
+        Returns the current status of the entertainment as reported by Disney
+        """
+        try:
+            s = requests.get("https://api.wdpro.disney.go.com/facility-service/entertainments/{}/wait-times".format(self.__id), headers=getHeaders())
+            data = json.loads(s.content)
+
+            return data['waitTime']['status']
+        except:
+            return None
+
+    def getEntertainmentWaitTime(self):
+        """
+        Returns the current wait time of the entertainment as reported by Disney, in minutes
+        TODO: test all entertainment for a wait time
+
+        """
+        try:
+            s = requests.get("https://api.wdpro.disney.go.com/facility-service/entertainments/{}/wait-times".format(self.__id), headers=getHeaders())
+            data = json.loads(s.content)
+
+            return data['waitTime']['postedWaitMinutes']
+        except:
+            return None
+
+    def getEntertainmentWaitTimeMessage(self):
+        """
+        Returns the current roll up wait time message of the entertainment as reported by Disney
+        """
+        try:
+            s = requests.get("https://api.wdpro.disney.go.com/facility-service/entertainments/{}/wait-times".format(self.__id), headers=getHeaders())
+            data = json.loads(s.content)
+
+            return data['waitTime']['rollUpWaitTimeMessage']
+        except:
+            return None
+
     def getStartDate(self):
         """
         Gets the start date of the entertainment and returns it as a datetime object. If there is no start date, returns None
@@ -156,6 +195,33 @@ class Entertainment(object):
         else:
             return False
 
+    def checkRelatedLocations(self):
+        """
+        Returns true if it has related locations, false if none
+        """
+        try:
+            check = self.__data['relatedLocations']
+            return True
+        except:
+            return False
+
+    def getRelatedLocations(self):
+        """
+        Returns the related locations of the entertainment
+        """
+        locs = []
+        if self.checkRelatedLocations():
+            for loc in self.__data['relatedLocations']['primaryLocations']:
+                type = loc['facilityType']
+                loc_id = loc['links']['self']['href'].split('/')[-1]
+
+                if type == 'point-of-interest':
+                    locs.append(PointOfInterest(loc_id))
+                else:
+                    print('no class for {} at this time'.format(type))
+        return locs
+
+
     def getAncestorDestination(self):
         """
         Returns the Ancestor Destination of the entertainment
@@ -166,28 +232,37 @@ class Entertainment(object):
         """
         Returns the Ancestor Resort Area for the Entertainment
         """
-        s = requests.get(self.__data['relatedLocations']['primaryLocations'][0]['links']['self']['href'], headers=getHeaders())
-        data = json.loads(s.content)
+        if self.checkRelatedLocations():
+            s = requests.get(self.__data['relatedLocations']['primaryLocations'][0]['links']['self']['href'], headers=getHeaders())
+            data = json.loads(s.content)
 
-        return data['links']['ancestorResortArea']['title']
+            return data['links']['ancestorResortArea']['title']
+        else:
+            return None
 
     def getAncestorThemePark(self):
         """
         Returns the Ancestor Theme Park for the Entertainment
         """
-        s = requests.get(self.__data['relatedLocations']['primaryLocations'][0]['links']['self']['href'], headers=getHeaders())
-        data = json.loads(s.content)
+        if self.checkRelatedLocations():
+            s = requests.get(self.__data['relatedLocations']['primaryLocations'][0]['links']['self']['href'], headers=getHeaders())
+            data = json.loads(s.content)
 
-        return data['links']['ancestorThemePark']['title']
+            return data['links']['ancestorThemePark']['title']
+        else:
+            return None
 
     def getAncestorLand(self):
         """
         Returns the Ancestor Land for the Entertainment
         """
-        s = requests.get(self.__data['relatedLocations']['primaryLocations'][0]['links']['self']['href'], headers=getHeaders())
-        data = json.loads(s.content)
+        if self.checkRelatedLocations():
+            s = requests.get(self.__data['relatedLocations']['primaryLocations'][0]['links']['self']['href'], headers=getHeaders())
+            data = json.loads(s.content)
 
-        return data['links']['ancestorLand']['title']
+            return data['links']['ancestorLand']['title']
+        else:
+            return None
 
     def __formatDate(self, month, day):
         """
