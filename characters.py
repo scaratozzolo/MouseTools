@@ -57,29 +57,33 @@ class Character(object):
         """
         return self.__id
 
-    def getRelatedLocationsType(self):
+    def checkRelatedLocations(self):
         """
-        Returns the type of location related to the character
+        Returns true if it has related locations, false if none
         """
-        return self.__data['relatedLocations']['primaryLocations'][0]['facilityType']
+        try:
+            check = self.__data['relatedLocations']
+            return True
+        except:
+            return False
 
     def getRelatedLocations(self):
         """
         Gets the locations the character is realted to. Alice:90003819
         """
-        try:
-            type = self.getRelatedLocationsType()
-            loc_id = self.__data['relatedLocations']['primaryLocations'][0]['links']['self']['href'].split('/')[-1]
+        locs = []
+        if self.checkRelatedLocations():
+            for loc in self.__data['relatedLocations']['primaryLocations']:
+                type = loc['facilityType']
+                loc_id = loc['links']['self']['href'].split('/')[-1]
 
-            if type == 'Attraction':
-                return Attraction(loc_id)
-            elif type == 'Facility':
-                return Facility(loc_id)
-            else:
-                print('no class for {} at this time'.format(type))
-
-        except:
-            return None
+                if type == 'Attraction':
+                    locs.append(Attraction(loc_id))
+                elif type == 'Facility':
+                    locs.append(Facility(loc_id))
+                else:
+                    print('no class for {} at this time'.format(type))
+        return locs
 
     def getAssociatedEvents(self):
         """
