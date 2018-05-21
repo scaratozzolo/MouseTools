@@ -96,7 +96,10 @@ class Attraction(object):
         """
         Returns the ancestor resort area of the attraction.
         """
-        return self.__data['links']['ancestorResortArea']['title']
+        try:
+            return self.__data['links']['ancestorResortArea']['title']
+        except:
+            return None
 
     def getAncestorLand(self):
         """
