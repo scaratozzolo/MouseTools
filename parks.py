@@ -22,11 +22,12 @@ class Park(object):
                 raise TypeError
 
             self.__id = id
+
             try:
-                s = requests.get("https://api.wdpro.disney.go.com/facility-service/theme-parks/{}".format(self.__id), headers=getHeaders())
+                s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/theme-parks/{}".format(self.__id), headers=getHeaders())
                 self.__data = json.loads(s.content)
                 if self.__data['errors'] != []:
-                    s = requests.get("https://api.wdpro.disney.go.com/facility-service/water-parks/{}".format(self.__id), headers=getHeaders())
+                    s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/water-parks/{}".format(self.__id), headers=getHeaders())
                     self.__data = json.loads(s.content)
             except:
                 pass
@@ -44,7 +45,6 @@ class Park(object):
             self.__sub_type = self.__data['subType']
             #advisories may update even when everything else doesn't. maybe create a seperate request to the data to get updated advisories
             self.__advisories = self.__data['advisories']
-            self.__weblink = self.__data['webLinks']['wdwDetail']['href']  #check if other parks have multiple. If they do create array or json
 
 
         except ValueError:
