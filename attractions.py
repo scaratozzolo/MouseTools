@@ -73,7 +73,11 @@ class Attraction(object):
         try:
             return Park(self.__data['links']['ancestorThemePark']['href'].split('/')[-1])
         except:
-            return self.getAncestorWaterPark()
+            try:
+                self.__data['links']['ancestorWaterPark']['href'].split('/')[-1]
+                return self.getAncestorWaterPark()
+            except:
+                return None
 
     def getAncestorWaterPark(self):
         """
@@ -82,7 +86,11 @@ class Attraction(object):
         try:
             return Park(self.__data['links']['ancestorWaterPark']['href'].split('/')[-1])
         except:
-            return self.getAncestorThemePark()
+            try:
+                self.__data['links']['ancestorThemePark']['href'].split('/')[-1]
+                return self.getAncestorThemePark()
+            except:
+                return None
 
     def getAncestorResortArea(self):
         """
@@ -94,7 +102,10 @@ class Attraction(object):
         """
         Retuns the ancestor land of the attracion.
         """
-        return self.__data['links']['ancestorLand']['title']
+        try:
+            return self.__data['links']['ancestorLand']['title']
+        except:
+            return None
 
     def getTodayAttractionHours(self):
         """
@@ -171,7 +182,10 @@ class Attraction(object):
         s = requests.get("https://api.wdpro.disney.go.com/facility-service/attractions/{}/wait-times".format(self.__id), headers=getHeaders())
         data = json.loads(s.content)
 
-        return data['waitTime']['status']
+        try:
+            return data['waitTime']['status']
+        except:
+            return None
 
     def getAttractionWaitTime(self):
         """
@@ -182,7 +196,10 @@ class Attraction(object):
         s = requests.get("https://api.wdpro.disney.go.com/facility-service/attractions/{}/wait-times".format(self.__id), headers=getHeaders())
         data = json.loads(s.content)
 
-        return data['waitTime']['postedWaitMinutes']
+        try:
+            return data['waitTime']['postedWaitMinutes']
+        except:
+            return None
 
     def getAttractionWaitTimeMessage(self):
         """
@@ -191,7 +208,10 @@ class Attraction(object):
         s = requests.get("https://api.wdpro.disney.go.com/facility-service/attractions/{}/wait-times".format(self.__id), headers=getHeaders())
         data = json.loads(s.content)
 
-        return data['waitTime']['rollUpWaitTimeMessage']
+        try:
+            return data['waitTime']['rollUpWaitTimeMessage']
+        except:
+            return None
 
     def getAttractionFastPassAvailable(self):
         """
@@ -200,10 +220,13 @@ class Attraction(object):
         s = requests.get("https://api.wdpro.disney.go.com/facility-service/attractions/{}/wait-times".format(self.__id), headers=getHeaders())
         data = json.loads(s.content)
 
-        if data['waitTime']['fastPass']['available'] == 'true':
-            return True
-        else:
-            return False
+        try:
+            if data['waitTime']['fastPass']['available'] == 'true':
+                return True
+            else:
+                return False
+        except:
+            return None
 
     def checkAssociatedCharacters(self):
         """
