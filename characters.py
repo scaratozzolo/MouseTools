@@ -30,10 +30,10 @@ class Character(object):
             s = requests.get("https://api.wdpro.disney.go.com/facility-service/characters/{}".format(self.__id), headers=getHeaders())
             self.__data = json.loads(s.content)
 
-            self.__character_name = self.__data['name'].replace(u"\u2019", "'").replace(u"\u2013", "-").replace(u"\u2122", "").replace(u"\u2022", "-").replace(u"\u00ae", "").replace(u"\u2014", "-").replace(u"\u00a1", "").replace(u"\u00ee", "i").strip()
+            self.__character_name = self.__data['name'].replace(u"\u2019", "'").replace(u"\u2013", "-").replace(u"\u2122", "").replace(u"\u2022", "-").replace(u"\u00ae", "").replace(u"\u2014", "-").replace(u"\u00a1", "").replace(u"\u00ee", "i").replace(u"\u25cf", " ").replace(u"\u00e9", "e").replace(u"\u00ad", "").replace(u"\u00a0", " ").replace(u"\u00e8", "e").replace(u"\u00eb", "e").replace(u"\u2026", "...").replace(u"\u00e4", "a").replace(u"\u2018", "'").replace(u"\u00ed", "i").replace(u"\u201c", '"').replace(u"\u201d", '"').strip()
 
         except ValueError:
-            print('Character object expects an id value. Must be passed as string.\n Usage: Character(id = None)')
+            print('Character object expects an id value. Must be passed as string.\n Usage: Character(id)')
             sys.exit()
         except TypeError:
             print('Character object expects a string argument.')
@@ -72,18 +72,21 @@ class Character(object):
         Gets the locations the character is realted to. Alice:90003819
         """
         locs = []
-        if self.checkRelatedLocations():
-            for loc in self.__data['relatedLocations']['primaryLocations']:
-                type = loc['facilityType']
-                loc_id = loc['links']['self']['href'].split('/')[-1]
+        try:
+            if self.checkRelatedLocations():
+                for loc in self.__data['relatedLocations']['primaryLocations']:
+                    type = loc['facilityType']
+                    loc_id = loc['links']['self']['href'].split('/')[-1]
 
-                if type == 'Attraction':
-                    locs.append(Attraction(loc_id))
-                elif type == 'Facility':
-                    locs.append(Facility(loc_id))
-                else:
-                    print('no class for {} at this time'.format(type))
-        return locs
+                    if type == 'Attraction':
+                        locs.append(Attraction(loc_id))
+                    elif type == 'Facility':
+                        locs.append(Facility(loc_id))
+                    else:
+                        print('no class for {} at this time'.format(type))
+            return locs
+        except:
+            return locs
 
     def getAssociatedEvents(self):
         """
@@ -92,14 +95,15 @@ class Character(object):
         when it tries to create the Entertainment object.
         """
         entertainments = []
-
-        for entertainment in self.__data['associatedEvents']:
-            try:
-                entertainments.append(Entertainment(entertainment['links']['self']['href'].split('/')[-1]))
-            except:
-                pass
-
-        return entertainments
+        try:
+            for entertainment in self.__data['associatedEvents']:
+                try:
+                    entertainments.append(Entertainment(entertainment['links']['self']['href'].split('/')[-1]))
+                except:
+                    pass
+            return entertainments
+        except:
+            return entertainments
 
     def __formatDate(self, month, day):
         """
