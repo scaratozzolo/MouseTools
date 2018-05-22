@@ -27,12 +27,12 @@ class Entertainment(object):
             s = requests.get("https://api.wdpro.disney.go.com/facility-service/entertainments/{}".format(self.__id), headers=getHeaders())
             self.__data = json.loads(s.content)
 
-            self.__entertainment_name = self.__data['name'].replace(u"\u2019", "'").replace(u"\u2013", "-").replace(u"\u2122", "").replace(u"\u2022", "-").replace(u"\u00ae", "").replace(u"\u2014", "-").replace(u"\u00a1", "").replace(u"\u00ee", "i").strip()
+            self.__entertainment_name = self.__data['name'].replace(u"\u2019", "'").replace(u"\u2013", "-").replace(u"\u2122", "").replace(u"\u2022", "-").replace(u"\u00ae", "").replace(u"\u2014", "-").replace(u"\u00a1", "").replace(u"\u00ee", "i").replace(u"\u25cf", " ").replace(u"\u00e9", "e").replace(u"\u00ad", "").replace(u"\u00a0", " ").replace(u"\u00e8", "e").replace(u"\u00eb", "e").replace(u"\u2026", "...").replace(u"\u00e4", "a").replace(u"\u2018", "'").replace(u"\u00ed", "i").replace(u"\u201c", '"').replace(u"\u201d", '"').strip()
             self.__type = self.__data['type']
             self.__subType = self.__data['subType']
 
         except ValueError:
-            print('Entertainment object expects an id value. Must be passed as string.\n Usage: Entertainment(id = None)')
+            print('Entertainment object expects an id value. Must be passed as string.\n Usage: Entertainment(id)')
             sys.exit()
         except TypeError:
             print('Entertainment object expects a string argument.')
@@ -210,58 +210,73 @@ class Entertainment(object):
         Returns the related locations of the entertainment
         """
         locs = []
-        if self.checkRelatedLocations():
-            for loc in self.__data['relatedLocations']['primaryLocations']:
-                type = loc['facilityType']
-                loc_id = loc['links']['self']['href'].split('/')[-1]
+        try:
+            if self.checkRelatedLocations():
+                for loc in self.__data['relatedLocations']['primaryLocations']:
+                    type = loc['facilityType']
+                    loc_id = loc['links']['self']['href'].split('/')[-1]
 
-                if type == 'point-of-interest':
-                    locs.append(PointOfInterest(loc_id))
-                else:
-                    print('no class for {} at this time'.format(type))
-        return locs
+                    if type == 'point-of-interest':
+                        locs.append(PointOfInterest(loc_id))
+                    else:
+                        print('no class for {} at this time'.format(type))
+            return locs
+        except:
+            return locs
 
 
     def getAncestorDestination(self):
         """
         Returns the Ancestor Destination of the entertainment
         """
-        return self.__data['ancestorDestination']['links']['self']['title']
+        try:
+            return self.__data['ancestorDestination']['links']['self']['title']
+        except:
+            return None
 
     def getAncestorResortArea(self):
         """
         Returns the Ancestor Resort Area for the Entertainment
         """
-        if self.checkRelatedLocations():
-            s = requests.get(self.__data['relatedLocations']['primaryLocations'][0]['links']['self']['href'], headers=getHeaders())
-            data = json.loads(s.content)
+        try:
+            if self.checkRelatedLocations():
+                s = requests.get(self.__data['relatedLocations']['primaryLocations'][0]['links']['self']['href'], headers=getHeaders())
+                data = json.loads(s.content)
 
-            return data['links']['ancestorResortArea']['title']
-        else:
+                return data['links']['ancestorResortArea']['title']
+            else:
+                return None
+        except:
             return None
 
     def getAncestorThemePark(self):
         """
         Returns the Ancestor Theme Park for the Entertainment
         """
-        if self.checkRelatedLocations():
-            s = requests.get(self.__data['relatedLocations']['primaryLocations'][0]['links']['self']['href'], headers=getHeaders())
-            data = json.loads(s.content)
+        try:
+            if self.checkRelatedLocations():
+                s = requests.get(self.__data['relatedLocations']['primaryLocations'][0]['links']['self']['href'], headers=getHeaders())
+                data = json.loads(s.content)
 
-            return data['links']['ancestorThemePark']['title']
-        else:
+                return data['links']['ancestorThemePark']['title']
+            else:
+                return None
+        except:
             return None
 
     def getAncestorLand(self):
         """
         Returns the Ancestor Land for the Entertainment
         """
-        if self.checkRelatedLocations():
-            s = requests.get(self.__data['relatedLocations']['primaryLocations'][0]['links']['self']['href'], headers=getHeaders())
-            data = json.loads(s.content)
+        try:
+            if self.checkRelatedLocations():
+                s = requests.get(self.__data['relatedLocations']['primaryLocations'][0]['links']['self']['href'], headers=getHeaders())
+                data = json.loads(s.content)
 
-            return data['links']['ancestorLand']['title']
-        else:
+                return data['links']['ancestorLand']['title']
+            else:
+                return None
+        except:
             return None
 
     def __formatDate(self, month, day):

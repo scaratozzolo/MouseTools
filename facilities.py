@@ -26,11 +26,15 @@ class Facility(object):
             s = requests.get("https://api.wdpro.disney.go.com/facility-service/facilities/{}".format(self.__id), headers=getHeaders())
             self.__data = json.loads(s.content)
 
-            self.__facility_name = self.__data['name'].replace(u"\u2019", "'").replace(u"\u2013", "-").replace(u"\u2122", "").replace(u"\u2022", "-").replace(u"\u00ae", "").replace(u"\u2014", "-").replace(u"\u00a1", "").replace(u"\u00ee", "i").strip()
-            self.__subType = self.__data['subType']
+            self.__facility_name = self.__data['name'].replace(u"\u2019", "'").replace(u"\u2013", "-").replace(u"\u2122", "").replace(u"\u2022", "-").replace(u"\u00ae", "").replace(u"\u2014", "-").replace(u"\u00a1", "").replace(u"\u00ee", "i").replace(u"\u25cf", " ").replace(u"\u00e9", "e").replace(u"\u00ad", "").replace(u"\u00a0", " ").replace(u"\u00e8", "e").replace(u"\u00eb", "e").replace(u"\u2026", "...").replace(u"\u00e4", "a").replace(u"\u2018", "'").replace(u"\u00ed", "i").replace(u"\u201c", '"').replace(u"\u201d", '"').strip()
+
+            try:
+                self.__subType = self.__data['subType']
+            except:
+                self.__subType = None
 
         except ValueError:
-            print('Facility object expects an id value. Must be passed as string.\n Usage: Facility(id = None)')
+            print('Facility object expects an id value. Must be passed as string.\n Usage: Facility(id)')
             sys.exit()
         except TypeError:
             print('Facility object expects a string argument.')
@@ -63,25 +67,37 @@ class Facility(object):
         """
         Returns ancestor resort area
         """
-        return self.__data['links']['ancestorResortArea']['title']
+        try:
+            return self.__data['links']['ancestorResortArea']['title']
+        except:
+            return None
 
     def getAncestorThemePark(self):
         """
         Returns ancestor theme park
         """
-        return self.__data['links']['ancestorThemePark']['title']
+        try:
+            return self.__data['links']['ancestorThemePark']['title']
+        except:
+            return None
 
     def getAncestorLand(self):
         """
         Returns ancestor land
         """
-        return self.__data['links']['ancestorLand']['title']
+        try:
+            return self.__data['links']['ancestorLand']['title']
+        except:
+            return None
 
     def getAncestorDestination(self):
         """
         Returns ancestor destination
         """
-        return self.__data['links']['ancestorDestination']['title']
+        try:
+            return self.__data['links']['ancestorDestination']['title']
+        except:
+            return None
 
     def __formatDate(self, month, day):
         """
