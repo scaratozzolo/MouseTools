@@ -205,6 +205,18 @@ class Attraction(object):
         except:
             return None
 
+    def checkForAttractionWaitTime(self):
+        """
+        Checks if the attraction has a wait. Returns True if it exists, False if it doesn't
+        """
+        s = requests.get("https://api.wdpro.disney.go.com/facility-service/attractions/{}/wait-times".format(self.__id), headers=getHeaders())
+        data = json.loads(s.content)
+        try:
+            check = data['waitTime']['postedWaitMinutes']
+            return True
+        except:
+            return False
+
     def getAttractionWaitTime(self):
         """
         Returns the current wait time of the attraction as reported by Disney, in minutes
