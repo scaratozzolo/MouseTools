@@ -6,6 +6,7 @@ from auth import getHeaders
 from parks import Park
 from entertainments import Entertainment
 from attractions import Attraction
+from tqdm import tqdm
 
 
 class Destination(object):
@@ -79,9 +80,11 @@ class Destination(object):
         s = requests.get(self.__data['links']['entertainments']['href'], headers=getHeaders())
         data = json.loads(s.content)
 
-        for enter in data['entries']:
-            entertainments.append(Entertainment(enter['links']['self']['href'].split('/')[-1]))
-
+        for enter in tqdm(data['entries']):
+            try:
+                entertainments.append(Entertainment(enter['links']['self']['href'].split('/')[-1]))
+            except:
+                pass
         return entertainments
 
     def getAttractions(self):
@@ -93,9 +96,11 @@ class Destination(object):
         s = requests.get(self.__data['links']['attractions']['href'], headers=getHeaders())
         data = json.loads(s.content)
 
-        for attract in data['entries']:
-            attractions.append(Attraction(attract['links']['self']['href'].split('/')[-1]))
-
+        for attract in tqdm(data['entries']):
+            try:
+                attractions.append(Attraction(attract['links']['self']['href'].split('/')[-1]))
+            except:
+                pass
         return attractions
 
     def __formatDate(self, num):
