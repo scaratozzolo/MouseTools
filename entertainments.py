@@ -4,6 +4,7 @@ import sys
 from datetime import datetime, timedelta
 from auth import getHeaders
 from pointsofinterest import PointOfInterest
+from characters import Character
 
 
 class Entertainment(object):
@@ -85,15 +86,17 @@ class Entertainment(object):
         """
         Returns a list of associated characters IDs (maybe Character class in future)
         """
-        charIDs = []
+        chars = []
 
         s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType=Entertainment".format(self.__id), headers=getHeaders())
         data = json.loads(s.content)
 
         for i in range(len(data['entries'])):
-            charIDs.append(data['entries'][i]['links']['self']['href'].split('/')[-1])
-
-        return charIDs
+            try:
+                chars.append(Character(data['entries'][i]['links']['self']['href'].split('/')[-1]))
+            except:
+                pass
+        return chars
 
     def getEntertainmentStatus(self):
         """
@@ -106,6 +109,18 @@ class Entertainment(object):
             return data['waitTime']['status']
         except:
             return None
+
+    def checkForEntertainmentWaitTime(self):
+        """
+        Checks if the attraction has a wait. Returns True if it exists, False if it doesn't
+        """
+        s = requests.get("https://api.wdpro.disney.go.com/facility-service/attractions/{}/wait-times".format(self.__id), headers=getHeaders())
+        data = json.loads(s.content)
+        try:
+            check = data['waitTime']['postedWaitMinutes']
+            return True
+        except:
+            return False
 
     def getEntertainmentWaitTime(self):
         """
