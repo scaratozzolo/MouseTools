@@ -98,15 +98,13 @@ class Destination(object):
 
         return attractions
 
-    def __formatDate(self, month, day):
+    def __formatDate(self, num):
         """
         Formats month and day into proper format
         """
-        if len(month) < 2:
-            month = '0'+month
-        if len(day) < 2:
-            day = '0'+day
-        return month, day
+        if len(num) < 2:
+            num = '0'+num
+        return num
 
     def __str__(self):
         return 'Destination object for {}'.format(self.__destination_name)
