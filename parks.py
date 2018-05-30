@@ -3,6 +3,7 @@ import json
 import sys
 from datetime import datetime, timedelta
 from auth import getHeaders
+from tqdm import tqdm
 
 
 class Park(object):
@@ -54,7 +55,7 @@ class Park(object):
             print('Park object expects a string argument.')
             sys.exit()
         except Exception:
-            print('That park or ID is not available.')
+            print('That park or ID is not available. ID = {}'.format(id))
             print('Full list of possible parks and their ID\'s can be found here: https://scaratozzolo.github.io/MouseTools/parks.txt')
             sys.exit()
 
@@ -170,6 +171,38 @@ class Park(object):
 
         return advisories
 
+    def getAttractionIDs(self):
+        """
+        Returns a list of all attraction IDs in the park
+        There is a huge discrepancy between the number of attractions reported and the actual number (This is why it errors out so much).
+        I suggest getting the attractions from the Destination class and sorting by Attraction.ancestorThemePark()
+        """
+        ids = []
+        s = requests.get("https://api.wdpro.disney.go.com/facility-service/theme-parks/{}/wait-times".format(self.__id), headers=getHeaders())
+        loaded = json.loads(s.content)
+
+        for i in range(len(loaded['entries'])):
+            ids.append(loaded['entries'][i]['id'].split(';')[0])
+        return ids
+
+    def getAttractions(self):
+        """
+        Returns a list of Attraction objects
+        There is a huge discrepancy between the number of attractions reported and the actual number (This is why it errors out so much).
+        I suggest getting the attractions from the Destination class and sorting by Attraction.ancestorThemePark()
+        """
+        from attractions import Attraction
+        attractions = []
+
+        data = self.getAttractionIDs()
+
+        for attract in tqdm(data):
+            try:
+                attractions.append(Attraction(attract))
+            except:
+                pass
+        return attractions
+
     def getCurrentWaitTimes(self):
         """
         Gets all current wait times for the park. Returns them in json {park:time in minutes}. May take some time as it goes through all attractions.
@@ -199,6 +232,12 @@ class Park(object):
         if len(num) < 2:
             num = '0'+num
         return num
+
+    def __eq__(self, other):
+        """
+        Checks if two parks are equal
+        """
+        return self.__id == other.getParkID()
 
     def __str__(self):
         return 'Park object for {}'.format(self.__park_name)
