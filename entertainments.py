@@ -4,7 +4,6 @@ import sys
 from datetime import datetime, timedelta
 from auth import getHeaders
 from pointsofinterest import PointOfInterest
-from characters import Character
 
 
 class Entertainment(object):
@@ -86,6 +85,7 @@ class Entertainment(object):
         """
         Returns a list of associated characters IDs (maybe Character class in future)
         """
+        from characters import Character
         chars = []
 
         s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType=Entertainment".format(self.__id), headers=getHeaders())
@@ -114,8 +114,8 @@ class Entertainment(object):
         """
         Checks if the attraction has a wait. Returns True if it exists, False if it doesn't
         """
-        s = requests.get("https://api.wdpro.disney.go.com/facility-service/attractions/{}/wait-times".format(self.__id), headers=getHeaders())
-        data = json.loads(s.content)
+        data = requests.get("https://api.wdpro.disney.go.com/facility-service/attractions/{}/wait-times".format(self.__id), headers=getHeaders()).json()
+        # data = json.loads(s.content)
         try:
             check = data['waitTime']['postedWaitMinutes']
             return True

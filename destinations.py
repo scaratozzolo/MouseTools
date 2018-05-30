@@ -39,7 +39,7 @@ class Destination(object):
             print('Destination object expects a string argument.')
             sys.exit()
         except Exception:
-            print('That destiantion or ID is not available. {}'.format(id))
+            print('That destination or ID is not available. ID = {}'.format(id))
             print('Full list of possible destinations and their ID\'s can be found here: https://scaratozzolo.github.io/MouseTools/destinations.txt')
             sys.exit()
 
