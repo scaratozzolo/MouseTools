@@ -37,7 +37,7 @@ class Attraction(object):
             print('Attraction object expects a string argument.')
             sys.exit()
         except Exception:
-            print('That attraction or ID is not available.')
+            print('That attraction or ID is not available. ID = {}'.format(id))
             print('Full list of possible attractions and their ID\'s can be found here: https://scaratozzolo.github.io/MouseTools/attractions.txt')
             sys.exit()
 
@@ -66,6 +66,19 @@ class Attraction(object):
         """
         return self.__data['ancestorDestination']['links']['self']['title']
 
+    def getAncestorThemeParkID(self):
+        """
+        Returns the ancestor theme park of the attraction.
+        """
+        try:
+            return self.__data['links']['ancestorThemePark']['href'].split('/')[-1]
+        except:
+            try:
+                self.__data['links']['ancestorWaterPark']['href'].split('/')[-1]
+                return self.getAncestorWaterParkID()
+            except:
+                return None
+
     def getAncestorThemePark(self):
         """
         Returns the ancestor theme park of the attraction.
@@ -76,6 +89,19 @@ class Attraction(object):
             try:
                 self.__data['links']['ancestorWaterPark']['href'].split('/')[-1]
                 return self.getAncestorWaterPark()
+            except:
+                return None
+
+    def getAncestorWaterParkID(self):
+        """
+        Returns the ancestor theme park of the attraction.
+        """
+        try:
+            return self.__data['links']['ancestorWaterPark']['href'].split('/')[-1]
+        except:
+            try:
+                self.__data['links']['ancestorThemePark']['href'].split('/')[-1]
+                return self.getAncestorThemeParkID()
             except:
                 return None
 
@@ -283,15 +309,17 @@ class Attraction(object):
         """
         Returns a list of associated characters IDs (maybe Character class in future)
         """
-        charIDs = []
-
+        from characters import Character
+        chars = []
         s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType=Attraction".format(self.__id), headers=getHeaders())
         data = json.loads(s.content)
 
         for i in range(len(data['entries'])):
-            charIDs.append(data['entries'][i]['links']['self']['href'].split('/')[-1])
-
-        return charIDs
+            try:
+                chars.append(Character(data['entries'][i]['links']['self']['href'].split('/')[-1]))
+            except:
+                pass
+        return chars
 
     def __formatDate(self, num):
         """
