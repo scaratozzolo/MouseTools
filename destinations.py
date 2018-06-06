@@ -21,7 +21,7 @@ class Destination(object):
 
             if id == '':
                 raise ValueError
-            elif id != None and type(id) != str:
+            elif type(id) != str:
                 raise TypeError
 
             self.__id = id
@@ -57,6 +57,20 @@ class Destination(object):
 
         return parks
 
+    def getThemeParkIDs(self):
+        """
+        Returns a list of theme park IDs
+        """
+        parks = []
+
+        s = requests.get(self.__data['links']['themeParks']['href'], headers=getHeaders())
+        data = json.loads(s.content)
+
+        for park in data['entries']:
+            parks.append(park['links']['self']['href'].split('/')[-1])
+
+        return parks
+
     def getWaterParks(self):
         """
         Returns a list of water park Park objects
@@ -68,6 +82,20 @@ class Destination(object):
 
         for park in data['entries']:
             parks.append(Park(park['links']['self']['href'].split('/')[-1]))
+
+        return parks
+
+    def getWaterParkIDs(self):
+        """
+        Returns a list of water park IDs
+        """
+        parks = []
+
+        s = requests.get(self.__data['links']['waterParks']['href'], headers=getHeaders())
+        data = json.loads(s.content)
+
+        for park in data['entries']:
+            parks.append(park['links']['self']['href'].split('/')[-1])
 
         return parks
 
@@ -87,6 +115,22 @@ class Destination(object):
                 pass
         return entertainments
 
+    def getEntertainmentIDs(self):
+        """
+        Returns a list of Entertainment IDs
+        """
+        entertainments = []
+
+        s = requests.get(self.__data['links']['entertainments']['href'], headers=getHeaders())
+        data = json.loads(s.content)
+
+        for enter in data['entries']:
+            try:
+                entertainments.append(enter['links']['self']['href'].split('/')[-1])
+            except:
+                pass
+        return entertainments
+
     def getAttractions(self):
         """
         Returns a list of Attraction objects
@@ -99,6 +143,22 @@ class Destination(object):
         for attract in tqdm(data['entries']):
             try:
                 attractions.append(Attraction(attract['links']['self']['href'].split('/')[-1]))
+            except:
+                pass
+        return attractions
+
+    def getAttractionIDs(self):
+        """
+        Returns a list of Attraction IDs
+        """
+        attractions = []
+
+        s = requests.get(self.__data['links']['attractions']['href'], headers=getHeaders())
+        data = json.loads(s.content)
+
+        for attract in data['entries']:
+            try:
+                attractions.append(attract['links']['self']['href'].split('/')[-1])
             except:
                 pass
         return attractions
