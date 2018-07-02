@@ -112,15 +112,15 @@ class Entertainment(object):
 
     def checkForEntertainmentWaitTime(self):
         """
-        Checks if the attraction has a wait. Returns True if it exists, False if it doesn't
+        Checks if the attraction has a wait. Returns True if it exists, False if it doesn't. Also returns the wait time json data.
         """
-        data = requests.get("https://api.wdpro.disney.go.com/facility-service/attractions/{}/wait-times".format(self.__id), headers=getHeaders()).json()
+        data = requests.get("https://api.wdpro.disney.go.com/facility-service/entertainments/{}/wait-times".format(self.__id), headers=getHeaders()).json()
         # data = json.loads(s.content)
         try:
             check = data['waitTime']['postedWaitMinutes']
-            return True
+            return True, data
         except:
-            return False
+            return False, data
 
     def getEntertainmentWaitTime(self):
         """
@@ -128,11 +128,12 @@ class Entertainment(object):
         TODO: test all entertainment for a wait time
 
         """
+        check, data = self.checkForEntertainmentWaitTime()
         try:
-            s = requests.get("https://api.wdpro.disney.go.com/facility-service/entertainments/{}/wait-times".format(self.__id), headers=getHeaders())
-            data = json.loads(s.content)
-
-            return data['waitTime']['postedWaitMinutes']
+            if check:
+                return data['waitTime']['postedWaitMinutes']
+            else:
+                return None
         except:
             return None
 
@@ -140,11 +141,12 @@ class Entertainment(object):
         """
         Returns the current roll up wait time message of the entertainment as reported by Disney
         """
+        check, data = self.checkForEntertainmentWaitTime()
         try:
-            s = requests.get("https://api.wdpro.disney.go.com/facility-service/entertainments/{}/wait-times".format(self.__id), headers=getHeaders())
-            data = json.loads(s.content)
-
-            return data['waitTime']['rollUpWaitTimeMessage']
+            if check:
+                return data['waitTime']['rollUpWaitTimeMessage']
+            else:
+                return None
         except:
             return None
 
@@ -249,6 +251,15 @@ class Entertainment(object):
         except:
             return None
 
+    def getAncestorDestinationID(self):
+        """
+        Returns the Ancestor Destination of the entertainment
+        """
+        try:
+            return self.__data['ancestorDestination']['links']['self']['href'].split('/')[-1]
+        except:
+            return None
+
     def getAncestorResortArea(self):
         """
         Returns the Ancestor Resort Area for the Entertainment
@@ -259,6 +270,21 @@ class Entertainment(object):
                 data = json.loads(s.content)
 
                 return data['links']['ancestorResortArea']['title']
+            else:
+                return None
+        except:
+            return None
+
+    def getAncestorResortAreaID(self):
+        """
+        Returns the Ancestor Resort Area for the Entertainment
+        """
+        try:
+            if self.checkRelatedLocations():
+                s = requests.get(self.__data['relatedLocations']['primaryLocations'][0]['links']['self']['href'], headers=getHeaders())
+                data = json.loads(s.content)
+
+                return data['links']['ancestorResortArea']['href'].split('/')[-1]
             else:
                 return None
         except:
@@ -279,6 +305,21 @@ class Entertainment(object):
         except:
             return None
 
+    def getAncestorThemeParkID(self):
+        """
+        Returns the Ancestor Theme Park ID for the Entertainment
+        """
+        try:
+            if self.checkRelatedLocations():
+                s = requests.get(self.__data['relatedLocations']['primaryLocations'][0]['links']['self']['href'], headers=getHeaders())
+                data = json.loads(s.content)
+
+                return data['links']['ancestorThemePark']['href'].split('/')[-1]
+            else:
+                return None
+        except:
+            return None
+
     def getAncestorLand(self):
         """
         Returns the Ancestor Land for the Entertainment
@@ -289,6 +330,21 @@ class Entertainment(object):
                 data = json.loads(s.content)
 
                 return data['links']['ancestorLand']['title']
+            else:
+                return None
+        except:
+            return None
+
+    def getAncestorLandID(self):
+        """
+        Returns the Ancestor Land for the Entertainment
+        """
+        try:
+            if self.checkRelatedLocations():
+                s = requests.get(self.__data['relatedLocations']['primaryLocations'][0]['links']['self']['href'], headers=getHeaders())
+                data = json.loads(s.content)
+
+                return data['links']['ancestorLand']['href'].split('/')[-1]
             else:
                 return None
         except:
