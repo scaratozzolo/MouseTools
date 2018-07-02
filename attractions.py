@@ -222,23 +222,23 @@ class Attraction(object):
         """
         Checks if the attraction has a wait. Returns True if it exists, False if it doesn't. Also returns the wait time json data.
         """
-        s = requests.get("https://api.wdpro.disney.go.com/facility-service/attractions/{}/wait-times".format(self.__id), headers=getHeaders())
-        data = json.loads(s.content)
+        self.waitTimeData = requests.get("https://api.wdpro.disney.go.com/facility-service/attractions/{}/wait-times".format(self.__id), headers=getHeaders()).json()
+        # data = json.loads(s.content)
         try:
-            check = data['waitTime']['postedWaitMinutes']
-            return True, data
+            check = self.waitTimeData['waitTime']['postedWaitMinutes']
+            return True
         except:
-            return False, data
+            return False
 
     def getAttractionStatus(self):
         """
         Returns the current status of the attraction as reported by Disney
         """
-        s = requests.get("https://api.wdpro.disney.go.com/facility-service/attractions/{}/wait-times".format(self.__id), headers=getHeaders())
-        data = json.loads(s.content)
-
         try:
-            return data['waitTime']['status']
+            if self.checkForAttractionWaitTime():
+                return self.waitTimeData['waitTime']['status']
+            else:
+                return None
         except:
             return None
 
@@ -248,10 +248,9 @@ class Attraction(object):
         TODO: test all attractions for a wait time
 
         """
-        check, data = self.checkForAttractionWaitTime()
         try:
-            if check:
-                return data['waitTime']['postedWaitMinutes']
+            if self.checkForAttractionWaitTime():
+                return self.waitTimeData['waitTime']['postedWaitMinutes']
             else:
                 return None
         except:
@@ -261,11 +260,11 @@ class Attraction(object):
         """
         Returns the current roll up wait time message of the attraction as reported by Disney
         """
-        s = requests.get("https://api.wdpro.disney.go.com/facility-service/attractions/{}/wait-times".format(self.__id), headers=getHeaders())
-        data = json.loads(s.content)
-
         try:
-            return data['waitTime']['rollUpWaitTimeMessage']
+            if self.checkForAttractionWaitTime():
+                return self.waitTimeData['waitTime']['rollUpWaitTimeMessage']
+            else:
+                return None
         except:
             return None
 
@@ -273,16 +272,16 @@ class Attraction(object):
         """
         Returns boolean of whether fast pass is available
         """
-        s = requests.get("https://api.wdpro.disney.go.com/facility-service/attractions/{}/wait-times".format(self.__id), headers=getHeaders())
-        data = json.loads(s.content)
-
         try:
-            if data['waitTime']['fastPass']['available'] == 'true':
-                return True
+            if self.checkForAttractionWaitTime():
+                if self.waitTimeData['waitTime']['fastPass']['available'] == 'true':
+                    return True
+                else:
+                    return False
             else:
                 return False
         except:
-            return None
+            return False
 
     def checkAssociatedCharacters(self):
         """

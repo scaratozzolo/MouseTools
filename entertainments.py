@@ -114,13 +114,13 @@ class Entertainment(object):
         """
         Checks if the attraction has a wait. Returns True if it exists, False if it doesn't. Also returns the wait time json data.
         """
-        data = requests.get("https://api.wdpro.disney.go.com/facility-service/entertainments/{}/wait-times".format(self.__id), headers=getHeaders()).json()
+        self.waitTimeData = requests.get("https://api.wdpro.disney.go.com/facility-service/entertainments/{}/wait-times".format(self.__id), headers=getHeaders()).json()
         # data = json.loads(s.content)
         try:
-            check = data['waitTime']['postedWaitMinutes']
-            return True, data
+            check = self.waitTimeData['waitTime']['postedWaitMinutes']
+            return True
         except:
-            return False, data
+            return False
 
     def getEntertainmentWaitTime(self):
         """
@@ -128,10 +128,9 @@ class Entertainment(object):
         TODO: test all entertainment for a wait time
 
         """
-        check, data = self.checkForEntertainmentWaitTime()
         try:
-            if check:
-                return data['waitTime']['postedWaitMinutes']
+            if self.checkForEntertainmentWaitTime():
+                return self.waitTimeData['waitTime']['postedWaitMinutes']
             else:
                 return None
         except:
@@ -141,10 +140,9 @@ class Entertainment(object):
         """
         Returns the current roll up wait time message of the entertainment as reported by Disney
         """
-        check, data = self.checkForEntertainmentWaitTime()
         try:
-            if check:
-                return data['waitTime']['rollUpWaitTimeMessage']
+            if self.checkForEntertainmentWaitTime():
+                return self.waitTimeData['waitTime']['rollUpWaitTimeMessage']
             else:
                 return None
         except:
@@ -296,10 +294,7 @@ class Entertainment(object):
         """
         try:
             if self.checkRelatedLocations():
-                s = requests.get(self.__data['relatedLocations']['primaryLocations'][0]['links']['self']['href'], headers=getHeaders())
-                data = json.loads(s.content)
-
-                return data['links']['ancestorThemePark']['title']
+                return Park(self.getAncestorThemeParkID())
             else:
                 return None
         except:
