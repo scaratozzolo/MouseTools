@@ -218,6 +218,17 @@ class Attraction(object):
             pass
         return operating_hours_start, operating_hours_end, extra_hours_start, extra_hours_end
 
+    def checkForAttractionWaitTime(self):
+        """
+        Checks if the attraction has a wait. Returns True if it exists, False if it doesn't. Also returns the wait time json data.
+        """
+        s = requests.get("https://api.wdpro.disney.go.com/facility-service/attractions/{}/wait-times".format(self.__id), headers=getHeaders())
+        data = json.loads(s.content)
+        try:
+            check = data['waitTime']['postedWaitMinutes']
+            return True, data
+        except:
+            return False, data
 
     def getAttractionStatus(self):
         """
@@ -231,29 +242,18 @@ class Attraction(object):
         except:
             return None
 
-    def checkForAttractionWaitTime(self):
-        """
-        Checks if the attraction has a wait. Returns True if it exists, False if it doesn't
-        """
-        s = requests.get("https://api.wdpro.disney.go.com/facility-service/attractions/{}/wait-times".format(self.__id), headers=getHeaders())
-        data = json.loads(s.content)
-        try:
-            check = data['waitTime']['postedWaitMinutes']
-            return True
-        except:
-            return False
-
     def getAttractionWaitTime(self):
         """
         Returns the current wait time of the attraction as reported by Disney, in minutes
         TODO: test all attractions for a wait time
 
         """
-        s = requests.get("https://api.wdpro.disney.go.com/facility-service/attractions/{}/wait-times".format(self.__id), headers=getHeaders())
-        data = json.loads(s.content)
-
+        check, data = self.checkForAttractionWaitTime()
         try:
-            return data['waitTime']['postedWaitMinutes']
+            if check:
+                return data['waitTime']['postedWaitMinutes']
+            else:
+                return None
         except:
             return None
 
@@ -307,7 +307,7 @@ class Attraction(object):
 
     def getAssociatedCharacters(self):
         """
-        Returns a list of associated characters IDs (maybe Character class in future)
+        Returns a list of associated character objects
         """
         from characters import Character
         chars = []
@@ -317,6 +317,22 @@ class Attraction(object):
         for i in range(len(data['entries'])):
             try:
                 chars.append(Character(data['entries'][i]['links']['self']['href'].split('/')[-1]))
+            except:
+                pass
+        return chars
+
+    def getAssociatedCharacterIDs(self):
+        """
+        Returns a list of associated characters IDs
+        """
+        from characters import Character
+        chars = []
+        s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType=Attraction".format(self.__id), headers=getHeaders())
+        data = json.loads(s.content)
+
+        for i in range(len(data['entries'])):
+            try:
+                chars.append(data['entries'][i]['links']['self']['href'].split('/')[-1])
             except:
                 pass
         return chars
