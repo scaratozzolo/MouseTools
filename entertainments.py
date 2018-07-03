@@ -31,6 +31,7 @@ class Entertainment(object):
             self.__entertainment_name = self.__data['name'].replace(u"\u2019", "'").replace(u"\u2013", "-").replace(u"\u2122", "").replace(u"\u2022", "-").replace(u"\u00ae", "").replace(u"\u2014", "-").replace(u"\u00a1", "").replace(u"\u00ee", "i").replace(u"\u25cf", " ").replace(u"\u00e9", "e").replace(u"\u00ad", "").replace(u"\u00a0", " ").replace(u"\u00e8", "e").replace(u"\u00eb", "e").replace(u"\u2026", "...").replace(u"\u00e4", "a").replace(u"\u2018", "'").replace(u"\u00ed", "i").replace(u"\u201c", '"').replace(u"\u201d", '"').strip()
             self.__type = self.__data['type']
             self.__subType = self.__data['subType']
+            self.waitTimeData = None
 
         except ValueError:
             print('Entertainment object expects an id value. Must be passed as string.\n Usage: Entertainment(id)')
@@ -131,6 +132,23 @@ class Entertainment(object):
         """
         try:
             if self.checkForEntertainmentWaitTime():
+                return self.waitTimeData['waitTime']['postedWaitMinutes']
+            else:
+                return None
+        except:
+            return None
+
+    def getEntertainmentWaitTimeFromData(self):
+        """
+        Returns the current wait time of the entertainment as reported by Disney, in minutes, from self.waitTimeData
+        In order to properly use this function, you must call self.checkForAttractionWaitTime() before calling this function.
+        The idea is if you're creating a list of objects with wait times, you can parse over the list and not have to make another request to Disney to get the wait times.
+        This function was created with WWDWaits in mind.
+        """
+        try:
+            if self.waitTimeData != None:
+                return self.waitTimeData['waitTime']['postedWaitMinutes']
+            elif self.checkForEntertainmentWaitTime():
                 return self.waitTimeData['waitTime']['postedWaitMinutes']
             else:
                 return None

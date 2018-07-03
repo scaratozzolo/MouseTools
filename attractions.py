@@ -245,11 +245,27 @@ class Attraction(object):
     def getAttractionWaitTime(self):
         """
         Returns the current wait time of the attraction as reported by Disney, in minutes
-        TODO: test all attractions for a wait time
 
         """
         try:
             if self.checkForAttractionWaitTime():
+                return self.waitTimeData['waitTime']['postedWaitMinutes']
+            else:
+                return None
+        except:
+            return None
+
+    def getAttractionWaitTimeFromData(self):
+        """
+        Returns the current wait time of the attraction as reported by Disney, in minutes, from self.waitTimeData
+        In order to properly use this function, you must call self.checkForAttractionWaitTime() before calling this function.
+        The idea is if you're creating a list of objects with wait times, you can parse over the list and not have to make another request to Disney to get the wait times.
+        This function was created with WWDWaits in mind.
+        """
+        try:
+            if self.waitTimeData != None:
+                return self.waitTimeData['waitTime']['postedWaitMinutes']
+            elif self.checkForAttractionWaitTime():
                 return self.waitTimeData['waitTime']['postedWaitMinutes']
             else:
                 return None
