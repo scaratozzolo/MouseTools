@@ -3,7 +3,7 @@ import json
 import sys
 from datetime import datetime, timedelta
 from auth import getHeaders
-from tqdm import tqdm
+
 
 
 class Park(object):
@@ -196,7 +196,7 @@ class Park(object):
 
         data = self.getAttractionIDs()
 
-        for attract in tqdm(data):
+        for attract in data:
             try:
                 attractions.append(Attraction(attract))
             except:

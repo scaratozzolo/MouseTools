@@ -141,7 +141,7 @@ class Entertainment(object):
     def getEntertainmentWaitTimeFromData(self):
         """
         Returns the current wait time of the entertainment as reported by Disney, in minutes, from self.waitTimeData
-        In order to properly use this function, you must call self.checkForAttractionWaitTime() before calling this function.
+        In order to properly use this function, you must call self.checkForEntertainmentWaitTime() before calling this function.
         The idea is if you're creating a list of objects with wait times, you can parse over the list and not have to make another request to Disney to get the wait times.
         This function was created with WWDWaits in mind.
         """
