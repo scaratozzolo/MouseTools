@@ -31,15 +31,19 @@ class Entertainment(object):
             self.__entertainment_name = self.__data['name'].replace(u"\u2019", "'").replace(u"\u2013", "-").replace(u"\u2122", "").replace(u"\u2022", "-").replace(u"\u00ae", "").replace(u"\u2014", "-").replace(u"\u00a1", "").replace(u"\u00ee", "i").replace(u"\u25cf", " ").replace(u"\u00e9", "e").replace(u"\u00ad", "").replace(u"\u00a0", " ").replace(u"\u00e8", "e").replace(u"\u00eb", "e").replace(u"\u2026", "...").replace(u"\u00e4", "a").replace(u"\u2018", "'").replace(u"\u00ed", "i").replace(u"\u201c", '"').replace(u"\u201d", '"').strip()
             self.__type = self.__data['type']
             self.__subType = self.__data['subType']
+            self.__coordinates = self.getRelatedLocations()[0].getPointOfInterestCoordinates()
             self.waitTimeData = None
 
-        except ValueError:
+        except ValueError as e:
+            # print(e)
             print('Entertainment object expects an id value. Must be passed as string.\n Usage: Entertainment(id)')
             sys.exit()
-        except TypeError:
+        except TypeError as e:
+            # print(e)
             print('Entertainment object expects a string argument.')
             sys.exit()
-        except Exception:
+        except Exception as e:
+            # print(e)
             print('That entertainment or ID is not available. {}'.format(id))
             print('Full list of possible entertainments and their ID\'s can be found here: https://scaratozzolo.github.io/MouseTools/entertainments.txt')
             sys.exit()
@@ -61,6 +65,12 @@ class Entertainment(object):
         Returns the Entertainment Sub Type
         """
         return self.__subType
+
+    def getEntertainmentCoordinates(self):
+        """
+        Returns the Entertainment coordinates
+        """
+        return self.__coordinates
 
     def checkAssociatedCharacters(self):
         """

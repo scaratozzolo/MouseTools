@@ -27,6 +27,10 @@ class PointOfInterest(object):
 
             self.__point_of_interest_name = self.__data['name'].replace(u"\u2019", "'").replace(u"\u2013", "-").replace(u"\u2122", "").replace(u"\u2022", "-").replace(u"\u00ae", "").replace(u"\u2014", "-").replace(u"\u00a1", "").replace(u"\u00ee", "i").replace(u"\u25cf", " ").replace(u"\u00e9", "e").replace(u"\u00ad", "").replace(u"\u00a0", " ").replace(u"\u00e8", "e").replace(u"\u00eb", "e").replace(u"\u2026", "...").replace(u"\u00e4", "a").replace(u"\u2018", "'").replace(u"\u00ed", "i").replace(u"\u201c", '"').replace(u"\u201d", '"').strip()
             self.__type = self.__data['type']
+            try:
+                self.__coordinates = (self.__data["coordinates"]["Guest Entrance"]["gps"]["latitude"], self.__data["coordinates"]["Guest Entrance"]["gps"]["longitude"])
+            except:
+                self.__coordinates = None
 
 
         except ValueError:
@@ -51,6 +55,12 @@ class PointOfInterest(object):
         Returns the ID of the point of interest
         """
         return self.__id
+
+    def getPointOfInterestCoordinates(self):
+        """
+        Returns the coordinates for the Point of Interest
+        """
+        return self.__coordinates
 
     def getAncestorDestination(self):
         """

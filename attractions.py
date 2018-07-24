@@ -18,27 +18,31 @@ class Attraction(object):
         try:
 
             if id == '':
-                raise ValueError
+                raise ValueError('Attraction object expects an id value. Must be passed as string.\n Usage: Attraction(id)')
             elif id != None and type(id) != str:
-                raise TypeError
+                raise TypeError('Attraction object expects a string argument.')
 
             self.__id = id
 
-            s = requests.get("https://api.wdpro.disney.go.com/facility-service/attractions/{}".format(self.__id), headers=getHeaders())
+            s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/attractions/{}".format(self.__id), headers=getHeaders())
             self.__data = json.loads(s.content)
 
             self.__attraction_name = self.__data['name'].replace(u"\u2019", "'").replace(u"\u2013", "-").replace(u"\u2122", "").replace(u"\u2022", "-").replace(u"\u00ae", "").replace(u"\u2014", "-").replace(u"\u00a1", "").replace(u"\u00ee", "i").replace(u"\u25cf", " ").replace(u"\u00e9", "e").replace(u"\u00ad", "").replace(u"\u00a0", " ").replace(u"\u00e8", "e").replace(u"\u00eb", "e").replace(u"\u2026", "...").replace(u"\u00e4", "a").replace(u"\u2018", "'").replace(u"\u00ed", "i").replace(u"\u201c", '"').replace(u"\u201d", '"').strip()
             self.__type = self.__data['type']
+            try:
+                self.__coordinates = (self.__data["coordinates"]["Guest Entrance"]["gps"]["latitude"], self.__data["coordinates"]["Guest Entrance"]["gps"]["longitude"])
+            except:
+                self.__coordinates = None
 
-        except ValueError:
-            print('Attraction object expects an id value. Must be passed as string.\n Usage: Attraction(id)')
+        except ValueError as e:
+            print(e)
             sys.exit()
-        except TypeError:
-            print('Attraction object expects a string argument.')
+        except TypeError as e:
+            print(e)
             sys.exit()
-        except Exception:
-            print('That attraction or ID is not available. ID = {}'.format(id))
-            print('Full list of possible attractions and their ID\'s can be found here: https://scaratozzolo.github.io/MouseTools/attractions.txt')
+        except Exception as e:
+            print(e)
+            print('That attraction or ID is not available. ID = {}\n Full list of possible attractions and their ID\'s can be found here: https://scaratozzolo.github.io/MouseTools/attractions.txt'.format(id))
             sys.exit()
 
 
@@ -59,6 +63,12 @@ class Attraction(object):
         Returns the attraction type, which should just be "Attraction". But if you need it returned for whatever reason.
         """
         return self.__type
+
+    def getAttractionCoordinates(self):
+        """
+        Returns the coordinates of the attracion
+        """
+        return self.__coordinates
 
     def getAncestorDestination(self):
         """
