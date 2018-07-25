@@ -19,9 +19,9 @@ class Entertainment(object):
         try:
 
             if id == '':
-                raise ValueError
+                raise ValueError('Entertainment object expects an id value. Must be passed as string.\n Usage: Entertainment(id)')
             elif id != None and type(id) != str:
-                raise TypeError
+                raise TypeError('Entertainment object expects a string argument.')
 
             self.__id = id
 
@@ -35,17 +35,14 @@ class Entertainment(object):
             self.waitTimeData = None
 
         except ValueError as e:
-            # print(e)
-            print('Entertainment object expects an id value. Must be passed as string.\n Usage: Entertainment(id)')
+            print(e)
             sys.exit()
         except TypeError as e:
-            # print(e)
-            print('Entertainment object expects a string argument.')
+            print(e)
             sys.exit()
         except Exception as e:
-            # print(e)
-            print('That entertainment or ID is not available. {}'.format(id))
-            print('Full list of possible entertainments and their ID\'s can be found here: https://scaratozzolo.github.io/MouseTools/entertainments.txt')
+            print(e)
+            print('That entertainment or ID is not available. ID = {}\nFull list of possible entertainments and their ID\'s can be found here: https://scaratozzolo.github.io/MouseTools/entertainments.txt'.format(id))
             sys.exit()
 
     def getEntertainmentName(self):
