@@ -2,9 +2,9 @@ import requests
 import json
 import sys
 from datetime import datetime, timedelta
-from auth import getHeaders
-from parks import Park
-from pointsofinterest import PointOfInterest
+from .auth import getHeaders
+from .parks import Park
+from .pointsofinterest import PointOfInterest
 
 
 class Entertainment(object):
@@ -35,7 +35,7 @@ class Entertainment(object):
                 self.__coordinates = self.getRelatedLocations()[0].getPointOfInterestCoordinates()
             except:
                 self.__coordinates = ()
-                
+
             self.waitTimeData = None
 
         except ValueError as e:
@@ -98,7 +98,7 @@ class Entertainment(object):
         """
         Returns a list of associated characters IDs (maybe Character class in future)
         """
-        from characters import Character
+        from .characters import Character
         chars = []
 
         s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType=Entertainment".format(self.__id), headers=getHeaders())

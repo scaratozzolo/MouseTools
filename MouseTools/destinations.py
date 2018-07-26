@@ -2,10 +2,10 @@ import requests
 import json
 import sys
 from datetime import datetime, timedelta
-from auth import getHeaders
-from parks import Park
-from entertainments import Entertainment
-from attractions import Attraction
+from .auth import getHeaders
+from .parks import Park
+from .entertainments import Entertainment
+from .attractions import Attraction
 
 WDW_ID = '80007798'
 DL_ID = '80008297'

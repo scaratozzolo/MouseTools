@@ -2,8 +2,8 @@ import requests
 import json
 import sys
 from datetime import datetime, timedelta
-from auth import getHeaders
-from parks import Park
+from .auth import getHeaders
+from .parks import Park
 
 
 class Attraction(object):
@@ -334,7 +334,7 @@ class Attraction(object):
         """
         Returns a list of associated character objects
         """
-        from characters import Character
+        from .characters import Character
         chars = []
         s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType=Attraction".format(self.__id), headers=getHeaders())
         data = json.loads(s.content)
@@ -350,7 +350,7 @@ class Attraction(object):
         """
         Returns a list of associated characters IDs
         """
-        from characters import Character
+        from .characters import Character
         chars = []
         s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType=Attraction".format(self.__id), headers=getHeaders())
         data = json.loads(s.content)

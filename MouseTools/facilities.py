@@ -2,7 +2,7 @@ import requests
 import json
 import sys
 from datetime import datetime, timedelta
-from auth import getHeaders
+from .auth import getHeaders
 
 
 class Facility(object):

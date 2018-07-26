@@ -2,10 +2,10 @@ import requests
 import json
 import sys
 from datetime import datetime, timedelta
-from auth import getHeaders
-from attractions import Attraction
-from entertainments import Entertainment
-from facilities import Facility
+from .auth import getHeaders
+from .attractions import Attraction
+from .entertainments import Entertainment
+from .facilities import Facility
 
 
 class Character(object):

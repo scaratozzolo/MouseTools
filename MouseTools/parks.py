@@ -2,7 +2,7 @@ import requests
 import json
 import sys
 from datetime import datetime, timedelta
-from auth import getHeaders
+from .auth import getHeaders
 
 MK_ID = "80007944"
 EPCOT_ID = "80007838"
@@ -198,7 +198,7 @@ class Park(object):
         There is a huge discrepancy between the number of attractions reported and the actual number (This is why it errors out so much).
         I suggest getting the attractions from the Destination class and sorting by Attraction.ancestorThemePark()
         """
-        from attractions import Attraction
+        from .attractions import Attraction
         attractions = []
 
         data = self.getAttractionIDs()
