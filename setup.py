@@ -12,7 +12,9 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/scaratozzolo/MouseTools",
+    license = "MIT"
     packages=setuptools.find_packages(),
+    install_requires=["tqdm", "requests"]
     classifiers=(
         "Programming Language :: Python :: 3.6",
         "License :: OSI Approved :: MIT License",
