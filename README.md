@@ -1,6 +1,6 @@
 # MouseTools
 
-An unofficial Python wrapper for the Disney API. Data is pulled directly from Disney.
+A Python wrapper for the Disney API. Data is pulled directly from Disney.
 Yeah you could look at the code and figure it out yourself, but here's a library incase you're lazy.
 
 If you needs something specific from the API open a new issue with a "feature request" label.
