@@ -7,6 +7,8 @@ from parks import Park
 from entertainments import Entertainment
 from attractions import Attraction
 
+WDW_ID = '80007798'
+DL_ID = '80008297'
 
 class Destination(object):
 

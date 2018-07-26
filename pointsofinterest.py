@@ -30,7 +30,7 @@ class PointOfInterest(object):
             try:
                 self.__coordinates = (self.__data["coordinates"]["Guest Entrance"]["gps"]["latitude"], self.__data["coordinates"]["Guest Entrance"]["gps"]["longitude"])
             except:
-                self.__coordinates = None
+                self.__coordinates = ()
 
 
         except ValueError:

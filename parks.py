@@ -4,7 +4,14 @@ import sys
 from datetime import datetime, timedelta
 from auth import getHeaders
 
-
+MK_ID = "80007944"
+EPCOT_ID = "80007838"
+HS_ID = "80007998"
+AK_ID = "80007823"
+DLP_ID = "330339"
+CA_ID = "336894"
+TL_ID = "80007981"
+BB_ID = "80007834"
 
 class Park(object):
 
@@ -18,9 +25,9 @@ class Park(object):
         try:
             #Making sure id and attraction_name are not None, are strings, and exist
             if id == '':
-                raise ValueError
+                raise ValueError('Park object expects an id value. Must be passed as string.\n Usage: Park(id)')
             elif id != None and type(id) != str:
-                raise TypeError
+                raise TypeError('Park object expects a string argument.')
 
             self.__id = id
 
@@ -48,15 +55,15 @@ class Park(object):
             self.__advisories = self.__data['advisories']
 
 
-        except ValueError:
-            print('Park object expects an id value. Must be passed as string.\n Usage: Park(id = None)')
+        except ValueError as e:
+            print(e)
             sys.exit()
-        except TypeError:
-            print('Park object expects a string argument.')
+        except TypeError as e:
+            print(e)
             sys.exit()
-        except Exception:
-            print('That park or ID is not available. ID = {}'.format(id))
-            print('Full list of possible parks and their ID\'s can be found here: https://scaratozzolo.github.io/MouseTools/parks.txt')
+        except Exception as e:
+            print(e)
+            print('That park or ID is not available. ID = {}\nFull list of possible parks and their ID\'s can be found here: https://scaratozzolo.github.io/MouseTools/parks.txt'.format(id))
             sys.exit()
 
     def getParkID(self):
