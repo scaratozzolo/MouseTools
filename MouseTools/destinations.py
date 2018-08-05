@@ -9,6 +9,7 @@ from .attractions import Attraction
 
 WDW_ID = '80007798'
 DL_ID = '80008297'
+DEST_IDS = [WDW_ID, DL_ID]
 
 class Destination(object):
 
@@ -21,9 +22,9 @@ class Destination(object):
         try:
 
             if id == '':
-                raise ValueError
-            elif type(id) != str:
-                raise TypeError
+                raise ValueError('Destination object expects an id value. Must be passed as string.\n Usage: Destination(id)')
+            elif id != None and type(id) != str:
+                raise TypeError('Destination object expects a string argument.')
 
             self.__id = id
 
@@ -33,16 +34,34 @@ class Destination(object):
             self.__destination_name = self.__data['name'].replace(u"\u2019", "'").replace(u"\u2013", "-").replace(u"\u2122", "").replace(u"\u2022", "-").replace(u"\u00ae", "").replace(u"\u2014", "-").replace(u"\u00a1", "").replace(u"\u00ee", "i").replace(u"\u25cf", " ").replace(u"\u00e9", "e").replace(u"\u00ad", "").replace(u"\u00a0", " ").replace(u"\u00e8", "e").replace(u"\u00eb", "e").replace(u"\u2026", "...").replace(u"\u00e4", "a").replace(u"\u2018", "'").replace(u"\u00ed", "i").replace(u"\u201c", '"').replace(u"\u201d", '"').strip()
             self.__type = self.__data['type']
 
-        except ValueError:
-            print('Destination object expects an id value. Must be passed as string.\n Usage: Destination(id)')
+        except ValueError as e:
+            print(e)
             sys.exit()
-        except TypeError:
-            print('Destination object expects a string argument.')
+        except TypeError as e:
+            print(e)
             sys.exit()
-        except Exception:
-            print('That destination or ID is not available. ID = {}'.format(id))
-            print('Full list of possible destinations and their ID\'s can be found here: https://scaratozzolo.github.io/MouseTools/destinations.txt')
+        except Exception as e:
+            print(e)
+            print('That destination or ID is not available. ID = {}\nFull list of possible destinations and their ID\'s can be found here: https://scaratozzolo.github.io/MouseTools/destinations.txt'.format(id))
             sys.exit()
+
+    def getName(self):
+        """
+        Returns name of destination
+        """
+        return self.__destination_name
+
+    def getID(self):
+        """
+        Returns destination ID
+        """
+        return self.__id
+
+    def getType(self):
+        """
+        Returns location type
+        """
+        return self.__type
 
     def getThemeParks(self):
         """
