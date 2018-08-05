@@ -94,7 +94,7 @@ class Attraction(object):
         Returns the ancestor theme park of the attraction.
         """
         try:
-            return Park(self.__data['links']['ancestorThemePark']['href'].split('/')[-1])
+            return Park(self.getAncestorThemeParkID())
         except:
             try:
                 self.__data['links']['ancestorWaterPark']['href'].split('/')[-1]
@@ -120,7 +120,7 @@ class Attraction(object):
         Returns the ancestor water park of the attraction.
         """
         try:
-            return Park(self.__data['links']['ancestorWaterPark']['href'].split('/')[-1])
+            return Park(self.getAncestorWaterParkID())
         except:
             try:
                 self.__data['links']['ancestorThemePark']['href'].split('/')[-1]
