@@ -16,9 +16,9 @@ class PointOfInterest(object):
         try:
 
             if id == '':
-                raise ValueError
+                raise ValueError('PointOfInterest object expects an id value. Must be passed as string.\n Usage: PointOfInterest(id)')
             elif id != None and type(id) != str:
-                raise TypeError
+                raise TypeError('PointOfInterest object expects a string argument.')
 
             self.__id = id
 
@@ -33,15 +33,14 @@ class PointOfInterest(object):
                 self.__coordinates = ()
 
 
-        except ValueError:
-            print('PointOfInterest object expects an id value. Must be passed as string.\n Usage: PointOfInterest(id)')
+        except ValueError as e:
+            print(e)
             sys.exit()
-        except TypeError:
-            print('PointOfInterest object expects a string argument.')
+        except TypeError as e:
+            print(e)
             sys.exit()
         except Exception:
-            print('That point of interest or ID is not available. {}'.format(id))
-            print('Full list of possible points of interest and their ID\'s can be found here: https://scaratozzolo.github.io/MouseTools/pointsofinterest.txt')
+            print('That point of interest or ID is not available. {} Full list of possible points of interest and their ID\'s can be found here: https://scaratozzolo.github.io/MouseTools/pointsofinterest.txt'.format(id))
             sys.exit()
 
     def getPointOfInterestName(self):
