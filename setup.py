@@ -5,14 +5,13 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="MouseTools",
-    version="1.0.2",
+    version="1.1.0",
     author="Scott Caratozzolo",
     author_email="scaratozzolo12@gmail.com",
     description="A Python wrapper for the Disney API",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/scaratozzolo/MouseTools",
-    license = "MIT"
     packages=setuptools.find_packages(),
     install_requires=["tqdm", "requests"]
     classifiers=(
