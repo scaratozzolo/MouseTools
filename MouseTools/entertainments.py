@@ -211,14 +211,14 @@ class Entertainment(object):
         Returns the duration of the entertainment in minutes as a float
         """
         dur = self.__data['duration'].split(':')
-        return int(dur[0])*60 + int(dur[1]) + int(dur[2])/60
+        return float(int(dur[0])*60 + int(dur[1]) + int(dur[2])/60)
 
     def getDurationSeconds(self):
         """
         Returns the duration of the entertainment in seconds as an integer
         """
         dur = self.__data['duration'].split(':')
-        return int(self.getDurationMinutes())*60
+        return int(self.getDurationMinutes())*60 + int(dur[2])
 
     def getEntertainmentFastPassAvailable(self):
         """
@@ -324,7 +324,13 @@ class Entertainment(object):
         """
         try:
             if self.checkRelatedLocations():
-                return Park(self.getAncestorThemeParkID())
+                try:
+                    return Park(self.getAncestorThemeParkID())
+                except:
+                    try:
+                        return Park(self.getAncestorWaterParkID())
+                    except:
+                        return None
             else:
                 return None
         except:
@@ -336,14 +342,58 @@ class Entertainment(object):
         """
         try:
             if self.checkRelatedLocations():
-                s = requests.get(self.__data['relatedLocations']['primaryLocations'][0]['links']['self']['href'], headers=getHeaders())
-                data = json.loads(s.content)
-
-                return data['links']['ancestorThemePark']['href'].split('/')[-1]
+                data = requests.get(self.__data['relatedLocations']['primaryLocations'][0]['links']['self']['href'], headers=getHeaders()).json()
+                try:
+                    return data['links']['ancestorThemePark']['href'].split('/')[-1]
+                except:
+                    try:
+                        data['links']['ancestorWaterPark']['href'].split('/')[-1]
+                        return self.getAncestorWaterParkID()
+                    except:
+                        return None
             else:
                 return None
         except:
             return None
+
+    def getAncestorWaterPark(self):
+        """
+        Returns the Ancestor Water Park for the Entertainment
+        """
+        try:
+            if self.checkRelatedLocations():
+                try:
+                    return Park(self.getAncestorWaterParkID())
+                except:
+                    try:
+                        return Park(self.getAncestorThemeParkID())
+                    except:
+                        return None
+            else:
+                return None
+        except:
+            return None
+
+    def getAncestorWaterParkID(self):
+        """
+        Returns the Ancestor Water Park ID for the Entertainment
+        """
+        try:
+            if self.checkRelatedLocations():
+                data = requests.get(self.__data['relatedLocations']['primaryLocations'][0]['links']['self']['href'], headers=getHeaders()).json()
+                try:
+                    return data['links']['ancestorWaterPark']['href'].split('/')[-1]
+                except:
+                    try:
+                        data['links']['ancestorThemePark']['href'].split('/')[-1]
+                        return self.getAncestorThemeParkID()
+                    except:
+                        return None
+            else:
+                return None
+        except:
+            return None
+
 
     def getAncestorLand(self):
         """
