@@ -97,7 +97,7 @@ class Character(object):
         entertainments = []
         for entertainment in self.__data['associatedEvents']:
             try:
-                entertainments.append(Entertainment(entertainment['links']['self']['href'].split('/')[-1]))
+                entertainments.append(Entertainment(entertainment['links']['self']['href'].split('/')[-1].split('?')[0]))
             except:
                 pass
         return entertainments
