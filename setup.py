@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="MouseTools",
-    version="1.1.0",
+    version="1.2.0",
     author="Scott Caratozzolo",
     author_email="scaratozzolo12@gmail.com",
     description="A Python wrapper for the Disney API",
