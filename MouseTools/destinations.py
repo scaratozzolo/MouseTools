@@ -97,13 +97,17 @@ class Destination(object):
         """
         parks = []
 
-        s = requests.get(self.__data['links']['waterParks']['href'], headers=getHeaders())
-        data = json.loads(s.content)
+        try:
+            s = requests.get(self.__data['links']['waterParks']['href'], headers=getHeaders())
+            data = json.loads(s.content)
 
-        for park in data['entries']:
-            parks.append(Park(park['links']['self']['href'].split('/')[-1]))
+            for park in data['entries']:
+                parks.append(Park(park['links']['self']['href'].split('/')[-1]))
 
-        return parks
+            return parks
+
+        except:
+            return parks
 
     def getWaterParkIDs(self):
         """
@@ -111,13 +115,17 @@ class Destination(object):
         """
         parks = []
 
-        s = requests.get(self.__data['links']['waterParks']['href'], headers=getHeaders())
-        data = json.loads(s.content)
+        try:
+            s = requests.get(self.__data['links']['waterParks']['href'], headers=getHeaders())
+            data = json.loads(s.content)
 
-        for park in data['entries']:
-            parks.append(park['links']['self']['href'].split('/')[-1])
+            for park in data['entries']:
+                parks.append(park['links']['self']['href'].split('/')[-1])
 
-        return parks
+            return parks
+        
+        except:
+            return parks
 
     def getEntertainments(self):
         """
