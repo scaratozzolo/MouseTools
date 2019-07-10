@@ -232,7 +232,7 @@ class Attraction(object):
         """
         Checks if the attraction has a wait. Returns True if it exists, False if it doesn't. Also returns the wait time json data.
         """
-        self.waitTimeData = requests.get("https://api.wdpro.disney.go.com/facility-service/attractions/{}/wait-times".format(self.__id), headers=getHeaders()).json()
+        self.waitTimeData = requests.get("https://disneyworld.disney.go.com/api/wdpro/facility-service/attractions/{}/wait-times".format(self.__id), headers=getHeaders()).json()
         # data = json.loads(s.content)
         try:
             check = self.waitTimeData['waitTime']['postedWaitMinutes']
