@@ -186,7 +186,7 @@ class Park(object):
         I suggest getting the attractions from the Destination class and sorting by Attraction.ancestorThemePark()
         """
         ids = []
-        s = requests.get("https://api.wdpro.disney.go.com/facility-service/theme-parks/{}/wait-times".format(self.__id), headers=getHeaders())
+        s = requests.get("https://disneyworld.disney.go.com/api/wdpro/facility-service/theme-parks/{}/wait-times".format(self.__id), headers=getHeaders())
         loaded = json.loads(s.content)
 
         for i in range(len(loaded['entries'])):
@@ -216,7 +216,7 @@ class Park(object):
         Gets all current wait times for the park. Returns them in json {park:time in minutes}. May take some time as it goes through all attractions.
         """
 
-        s = requests.get("https://api.wdpro.disney.go.com/facility-service/theme-parks/{}/wait-times".format(self.__id), headers=getHeaders())
+        s = requests.get("https://disneyworld.disney.go.com/api/wdpro/facility-service/theme-parks/{}/wait-times".format(self.__id), headers=getHeaders())
         loaded_times = json.loads(s.content)
 
         times = {}
