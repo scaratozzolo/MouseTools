@@ -190,7 +190,8 @@ class Park(object):
         loaded = json.loads(s.content)
 
         for i in range(len(loaded['entries'])):
-            ids.append(loaded['entries'][i]['id'].split(';')[0])
+            if(loaded['entries'][i]['id'].split(';')[1].find('Attraction') > -1):
+                ids.append(loaded['entries'][i]['id'].split(';')[0])
         return ids
 
     def getAttractions(self):
