@@ -73,7 +73,7 @@ class Destination(object):
         data = json.loads(s.content)
 
         for park in data['entries']:
-            parks.append(Park(park['links']['self']['href'].split('/')[-1]))
+            parks.append(Park(park['links']['self']['href'].split('/')[-1].split('?')[0]))
 
         return parks
 
@@ -87,7 +87,7 @@ class Destination(object):
         data = json.loads(s.content)
 
         for park in data['entries']:
-            parks.append(park['links']['self']['href'].split('/')[-1])
+            parks.append(park['links']['self']['href'].split('/')[-1].split('?')[0])
 
         return parks
 
@@ -102,7 +102,7 @@ class Destination(object):
             data = json.loads(s.content)
 
             for park in data['entries']:
-                parks.append(Park(park['links']['self']['href'].split('/')[-1]))
+                parks.append(Park(park['links']['self']['href'].split('/')[-1].split('?')[0]))
 
             return parks
 
@@ -120,10 +120,10 @@ class Destination(object):
             data = json.loads(s.content)
 
             for park in data['entries']:
-                parks.append(park['links']['self']['href'].split('/')[-1])
+                parks.append(park['links']['self']['href'].split('/')[-1].split('?')[0])
 
             return parks
-        
+
         except:
             return parks
 
@@ -138,7 +138,7 @@ class Destination(object):
 
         for enter in data['entries']:
             try:
-                entertainments.append(Entertainment(enter['links']['self']['href'].split('/')[-1]))
+                entertainments.append(Entertainment(enter['links']['self']['href'].split('/')[-1].split('?')[0]))
             except:
                 pass
         return entertainments
@@ -154,7 +154,7 @@ class Destination(object):
 
         for enter in data['entries']:
             try:
-                entertainments.append(enter['links']['self']['href'].split('/')[-1])
+                entertainments.append(enter['links']['self']['href'].split('/')[-1].split('?')[0])
             except:
                 pass
         return entertainments
@@ -170,7 +170,7 @@ class Destination(object):
 
         for attract in data['entries']:
             try:
-                attractions.append(Attraction(attract['links']['self']['href'].split('/')[-1]))
+                attractions.append(Attraction(attract['links']['self']['href'].split('/')[-1].split('?')[0]))
             except:
                 pass
         return attractions
@@ -186,7 +186,7 @@ class Destination(object):
 
         for attract in data['entries']:
             try:
-                attractions.append(attract['links']['self']['href'].split('/')[-1])
+                attractions.append(attract['links']['self']['href'].split('/')[-1].split('?')[0])
             except:
                 pass
         return attractions
