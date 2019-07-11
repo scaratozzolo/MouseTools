@@ -95,12 +95,15 @@ class Character(object):
         when it tries to create the Entertainment object.
         """
         entertainments = []
-        for entertainment in self.__data['associatedEvents']:
-            try:
-                entertainments.append(Entertainment(entertainment['links']['self']['href'].split('/')[-1].split('?')[0]))
-            except:
-                pass
-        return entertainments
+        try:
+            for entertainment in self.__data['associatedEvents']:
+                try:
+                    entertainments.append(Entertainment(entertainment['links']['self']['href'].split('/')[-1].split('?')[0]))
+                except:
+                    pass
+            return entertainments
+        except:
+            return entertainments
 
     def __formatDate(self, num):
         """
