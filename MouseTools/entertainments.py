@@ -325,10 +325,18 @@ class Entertainment(object):
         try:
             if self.checkRelatedLocations():
                 try:
-                    return Park(self.getAncestorThemeParkID())
+                    id = self.getAncestorThemeParkID()
+                    if(id != None):
+                        return Park(id)
+                    else:
+                        return None
                 except:
                     try:
-                        return Park(self.getAncestorWaterParkID())
+                        id = self.getAncestorWaterParkID()
+                        if(id != None):
+                            return Park(id)
+                        else:
+                            return None
                     except:
                         return None
             else:
@@ -344,10 +352,10 @@ class Entertainment(object):
             if self.checkRelatedLocations():
                 data = requests.get(self.__data['relatedLocations']['primaryLocations'][0]['links']['self']['href'], headers=getHeaders()).json()
                 try:
-                    return data['links']['ancestorThemePark']['href'].split('/')[-1]
+                    return data['links']['ancestorThemePark']['href'].split('/')[-1].split('?')[0]
                 except:
                     try:
-                        data['links']['ancestorWaterPark']['href'].split('/')[-1]
+                        data['links']['ancestorWaterPark']['href'].split('/')[-1].split('?')[0]
                         return self.getAncestorWaterParkID()
                     except:
                         return None
@@ -363,10 +371,18 @@ class Entertainment(object):
         try:
             if self.checkRelatedLocations():
                 try:
-                    return Park(self.getAncestorWaterParkID())
+                    id = self.getAncestorWaterParkID()
+                    if(id != None):
+                        return Park(id)
+                    else:
+                        return None
                 except:
                     try:
-                        return Park(self.getAncestorThemeParkID())
+                        id = self.getAncestorThemeParkID()
+                        if(id != None):
+                            return Park(id)
+                        else:
+                            return None
                     except:
                         return None
             else:
@@ -382,10 +398,10 @@ class Entertainment(object):
             if self.checkRelatedLocations():
                 data = requests.get(self.__data['relatedLocations']['primaryLocations'][0]['links']['self']['href'], headers=getHeaders()).json()
                 try:
-                    return data['links']['ancestorWaterPark']['href'].split('/')[-1]
+                    return data['links']['ancestorWaterPark']['href'].split('/')[-1].split('?')[0]
                 except:
                     try:
-                        data['links']['ancestorThemePark']['href'].split('/')[-1]
+                        data['links']['ancestorThemePark']['href'].split('/')[-1].split('?')[0]
                         return self.getAncestorThemeParkID()
                     except:
                         return None
