@@ -10,3 +10,16 @@ You can install using pip:
 ```bash
 pip install MouseTools
 ```
+
+This package supports Walt Disney World and Disneyland.
+
+Example usage:
+```python
+import MouseTools
+
+wdw_dest = MouseTools.Destination('wdw')
+print(wdw_dest.get_attraction_ids())
+
+dlr_dest = MouseTools.Destination('dlr')
+print(dlr_dest.get_entertainment_ids())
+```
