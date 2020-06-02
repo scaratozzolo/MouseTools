@@ -71,6 +71,20 @@ class DisneyDatabase:
         conn.commit()
         conn.close()
 
+    def __additional_id(self, id):
+
+        payload = {"docs" : [{
+            "id": id
+          }], 'json':True}
+        r = requests.post("https://realtime-sync-gw.wdprapps.disney.com/park-platform-pub/_bulk_get?revs=true&attachments=true", data=json.dumps(payload), headers=couchbaseHeaders())
+        s = r.text
+
+        cont_reg = re.compile("\w+-\w+:\s\w+\/\w+")
+        s = re.sub(cont_reg, "", s)
+        s = s.splitlines()
+
+        return s
+
     def create_channel(self, channel):
         # wdw.facilities.1_0.en_us
         # dlr.facilities.1_0.en_us
@@ -100,6 +114,7 @@ class DisneyDatabase:
 
             docs.append(this)
 
+
         # print('getting {} docs'.format(len(docs)))
 
         payload = {"docs": docs, "json":True}
@@ -115,7 +130,11 @@ class DisneyDatabase:
                     x = json.loads(x)
                     c.execute("""INSERT INTO sync (id, rev, body, channel) VALUES ('{}', '{}', '{}', '{}')""".format(x['_id'], x['_rev'], json.dumps(x), channel))
 
-                    this['id'] = x['id'].split(';')[0]
+                    split_id = x['_id'].split(':')
+                    this['id'] = split_id[-1].split(';')[0].split('.')[-1]
+
+                    s.extend(self.__additional_id(split_id[0]))
+
                     this['name'] = x['name']
                     this['entityType'] = x['type']
                     this['cb_id'] = x['_id']
@@ -199,7 +218,11 @@ class DisneyDatabase:
                         x = json.loads(x)
                         c.execute("""INSERT OR INTO sync (id, rev, body, channel) VALUES ('{}', '{}', '{}', '{}')""".format(x['_id'], x['_rev'], json.dumps(x), channel))
 
-                        this['id'] = x['id'].split(';')[0]
+                        split_id = x['_id'].split(':')
+                        this['id'] = split_id[-1].split(';')[0].split('.')[-1]
+
+                        s.extend(self.__additional_id(split_id[0]))
+
                         this['name'] = x['name']
                         this['entityType'] = x['type']
                         this['cb_id'] = x['_id']
