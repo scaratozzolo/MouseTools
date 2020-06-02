@@ -1,7 +1,8 @@
 import setuptools
 from MouseTools.__init__ import __version__
 from MouseTools import DisneyDatabase
-DisneyDatabase()
+
+
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -23,3 +24,5 @@ setuptools.setup(
         "Operating System :: OS Independent"
     ),
 )
+
+DisneyDatabase()
