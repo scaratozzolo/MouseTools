@@ -35,8 +35,9 @@ class Destination(object):
             conn = sqlite3.connect(self.__db.db_path)
             c = conn.cursor()
 
-
-            self.__id = c.execute("""SELECT id FROM facilities WHERE entityType = 'Destination' and destination_code = '{}'""".format(self.__dest_code))
+            dest_data = c.execute("""SELECT id, name FROM facilities WHERE entityType = 'destination' and destination_code = '{}'""".format(self.__dest_code)).fetchone()
+            self.__id = dest_data[0]
+            self.__name = dest_data[1]
 
             conn.commit()
             conn.close()
@@ -54,6 +55,10 @@ class Destination(object):
     def get_id(self):
         """Returns the id of the destination"""
         return self.__id
+
+    def get_destination_name(self):
+        """Returns the name of the destination"""
+        return self.__name
 
     def get_attraction_ids(self):
         """Returns a list of attraction ids associated with the destination"""
@@ -86,4 +91,5 @@ class Destination(object):
 
 
     def __str__(self):
-        return 'Destination object for {}'.format(self.__destination_name)
+
+        return 'Destination object for {}'.format(self.__name)
