@@ -32,7 +32,7 @@ class Destination(object):
             self.__dest_code = dest_code
 
             self.__db = DisneyDatabase()
-            conn = sqlite3.connect(self.__db.db_name)
+            conn = sqlite3.connect(self.__db.db_path)
             c = conn.cursor()
 
 
@@ -57,7 +57,7 @@ class Destination(object):
 
     def get_attraction_ids(self):
         """Returns a list of attraction ids associated with the destination"""
-        conn = sqlite3.connect(self.__db.db_name)
+        conn = sqlite3.connect(self.__db.db_path)
         c = conn.cursor()
 
         ids = []
@@ -71,7 +71,7 @@ class Destination(object):
 
     def get_entertainment_ids(self):
         """Returns a list of entertainment ids associated with the destination"""
-        conn = sqlite3.connect(self.__db.db_name)
+        conn = sqlite3.connect(self.__db.db_path)
         c = conn.cursor()
 
         ids = []

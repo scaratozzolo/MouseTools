@@ -1,10 +1,12 @@
 # MouseTools
 
 A Python wrapper for the Disney API. Data is pulled directly from Disney.
-Yeah you could look at the code and figure it out yourself, but here's a library incase you're lazy.
 
-If you needs something specific from the API open a new issue with a "feature request" label.
+I created this project to help with another project found [here](https://github.com/scaratozzolo/WDWWaits). Some parts of the wrapper were created with that in mind.
 
-The creation of this was for a project I created called [WDWWaits](https://github.com/scaratozzolo/WDWWaits). Some parts of the wrapper were created with that in mind. The goal was to create a data set of the Walt Disney World wait times to perform analysis on at some point. The program now incorporates Disneyland as well.
+Installation will take some time as the initial database is set up and created. There is a lot of data to load and parse so just be patient.
 
-IDs can be found [here](https://github.com/scaratozzolo/scaratozzolo.github.io/tree/master/MouseTools).
+You can install using pip:
+```bash
+pip install MouseTools
+```
