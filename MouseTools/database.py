@@ -67,13 +67,15 @@ class DisneyDatabase:
         c = conn.cursor()
 
         facility_channel_exists = c.execute("""SELECT COUNT(value) FROM lastSequence WHERE channel = '{}'""".format(channel)).fetchone()[0]
-        return facility_channel_exists != 0
-
         conn.commit()
         conn.close()
 
+        return facility_channel_exists != 0
+
+
+
     def create_channel(self, channel):
-        # no transportation entities
+
         payload = {
             "channels": channel,
             "style": 'all_docs',
@@ -204,62 +206,62 @@ class DisneyDatabase:
                     this['id'] = split_id[0]
                     docs.append(this)
 
-            # print('updating {} docs'.format(len(docs)))
+        # print('updating {} docs'.format(len(docs)))
 
-            payload = {"docs": docs, "json":True}
-            r = requests.post("https://realtime-sync-gw.wdprapps.disney.com/park-platform-pub/_bulk_get?revs=true&attachments=true", data=json.dumps(payload), headers=couchbaseHeaders())
-            s = r.text
+        payload = {"docs": docs, "json":True}
+        r = requests.post("https://realtime-sync-gw.wdprapps.disney.com/park-platform-pub/_bulk_get?revs=true&attachments=true", data=json.dumps(payload), headers=couchbaseHeaders())
+        s = r.text
 
-            cont_reg = re.compile("\w+-\w+:\s\w+\/\w+")
-            s = re.sub(cont_reg, "", s)
-            s = s.splitlines()
-            for x in s:
-                if x != '':
+        cont_reg = re.compile("\w+-\w+:\s\w+\/\w+")
+        s = re.sub(cont_reg, "", s)
+        s = s.splitlines()
+        for x in s:
+            if x != '':
+                try:
+                    x = json.loads(x)
+                    query = """INSERT OR REPLACE INTO sync (id, rev, body, channel) VALUES ('{}', '{}', '{}', '{}')""".format(x['_id'], x['_rev'], json.dumps(x).replace("'", "''"), channel)
+                    c.execute(query)
+
+                    split_id = x['_id'].split(':')
+                    this['id'] = split_id[-1].split(';')[0].split('.')[-1]
+
+
+                    this['name'] = x['name']
+                    this['entityType'] = x['type']
+                    this['cb_id'] = x['_id']
+                    this['dest_code'] = x['_id'].split('.')[0]
+
                     try:
-                        x = json.loads(x)
-                        query = """INSERT OR REPLACE INTO sync (id, rev, body, channel) VALUES ('{}', '{}', '{}', '{}')""".format(x['_id'], x['_rev'], json.dumps(x).replace("'", "''"), channel)
-                        c.execute(query)
+                        this['park_id'] = x['ancestorThemeParkId'].split(';')[0]
+                    except:
+                        this['park_id'] = '0'
 
-                        split_id = x['_id'].split(':')
-                        this['id'] = split_id[-1].split(';')[0].split('.')[-1]
+                    try:
+                        this['land_id'] = x['ancestorLandId'].split(';')[0]
+                    except:
+                        this['land_id'] = '0'
 
+                    try:
+                        this['resort_id'] = x['ancestorResortId'].split(';')[0]
+                    except:
+                        this['resort_id'] = '0'
 
-                        this['name'] = x['name']
-                        this['entityType'] = x['type']
-                        this['cb_id'] = x['_id']
-                        this['dest_code'] = x['_id'].split('.')[0]
+                    try:
+                        this['ra_id'] = x['ancestorResortAreaId'].split(';')[0]
+                    except:
+                        this['ra_id'] = '0'
 
-                        try:
-                            this['park_id'] = x['ancestorThemeParkId'].split(';')[0]
-                        except:
-                            this['park_id'] = '0'
+                    try:
+                        this['ev_id'] = x['ancestorEntertainmentVenueId'].split(';')[0]
+                    except:
+                        this['ev_id'] = '0'
 
-                        try:
-                            this['land_id'] = x['ancestorLandId'].split(';')[0]
-                        except:
-                            this['land_id'] = '0'
-
-                        try:
-                            this['resort_id'] = x['ancestorResortId'].split(';')[0]
-                        except:
-                            this['resort_id'] = '0'
-
-                        try:
-                            this['ra_id'] = x['ancestorResortAreaId'].split(';')[0]
-                        except:
-                            this['ra_id'] = '0'
-
-                        try:
-                            this['ev_id'] = x['ancestorEntertainmentVenueId'].split(';')[0]
-                        except:
-                            this['ev_id'] = '0'
-
-                        query = """INSERT OR REPLACE INTO facilities (id, name, entityType, couchbase_id, destination_code, park_id, land_id, resort_id, resort_area_id, entertainment_venue_id) VALUES ("{}", "{}", "{}", "{}", "{}", "{}", "{}", "{}", "{}", "{}")""".format(this['id'], this['name'].replace("'", "''"), this['entityType'], this['cb_id'], this['dest_code'], this['park_id'], this['land_id'], this['resort_id'], this['ra_id'], this['ev_id'])
-                        # print(query)
-                        c.execute(query)
-                    except Exception as e:
-                        # print(e)
-                        continue
+                    query = """INSERT OR REPLACE INTO facilities (id, name, entityType, couchbase_id, destination_code, park_id, land_id, resort_id, resort_area_id, entertainment_venue_id) VALUES ("{}", "{}", "{}", "{}", "{}", "{}", "{}", "{}", "{}", "{}")""".format(this['id'], this['name'].replace("'", "''"), this['entityType'], this['cb_id'], this['dest_code'], this['park_id'], this['land_id'], this['resort_id'], this['ra_id'], this['ev_id'])
+                    # print(query)
+                    c.execute(query)
+                except Exception as e:
+                    # print(e)
+                    continue
 
 
             conn.commit()
