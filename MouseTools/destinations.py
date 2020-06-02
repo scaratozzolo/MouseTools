@@ -22,15 +22,12 @@ class Destination(object):
     def __init__(self, dest_code = ''):
         """
         Constructor Function
-        Gets all destination data available and stores various elements into variables.
-        ID must be a string.
+        Allows access to various destination related data.
+        dest_code must be a string.
         """
         try:
-
-            if dest_code == '':
-                raise ValueError('Destination object expects an id value. Must be passed as string.\n Usage: Destination(id)')
-            elif dest_code != None and type(dest_code) != str:
-                raise TypeError('Destination object expects a string argument.')
+            if dest_code not in DEST_CODES:
+                raise ValueError()
 
             self.__dest_code = dest_code
 
@@ -38,32 +35,53 @@ class Destination(object):
             conn = sqlite3.connect(self.__db.db_name)
             c = conn.cursor()
 
-            if not self.__db.channel_exists('{}.facilities.1_0.en_us'.format(self.__dest_code)):
-                self.__db.create_channel('{}.facilities.1_0.en_us'.format(self.__dest_code))
-
 
             self.__id = c.execute("""SELECT id FROM facilities WHERE entityType = 'Destination' and destination_code = '{}'""".format(self.__dest_code))
 
             conn.commit()
             conn.close()
 
-        except ValueError as e:
-            print(e)
-            sys.exit()
-        except TypeError as e:
-            print(e)
-            sys.exit()
         except Exception as e:
             print(e)
-            print('That destination or ID is not available. ID = {}\nFull list of possible destinations and their ID\'s can be found here: https://scaratozzolo.github.io/MouseTools/destinations.txt'.format(id))
+            print('That destination is not available. Available destinations: {}'.format(", ".join(DEST_CODES)))
             sys.exit()
 
 
     def get_destination_code(self):
+        """Returns the destination code"""
         return self.__dest_code
 
     def get_id(self):
+        """Returns the id of the destination"""
         return self.__id
+
+    def get_attraction_ids(self):
+        """Returns a list of attraction ids associated with the destination"""
+        conn = sqlite3.connect(self.__db.db_name)
+        c = conn.cursor()
+
+        ids = []
+        for row in c.execute("""SELECT id FROM facilities WHERE destination_code = '{}' and entityType = 'Attraction'""".format(self.__dest_code)).fetchall():
+            ids.append(row[0])
+
+        conn.commit()
+        conn.close()
+
+        return ids
+
+    def get_entertainment_ids(self):
+        """Returns a list of entertainment ids associated with the destination"""
+        conn = sqlite3.connect(self.__db.db_name)
+        c = conn.cursor()
+
+        ids = []
+        for row in c.execute("""SELECT id FROM facilities WHERE destination_code = '{}' and entityType = 'Entertainment'""".format(self.__dest_code)).fetchall():
+            ids.append(row[0])
+
+        conn.commit()
+        conn.close()
+
+        return ids
 
 
 
