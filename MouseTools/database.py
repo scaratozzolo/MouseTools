@@ -4,7 +4,8 @@ import requests
 import json
 import re
 
-
+# Points of interest seem to have multiple locations for the same id, specifically guest services
+# Little Mermaid listed as point-of-interest not attraction
 class DisneyDatabase:
 
     def __init__(self):
@@ -19,6 +20,9 @@ class DisneyDatabase:
         last_sequence = c.execute("""SELECT COUNT(value) FROM lastSequence""").fetchone()[0]
         if last_sequence != 0:
             self.sync_database()
+        else:
+            self.create_channel('wdw.facilities.1_0.en_us')
+            self.create_channel('dlr.facilities.1_0.en_us')
 
 
         conn.close()
@@ -39,7 +43,7 @@ class DisneyDatabase:
         conn = sqlite3.connect(self.db_name)
         c = conn.cursor()
 
-        c.execute("""CREATE TABLE IF NOT EXISTS facilities (id TEXT PRIMARY KEY, name TEXT, entityType TEXt, couchbase_id TEXT, destination_code TEXT, park_id TEXT, resort_id TEXT, land_id TEXT, resort_area_id TEXT)""")
+        c.execute("""CREATE TABLE IF NOT EXISTS facilities (id TEXT PRIMARY KEY, name TEXT, entityType TEXt, couchbase_id TEXT, destination_code TEXT, park_id TEXT, resort_id TEXT, land_id TEXT, resort_area_id TEXT, entertainment_venue_id TEXT)""")
 
         conn.commit()
         conn.close()
@@ -137,7 +141,12 @@ class DisneyDatabase:
                     except:
                         this['ra_id'] = '0'
 
-                    c.execute("""INSERT INTO facilities (id, name, entityType, couchbase_id, destination_code, park_id, land_id, resort_id, resort_area_id) VALUES ('{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}')""".format(this['id'], this['name'], this['entityType'], this['cb_id'], this['dest_code'], this['park_id'], this['land_id'], this['resort_id'], this['ra_id']))
+                    try:
+                        this['ev_id'] = x['ancestorEntertainmentVenueId'].split(';')[0]
+                    except:
+                        this['ev_id'] = '0'
+
+                    c.execute("""INSERT INTO facilities (id, name, entityType, couchbase_id, destination_code, park_id, land_id, resort_id, resort_area_id, entertainment_venue_id) VALUES ('{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}')""".format(this['id'], this['name'], this['entityType'], this['cb_id'], this['dest_code'], this['park_id'], this['land_id'], this['resort_id'], this['ra_id'], this['ev_id']))
                 except Exception as e:
                     # print(e)
                     continue
@@ -216,7 +225,12 @@ class DisneyDatabase:
                         except:
                             this['ra_id'] = '0'
 
-                        c.execute("""INSERT OR INTO facilities (id, name, entityType, couchbase_id, destination_code, park_id, land_id, resort_id, resort_area_id) VALUES ('{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}')""".format(this['id'], this['name'], this['entityType'], this['cb_id'], this['dest_code'], this['park_id'], this['land_id'], this['resort_id'], this['ra_id']))
+                        try:
+                            this['ev_id'] = x['ancestorEntertainmentVenueId'].split(';')[0]
+                        except:
+                            this['ev_id'] = '0'
+
+                        c.execute("""INSERT OR INTO facilities (id, name, entityType, couchbase_id, destination_code, park_id, land_id, resort_id, resort_area_id, entertainment_venue_id) VALUES ('{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}')""".format(this['id'], this['name'], this['entityType'], this['cb_id'], this['dest_code'], this['park_id'], this['land_id'], this['resort_id'], this['ra_id'], this['ev_id']))
                     except Exception as e:
                         # print(e)
                         continue
