@@ -1,11 +1,12 @@
 import setuptools
+from MouseTools.__init__ import __version__
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
     name="MouseTools",
-    version="1.2.0",
+    version=__version__,
     author="Scott Caratozzolo",
     author_email="scaratozzolo12@gmail.com",
     description="A Python wrapper for the Disney API",
