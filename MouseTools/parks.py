@@ -208,6 +208,35 @@ class Park(object):
         facility_data = json.loads(self.__facilities_data)
         return facility_data['facets']
 
+    def get_todays_hours(self):
+        """Returns the start and end times for the object. Will return None, None if closed"""
+        start_time = None
+        end_time = None
+
+        if self.__db.channel_exists('{}.today.1_0'.format(self.__dest_code)):
+            self.__db.sync_today_channel()
+            # maybe just sync this channel? and do same for previous methods
+        else:
+            self.__db.create_today_channel('{}.today.1_0'.format(self.__dest_code))
+
+        conn = sqlite3.connect(self.__db.db_path)
+        c = conn.cursor()
+
+        today_data = c.execute("SELECT body FROM sync WHERE id = ?", ("{}.today.1_0.{}".format(self.__dest_code, self.__entityType),)).fetchone()
+
+        if today_data is None:
+            return start_time, end_time
+        else:
+            body = json.loads(today_data[0])
+            
+            if body['facilities'][self.__id + ';entityType=' + self.__entityType][0]['scheduleType'] == 'Closed' or body['facilities'][self.__id + ';entityType=Attraction'][0]['scheduleType'] == 'Refurbishment':
+                return start_time, end_time
+
+            start_time = datetime.strptime(body['facilities'][self.__id + ';entityType=' + self.__entityType][0]['startTime'], "%Y-%m-%dT%H:%M:%SZ")
+            end_time = datetime.strptime(body['facilities'][self.__id + ';entityType=' + self.__entityType][0]['endTime'], "%Y-%m-%dT%H:%M:%SZ")
+
+            return start_time, end_time
+
     def __eq__(self, other):
         """
         Checks if objects are equal
