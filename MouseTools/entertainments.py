@@ -44,13 +44,15 @@ class Entertainment(object):
                                                                                                                                                                                                     ]
         except Exception as e:
             print(e)
-            # conn = sqlite3.connect(DisneyDatabase().db_path)
-            # c = conn.cursor()
-            # pos_attrs = [row[0] for row in c.execute("""SELECT id FROM facilities WHERE entityType = 'Entertainment'""")]
-            # print('That Entertainment is not available. Available ids: {}'.format(', '.join(pos_attrs)))
             print('That entertainment is not available.')
             sys.exit()
 
+    def get_possible_ids(self):
+        """Returns a list of possible ids of this entityType"""
+        conn = sqlite3.connect(DisneyDatabase().db_path)
+        c = conn.cursor()
+        pos_ids = [row[0] for row in c.execute("""SELECT id FROM facilities WHERE entityType = 'Entertainment'""")]
+        return pos_ids
 
     def get_id(self):
         """Return object id"""
