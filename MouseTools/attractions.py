@@ -122,13 +122,14 @@ class Attraction(object):
             return body['waitMinutes']
 
     def get_status(self):
-        """Return current wait time of the object. Returns None if object doesn't have a wait time or no wait currently exists (eg. closed)"""
+        """Return current status of the object."""
         status_data = self.get_raw_facilitystatus_data()
         if status_data is None:
             return None
         else:
             body = json.loads(status_data[0])
             return body['status']
+        # TODO might have to change this from facilitystatus data to scheduleType from today, or test if none from status then get from today instead
 
     def fastpass_available(self):
         """Returns a boolean of whether this object has FastPass"""
@@ -141,15 +142,23 @@ class Attraction(object):
 
     def fastpass_times(self):
         """Returns the current start and end time of the FastPass"""
-        # TODO
         start_time = None
         end_time = None
+
+        if self.fastpass_available():
+            status_data = self.get_raw_facilitystatus_data()
+            body = json.loads(status_data[0])
+
+            start_time = datetime.strptime(body['fastPassStartTime'], "%Y-%m-%dT%H:%M:%SZ")
+            end_time = datetime.strptime(body['fastPassEndTime'], "%Y-%m-%dT%H:%M:%SZ")
+
         return start_time, end_time
 
     def get_last_update(self):
         """Returns facilities last update time as a datetime object"""
         facility_data = json.loads(self.__facilities_data)
         return datetime.strptime(facility_data['lastUpdate'], "%Y-%m-%dT%H:%M:%SZ")
+        # TODO check if facilitystatus has a different last update time
 
     def get_coordinates(self):
         """Returns the object's latitude and longitude"""
@@ -170,6 +179,35 @@ class Attraction(object):
         """Returns a list of  dictionaries of the object's facets"""
         facility_data = json.loads(self.__facilities_data)
         return facility_data['facets']
+
+    def get_todays_hours(self):
+        """Returns the start and end times for the object. Will return None, None if closed"""
+        start_time = None
+        end_time = None
+
+        if self.__db.channel_exists('{}.today.1_0'.format(self.__dest_code)):
+            self.__db.sync_database()
+            # maybe just sync this channel? and do same for previous methods
+        else:
+            self.__db.create_today_channel('{}.today.1_0'.format(self.__dest_code))
+
+        conn = sqlite3.connect(self.__db.db_path)
+        c = conn.cursor()
+
+        today_data = c.execute("""SELECT body FROM sync WHERE id = '{}.today.1_0.Attraction'""".format(self.__dest_code)).fetchone()
+
+        if today_data is None:
+            return start_time, end_time
+        else:
+            body = json.loads(today_data[0])
+
+            if body['facilities'][self.__id + ';entityType=Attraction'][0]['scheduleType'] == 'Closed' or body['facilities'][self.__id + ';entityType=Attraction'][0]['scheduleType'] == 'Refurbishment':
+                return start_time, end_time
+
+            start_time = datetime.strptime(body['facilities'][self.__id + ';entityType=Attraction'][0]['startTime'], "%Y-%m-%dT%H:%M:%SZ")
+            end_time = datetime.strptime(body['facilities'][self.__id + ';entityType=Attraction'][0]['endTime'], "%Y-%m-%dT%H:%M:%SZ")
+
+            return start_time, end_time
 
     def __str__(self):
         return 'Attraction object for {}'.format(self.__name)
