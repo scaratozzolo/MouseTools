@@ -39,8 +39,8 @@ class Attraction(object):
                 self.__anc_ra_id = row[9]
                 self.__anc_ev_id = row[10]
 
-            self.__facilities_data = c.execute("""SELECT body FROM sync WHERE id = '{}.facilities.1_0.en_us.{};entityType=Attraction'""".format(self.__dest_code, self.__id)).fetchone()
-
+            self.__facilities_data = c.execute("""SELECT body FROM sync WHERE id = '{}.facilities.1_0.en_us.attraction.{};entityType=Attraction'""".format(self.__dest_code, self.__id)).fetchone()[0
+                                                                                                                                                                                                    ]
         except Exception as e:
             print(e)
             # conn = sqlite3.connect(DisneyDatabase().db_path)
@@ -145,6 +145,31 @@ class Attraction(object):
         start_time = None
         end_time = None
         return start_time, end_time
+
+    def get_last_update(self):
+        """Returns facilities last update time as a datetime object"""
+        facility_data = json.loads(self.__facilities_data)
+        return datetime.strptime(facility_data['lastUpdate'], "%Y-%m-%dT%H:%M:%SZ")
+
+    def get_coordinates(self):
+        """Returns the object's latitude and longitude"""
+        facility_data = json.loads(self.__facilities_data)
+        return facility_data['latitude'], facility_data['longitude']
+
+    def get_description(self):
+        """Returns the object's descriptions"""
+        facility_data = json.loads(self.__facilities_data)
+        return facility_data['description']
+
+    def get_list_image(self):
+        """Returns the url to the object's list image"""
+        facility_data = json.loads(self.__facilities_data)
+        return facility_data['listImageUrl']
+
+    def get_facets(self):
+        """Returns a list of  dictionaries of the object's facets"""
+        facility_data = json.loads(self.__facilities_data)
+        return facility_data['facets']
 
     def __str__(self):
         return 'Attraction object for {}'.format(self.__name)
