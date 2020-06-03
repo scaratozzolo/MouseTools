@@ -1,10 +1,12 @@
 import requests
 import json
 import sys
+import sqlite3
 from datetime import datetime, timedelta
 from .auth import getHeaders
 from .parks import Park
 from .pointsofinterest import PointOfInterest
+from .database import DisneyDatabase
 
 
 class Entertainment(object):
@@ -18,436 +20,195 @@ class Entertainment(object):
 
         try:
 
-            if id == '':
-                raise ValueError('Entertainment object expects an id value. Must be passed as string.\n Usage: Entertainment(id)')
-            elif id != None and type(id) != str:
-                raise TypeError('Entertainment object expects a string argument.')
+            self.__db = DisneyDatabase()
+            conn = sqlite3.connect(self.__db.db_path)
+            c = conn.cursor()
 
-            self.__id = id
+            row = c.execute("""SELECT * FROM facilities WHERE id = '{}'""".format(id)).fetchone()
+            if row is None:
+                raise ValueError()
+            else:
+                self.__id = row[0]
+                self.__name = row[1]
+                self.__entityType = row[2]
+                self.__subType = row[3]
+                self.__doc_id = row[4]
+                self.__dest_code = row[5]
+                self.__anc_park_id = row[6]
+                self.__anc_resort_id = row[7]
+                self.__anc_land_id = row[8]
+                self.__anc_ra_id = row[9]
+                self.__anc_ev_id = row[10]
 
-            s = requests.get("https://api.wdpro.disney.go.com/facility-service/entertainments/{}".format(self.__id), headers=getHeaders())
-            self.__data = json.loads(s.content)
-
-            self.__entertainment_name = self.__data['name'].replace(u"\u2019", "'").replace(u"\u2013", "-").replace(u"\u2122", "").replace(u"\u2022", "-").replace(u"\u00ae", "").replace(u"\u2014", "-").replace(u"\u00a1", "").replace(u"\u00ee", "i").replace(u"\u25cf", " ").replace(u"\u00e9", "e").replace(u"\u00ad", "").replace(u"\u00a0", " ").replace(u"\u00e8", "e").replace(u"\u00eb", "e").replace(u"\u2026", "...").replace(u"\u00e4", "a").replace(u"\u2018", "'").replace(u"\u00ed", "i").replace(u"\u201c", '"').replace(u"\u201d", '"').strip()
-            self.__type = self.__data['type']
-            self.__subType = self.__data['subType']
-            try:
-                self.__coordinates = self.getRelatedLocations()[0].getPointOfInterestCoordinates()
-            except:
-                self.__coordinates = ()
-
-            self.waitTimeData = None
-
-        except ValueError as e:
-            print(e)
-            sys.exit()
-        except TypeError as e:
-            print(e)
-            sys.exit()
+            self.__facilities_data = c.execute("""SELECT body FROM sync WHERE id = '{}.facilities.1_0.en_us.entertainment.{};entityType=Entertainment'""".format(self.__dest_code, self.__id)).fetchone()[0
+                                                                                                                                                                                                    ]
         except Exception as e:
             print(e)
-            print('That entertainment or ID is not available. ID = {}\nFull list of possible entertainments and their ID\'s can be found here: https://scaratozzolo.github.io/MouseTools/entertainments.txt'.format(id))
+            # conn = sqlite3.connect(DisneyDatabase().db_path)
+            # c = conn.cursor()
+            # pos_attrs = [row[0] for row in c.execute("""SELECT id FROM facilities WHERE entityType = 'Entertainment'""")]
+            # print('That Entertainment is not available. Available ids: {}'.format(', '.join(pos_attrs)))
+            print('That entertainment is not available.')
             sys.exit()
 
-    def getEntertainmentName(self):
-        """
-        Returns the name of the entertainment
-        """
-        return self.__entertainment_name
 
-    def getEntertainmentID(self):
-        """
-        Returns the id of the entertainment
-        """
+    def get_id(self):
+        """Return object id"""
         return self.__id
 
-    def getEntertainmentSubType(self):
-        """
-        Returns the Entertainment Sub Type
-        """
+    def get_name(self):
+        """Return object name"""
+        return self.__name
+
+    def get_entityType(self):
+        """Return object entityType"""
+        return self.__entityType
+
+    def get_subType(self):
+        """Return object subType"""
         return self.__subType
 
-    def getEntertainmentCoordinates(self):
-        """
-        Returns the Entertainment coordinates
-        """
-        return self.__coordinates
+    def get_doc_id(self):
+        """Return object doc id"""
+        return self.__doc_id
 
-    def checkAssociatedCharacters(self):
-        """
-        Checks if an attracion has any associated characters
-        """
-        s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType=Entertainment".format(self.__id), headers=getHeaders())
-        data = json.loads(s.content)
+    def get_destination_code(self):
+        """Return object destination code"""
+        return self.__dest_code
 
-        if data['total'] > 0:
-            return True
+    def get_ancestor_park_id(self):
+        """Return object ancestor theme or water park id"""
+        return self.__anc_park_id
+
+    def get_ancestor_resort_id(self):
+        """Return object ancestor resort id"""
+        return self.__anc_resort_id
+
+    def get_ancestor_land_id(self):
+        """Return object land id"""
+        return self.__anc_land_id
+
+    def get_ancestor_resort_area_id(self):
+        """Return object resort area id"""
+        return self.__anc_ra_id
+
+    def get_ancestor_entertainment_venue_id(self):
+        """Return object entertainment venue id"""
+        return self.__anc_ev_id
+
+    def get_raw_facilities_data(self):
+        """Returns the raw facilities data currently stored in the database"""
+        return self.__facilities_data
+
+    def get_raw_facilitystatus_data(self):
+        """Returns the raw facilitystatus data from the database after syncing with Disney (returns most recent data)"""
+        if self.__db.channel_exists('{}.facilitystatus.1_0'.format(self.__dest_code)):
+            self.__db.sync_database()
         else:
-            return False
+            self.__db.create_facilitystatus_channel('{}.facilitystatus.1_0'.format(self.__dest_code))
 
-    def getNumberAssociatedCharacters(self):
-        """
-        Gets the total number of characters associated with the attraction_name
-        """
-        s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType=Entertainment".format(self.__id), headers=getHeaders())
-        data = json.loads(s.content)
+        conn = sqlite3.connect(self.__db.db_path)
+        c = conn.cursor()
 
-        return data['total']
+        status_data = c.execute("""SELECT body FROM sync WHERE id = '{}.facilitystatus.1_0.{};entityType=Entertainment'""".format(self.__dest_code, self.__id)).fetchone()
+        return status_data
 
-    def getAssociatedCharacters(self):
-        """
-        Returns a list of associated characters IDs (maybe Character class in future)
-        """
-        from .characters import Character
-        chars = []
-
-        s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType=Entertainment".format(self.__id), headers=getHeaders())
-        data = json.loads(s.content)
-
-        for i in range(len(data['entries'])):
-            try:
-                chars.append(Character(data['entries'][i]['links']['self']['href'].split('/')[-1]))
-            except:
-                pass
-        return chars
-
-    def getEntertainmentStatus(self):
-        """
-        Returns the current status of the entertainment as reported by Disney
-        """
-        try:
-            s = requests.get("https://api.wdpro.disney.go.com/facility-service/entertainments/{}/wait-times".format(self.__id), headers=getHeaders())
-            data = json.loads(s.content)
-
-            return data['waitTime']['status']
-        except:
+    def get_wait_time(self):
+        """Return current wait time of the object. Returns None if object doesn't have a wait time or no wait currently exists (eg. closed)"""
+        status_data = self.get_raw_facilitystatus_data()
+        if status_data is None:
             return None
-
-    def checkForEntertainmentWaitTime(self):
-        """
-        Checks if the attraction has a wait. Returns True if it exists, False if it doesn't. Also returns the wait time json data.
-        """
-        self.waitTimeData = requests.get("https://disneyworld.disney.go.com/api/wdpro/facility-service/entertainments/{}/wait-times".format(self.__id), headers=getHeaders()).json()
-        # data = json.loads(s.content)
-        try:
-            check = self.waitTimeData['waitTime']['postedWaitMinutes']
-            return True
-        except:
-            return False
-
-    def getEntertainmentWaitTime(self):
-        """
-        Returns the current wait time of the entertainment as reported by Disney, in minutes
-        TODO: test all entertainment for a wait time
-
-        """
-        try:
-            if self.checkForEntertainmentWaitTime():
-                return self.waitTimeData['waitTime']['postedWaitMinutes']
-            else:
-                return None
-        except:
-            return None
-
-    def getEntertainmentWaitTimeFromData(self):
-        """
-        Returns the current wait time of the entertainment as reported by Disney, in minutes, from self.waitTimeData
-        In order to properly use this function, you must call self.checkForEntertainmentWaitTime() before calling this function.
-        The idea is if you're creating a list of objects with wait times, you can parse over the list and not have to make another request to Disney to get the wait times.
-        This function was created with WWDWaits in mind.
-        """
-        try:
-            if self.waitTimeData != None:
-                return self.waitTimeData['waitTime']['postedWaitMinutes']
-            elif self.checkForEntertainmentWaitTime():
-                return self.waitTimeData['waitTime']['postedWaitMinutes']
-            else:
-                return None
-        except:
-            return None
-
-    def getEntertainmentWaitTimeMessage(self):
-        """
-        Returns the current roll up wait time message of the entertainment as reported by Disney
-        """
-        try:
-            if self.checkForEntertainmentWaitTime():
-                return self.waitTimeData['waitTime']['rollUpWaitTimeMessage']
-            else:
-                return None
-        except:
-            return None
-
-    def getStartDate(self):
-        """
-        Gets the start date of the entertainment and returns it as a datetime object. If there is no start date, returns None
-        """
-        date = self.__data['startDate']
-        if date == "":
-            return None
-
-        date = date.split('-')
-        return datetime(int(date[0]), int(date[1]), int(date[2]))
-
-    def getEndDate(self):
-        """
-        Gets the start date of the entertainment and returns it as a datetime object. If there is no start date, returns None.
-        """
-        date = self.__data['endDate']
-        if date == "":
-            return None
-
-        date = date.split('-')
-        return datetime(int(date[0]), int(date[1]), int(date[2]))
-
-    def getDuration(self):
-        """
-        Returns the string format of the duration of the entertainment as provided by Disney
-        """
-        return self.__data['duration']
-
-    def getDurationMinutes(self):
-        """
-        Returns the duration of the entertainment in minutes as a float
-        """
-        dur = self.__data['duration'].split(':')
-        return float(int(dur[0])*60 + int(dur[1]) + int(dur[2])/60)
-
-    def getDurationSeconds(self):
-        """
-        Returns the duration of the entertainment in seconds as an integer
-        """
-        dur = self.__data['duration'].split(':')
-        return int(self.getDurationMinutes())*60 + int(dur[2])
-
-    def getEntertainmentFastPassAvailable(self):
-        """
-        Returns True if fast pass is available
-        """
-        bool = self.__data['fastPass']
-        if bool == 'true':
-            return True
         else:
-            return False
+            body = json.loads(status_data[0])
+            return body['waitMinutes']
 
-    def getEntertainmentFastPassPlusAvailable(self):
-        """
-        Returns True if fast pass plus is available
-        """
-        bool = self.__data['fastPassPlus']
-        if bool == 'true':
-            return True
+    def get_status(self):
+        """Return current status of the object."""
+        status_data = self.get_raw_facilitystatus_data()
+        if status_data is None:
+            return None
         else:
+            body = json.loads(status_data[0])
+            return body['status']
+
+        # today.Entertainment channel was deleted?
+
+    def fastpass_available(self):
+        """Returns a boolean of whether this object has FastPass"""
+        status_data = self.get_raw_facilitystatus_data()
+        if status_data is None:
             return False
+        else:
+            body = json.loads(status_data[0])
+            return body['fastPassAvailable'] == 'true'
 
-    def checkRelatedLocations(self):
-        """
-        Returns true if it has related locations, false if none
-        """
-        try:
-            check = self.__data['relatedLocations']
-            return True
-        except:
-            return False
+    def fastpass_times(self):
+        """Returns the current start and end time of the FastPass"""
+        start_time = None
+        end_time = None
 
-    def getRelatedLocations(self):
-        """
-        Returns the related locations of the entertainment
-        """
-        locs = []
-        try:
-            if self.checkRelatedLocations():
-                for loc in self.__data['relatedLocations']['primaryLocations']:
-                    type = loc['facilityType']
-                    loc_id = loc['links']['self']['href'].split('/')[-1]
+        if self.fastpass_available():
+            status_data = self.get_raw_facilitystatus_data()
+            body = json.loads(status_data[0])
 
-                    if type == 'point-of-interest':
-                        locs.append(PointOfInterest(loc_id))
-                    else:
-                        print('no class for {} at this time'.format(type))
-            return locs
-        except:
-            return locs
+            start_time = datetime.strptime(body['fastPassStartTime'], "%Y-%m-%dT%H:%M:%SZ")
+            end_time = datetime.strptime(body['fastPassEndTime'], "%Y-%m-%dT%H:%M:%SZ")
 
+        return start_time, end_time
 
-    def getAncestorDestination(self):
-        """
-        Returns the Ancestor Destination of the entertainment
-        """
-        try:
-            return self.__data['ancestorDestination']['links']['self']['title']
-        except:
-            return None
+    def get_last_update(self):
+        """Returns facilities last update time as a datetime object"""
+        facility_data = json.loads(self.__facilities_data)
+        return datetime.strptime(facility_data['lastUpdate'], "%Y-%m-%dT%H:%M:%SZ")
 
-    def getAncestorDestinationID(self):
-        """
-        Returns the Ancestor Destination of the entertainment
-        """
-        try:
-            return self.__data['ancestorDestination']['links']['self']['href'].split('/')[-1]
-        except:
-            return None
+    def get_coordinates(self):
+        """Returns the object's latitude and longitude"""
+        facility_data = json.loads(self.__facilities_data)
+        return facility_data['latitude'], facility_data['longitude']
 
-    def getAncestorResortArea(self):
-        """
-        Returns the Ancestor Resort Area for the Entertainment
-        """
-        try:
-            if self.checkRelatedLocations():
-                s = requests.get(self.__data['relatedLocations']['primaryLocations'][0]['links']['self']['href'], headers=getHeaders())
-                data = json.loads(s.content)
+    def get_description(self):
+        """Returns the object's descriptions"""
+        facility_data = json.loads(self.__facilities_data)
+        return facility_data['description']
 
-                return data['links']['ancestorResortArea']['title']
-            else:
-                return None
-        except:
-            return None
+    def get_list_image(self):
+        """Returns the url to the object's list image"""
+        facility_data = json.loads(self.__facilities_data)
+        return facility_data['listImageUrl']
 
-    def getAncestorResortAreaID(self):
-        """
-        Returns the Ancestor Resort Area for the Entertainment
-        """
-        try:
-            if self.checkRelatedLocations():
-                s = requests.get(self.__data['relatedLocations']['primaryLocations'][0]['links']['self']['href'], headers=getHeaders())
-                data = json.loads(s.content)
+    def get_facets(self):
+        """Returns a list of  dictionaries of the object's facets"""
+        facility_data = json.loads(self.__facilities_data)
+        return facility_data['facets']
 
-                return data['links']['ancestorResortArea']['href'].split('/')[-1]
-            else:
-                return None
-        except:
-            return None
+    def get_todays_hours(self):
+        """Returns the start and end times for the object. Will return None, None if closed"""
+        start_time = None
+        end_time = None
 
-    def getAncestorThemePark(self):
-        """
-        Returns the Ancestor Theme Park for the Entertainment
-        """
-        try:
-            if self.checkRelatedLocations():
-                try:
-                    id = self.getAncestorThemeParkID()
-                    if(id != None):
-                        return Park(id)
-                    else:
-                        return None
-                except:
-                    try:
-                        id = self.getAncestorWaterParkID()
-                        if(id != None):
-                            return Park(id)
-                        else:
-                            return None
-                    except:
-                        return None
-            else:
-                return None
-        except:
-            return None
+        if self.__db.channel_exists('{}.today.1_0'.format(self.__dest_code)):
+            self.__db.sync_database()
+            # maybe just sync this channel? and do same for previous methods
+        else:
+            self.__db.create_today_channel('{}.today.1_0'.format(self.__dest_code))
 
-    def getAncestorThemeParkID(self):
-        """
-        Returns the Ancestor Theme Park ID for the Entertainment
-        """
-        try:
-            if self.checkRelatedLocations():
-                data = requests.get(self.__data['relatedLocations']['primaryLocations'][0]['links']['self']['href'], headers=getHeaders()).json()
-                try:
-                    return data['links']['ancestorThemePark']['href'].split('/')[-1].split('?')[0]
-                except:
-                    try:
-                        data['links']['ancestorWaterPark']['href'].split('/')[-1].split('?')[0]
-                        return self.getAncestorWaterParkID()
-                    except:
-                        return None
-            else:
-                return None
-        except:
-            return None
+        conn = sqlite3.connect(self.__db.db_path)
+        c = conn.cursor()
 
-    def getAncestorWaterPark(self):
-        """
-        Returns the Ancestor Water Park for the Entertainment
-        """
-        try:
-            if self.checkRelatedLocations():
-                try:
-                    id = self.getAncestorWaterParkID()
-                    if(id != None):
-                        return Park(id)
-                    else:
-                        return None
-                except:
-                    try:
-                        id = self.getAncestorThemeParkID()
-                        if(id != None):
-                            return Park(id)
-                        else:
-                            return None
-                    except:
-                        return None
-            else:
-                return None
-        except:
-            return None
+        today_data = c.execute("""SELECT body FROM sync WHERE id = '{}.today.1_0.Entertainment'""".format(self.__dest_code, self.__id)).fetchone()
 
-    def getAncestorWaterParkID(self):
-        """
-        Returns the Ancestor Water Park ID for the Entertainment
-        """
-        try:
-            if self.checkRelatedLocations():
-                data = requests.get(self.__data['relatedLocations']['primaryLocations'][0]['links']['self']['href'], headers=getHeaders()).json()
-                try:
-                    return data['links']['ancestorWaterPark']['href'].split('/')[-1].split('?')[0]
-                except:
-                    try:
-                        data['links']['ancestorThemePark']['href'].split('/')[-1].split('?')[0]
-                        return self.getAncestorThemeParkID()
-                    except:
-                        return None
-            else:
-                return None
-        except:
-            return None
+        if today_data is None:
+            return start_time, end_time
+        else:
+            body = json.loads(today_data[0])
 
+            if body['facilities'][self.__id + ';entityType=Entertainment'][0]['scheduleType'] == 'Closed' or body['facilities'][self.__id + ';entityType=Entertainment'][0]['scheduleType'] == 'Refurbishment':
+                return start_time, end_time
 
-    def getAncestorLand(self):
-        """
-        Returns the Ancestor Land for the Entertainment
-        """
-        try:
-            if self.checkRelatedLocations():
-                s = requests.get(self.__data['relatedLocations']['primaryLocations'][0]['links']['self']['href'], headers=getHeaders())
-                data = json.loads(s.content)
+            start_time = datetime.strptime(body['facilities'][self.__id + ';entityType=Entertainment'][0]['startTime'], "%Y-%m-%dT%H:%M:%SZ")
+            end_time = datetime.strptime(body['facilities'][self.__id + ';entityType=Entertainment'][0]['endTime'], "%Y-%m-%dT%H:%M:%SZ")
 
-                return data['links']['ancestorLand']['title']
-            else:
-                return None
-        except:
-            return None
-
-    def getAncestorLandID(self):
-        """
-        Returns the Ancestor Land for the Entertainment
-        """
-        try:
-            if self.checkRelatedLocations():
-                s = requests.get(self.__data['relatedLocations']['primaryLocations'][0]['links']['self']['href'], headers=getHeaders())
-                data = json.loads(s.content)
-
-                return data['links']['ancestorLand']['href'].split('/')[-1]
-            else:
-                return None
-        except:
-            return None
-
-    def __formatDate(self, num):
-        """
-        Formats month and day into proper format
-        """
-        if len(num) < 2:
-            num = '0'+num
-        return num
+            return start_time, end_time
 
     def __str__(self):
-        return 'Entertainment object for {}'.format(self.__entertainment_name)
+        return 'Entertainment object for {}'.format(self.__name)
