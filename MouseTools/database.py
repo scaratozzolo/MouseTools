@@ -22,18 +22,24 @@ class DisneyDatabase:
         if last_sequence != 0:
             self.sync_database()
         else:
-            self.create_channel('wdw.facilities.1_0.en_us')
-            self.create_channel('dlr.facilities.1_0.en_us')
+            self.create_facilities_channel('wdw.facilities.1_0.en_us')
+            self.create_facilities_channel('dlr.facilities.1_0.en_us')
 
 
         conn.close()
+
+    def sync_database(self):
+
+        self.sync_facilities_channel()
+        self.sync_facilitystatus_channel()
+
 
     def create_last_sequence_table(self):
 
         conn = sqlite3.connect(self.db_path)
         c = conn.cursor()
 
-        c.execute("""CREATE TABLE IF NOT EXISTS lastSequence (channel TEXT PRIMARY KEY, value TEXT)""")
+        c.execute("""CREATE TABLE IF NOT EXISTS lastSequence (channel TEXT PRIMARY KEY, value TEXT, channel_type TEXT)""")
 
         conn.commit()
         conn.close()
@@ -44,7 +50,7 @@ class DisneyDatabase:
         conn = sqlite3.connect(self.db_path)
         c = conn.cursor()
         # subType
-        c.execute("""CREATE TABLE IF NOT EXISTS facilities (id TEXT PRIMARY KEY, name TEXT, entityType TEXt, couchbase_id TEXT, destination_code TEXT, park_id TEXT, resort_id TEXT, land_id TEXT, resort_area_id TEXT, entertainment_venue_id TEXT)""")
+        c.execute("""CREATE TABLE IF NOT EXISTS facilities (id TEXT PRIMARY KEY, name TEXT, entityType TEXT, subType TEXT, doc_id TEXT, destination_code TEXT, park_id TEXT, resort_id TEXT, land_id TEXT, resort_area_id TEXT, entertainment_venue_id TEXT)""")
 
         conn.commit()
         conn.close()
@@ -74,22 +80,19 @@ class DisneyDatabase:
 
 
 
-    def create_channel(self, channel):
+    def create_facilities_channel(self, channel):
 
         payload = {
             "channels": channel,
             "style": 'all_docs',
             "filter": 'sync_gateway/bychannel',
             "feed": 'normal',
-            "heartbeat": 30000,
+            "heartbeat": 30000
         }
         r = requests.post("https://realtime-sync-gw.wdprapps.disney.com/park-platform-pub/_changes?feed=normal&heartbeat=30000&style=all_docs&filter=sync_gateway%2Fbychannel", data=json.dumps(payload), headers=couchbaseHeaders())
         s = json.loads(r.text)
 
-        conn = sqlite3.connect(self.db_path)
-        c = conn.cursor()
-
-        c.execute("""INSERT INTO lastSequence (channel, value) VALUES ('{}', '{}')""".format(channel, s['last_seq']))
+        c.execute("""INSERT INTO lastSequence (channel, value, channel_type) VALUES ('{}', '{}', 'facilities')""".format(channel, s['last_seq']))
 
         # search for deleted: i['deleted'] or i['removed']
         docs = []
@@ -127,6 +130,12 @@ class DisneyDatabase:
 
                     this['name'] = x['name']
                     this['entityType'] = x['type']
+
+                    try:
+                        this['sub'] = x['subType']
+                    except:
+                        this['sub'] = None
+
                     this['cb_id'] = x['_id']
                     this['dest_code'] = x['_id'].split('.')[0]
 
@@ -158,7 +167,7 @@ class DisneyDatabase:
                     except:
                         this['ev_id'] = '0'
 
-                    query = """INSERT INTO facilities (id, name, entityType, couchbase_id, destination_code, park_id, land_id, resort_id, resort_area_id, entertainment_venue_id) VALUES ("{}", "{}", "{}", "{}", "{}", "{}", "{}", "{}", "{}", "{}")""".format(this['id'], this['name'].replace("'", "''"), this['entityType'], this['cb_id'], this['dest_code'], this['park_id'], this['land_id'], this['resort_id'], this['ra_id'], this['ev_id'])
+                    query = """INSERT INTO facilities (id, name, entityType, subType, doc_id, destination_code, park_id, land_id, resort_id, resort_area_id, entertainment_venue_id) VALUES ("{}", "{}", "{}", "{}", "{}", "{}", "{}", "{}", "{}", "{}", "{}")""".format(this['id'], this['name'].replace("'", "''"), this['entityType'], this['sub'], this['cb_id'], this['dest_code'], this['park_id'], this['land_id'], this['resort_id'], this['ra_id'], this['ev_id'])
                     # print(query)
                     c.execute(query)
                 except Exception as e:
@@ -171,29 +180,27 @@ class DisneyDatabase:
         conn.commit()
         conn.close()
 
-    def sync_database(self):
+    def sync_facilities_channel(self):
 
         conn = sqlite3.connect(self.db_path)
         c = conn.cursor()
 
-        for row in c.execute("""SELECT * FROM lastSequence""").fetchall():
+        docs = []
+        for row in c.execute("""SELECT * FROM lastSequence WHERE channel_type = 'facilities'""").fetchall():
             payload = {
                 "channels": row[0],
                 "style": 'all_docs',
                 "filter": 'sync_gateway/bychannel',
                 "feed": 'normal',
-                "heartbeat": 30000,
+                "heartbeat": 30000
             }
             r = requests.post("https://realtime-sync-gw.wdprapps.disney.com/park-platform-pub/_changes?feed=normal&heartbeat=30000&style=all_docs&since={}&filter=sync_gateway%2Fbychannel".format(row[1]), data=json.dumps(payload), headers=couchbaseHeaders())
             s = json.loads(r.text)
 
-            conn = sqlite3.connect(self.db_path)
-            c = conn.cursor()
-
-            c.execute("""REPLACE INTO lastSequence (channel, value) VALUES ('{}', '{}')""".format(row[0], s['last_seq']))
+            c.execute("""REPLACE INTO lastSequence (channel, value, channel_type) VALUES ('{}', '{}', 'facilities')""".format(row[0], s['last_seq']))
 
             # search for deleted: i['deleted'] or i['removed']
-            docs = []
+
             for i in s['results']:
                 this = {}
                 this['id'] = i['id']
@@ -228,6 +235,12 @@ class DisneyDatabase:
 
                     this['name'] = x['name']
                     this['entityType'] = x['type']
+
+                    try:
+                        this['sub'] = x['subType']
+                    except:
+                        this['sub'] = None
+
                     this['cb_id'] = x['_id']
                     this['dest_code'] = x['_id'].split('.')[0]
 
@@ -256,7 +269,8 @@ class DisneyDatabase:
                     except:
                         this['ev_id'] = '0'
 
-                    query = """INSERT OR REPLACE INTO facilities (id, name, entityType, couchbase_id, destination_code, park_id, land_id, resort_id, resort_area_id, entertainment_venue_id) VALUES ("{}", "{}", "{}", "{}", "{}", "{}", "{}", "{}", "{}", "{}")""".format(this['id'], this['name'].replace("'", "''"), this['entityType'], this['cb_id'], this['dest_code'], this['park_id'], this['land_id'], this['resort_id'], this['ra_id'], this['ev_id'])
+                    # update execute to (?, ?), (this[], this[])
+                    query = """INSERT OR REPLACE INTO facilities (id, name, entityType, subType, doc_id, destination_code, park_id, land_id, resort_id, resort_area_id, entertainment_venue_id) VALUES ("{}", "{}", "{}", "{}", "{}", "{}", "{}", "{}", "{}", "{}", "{}")""".format(this['id'], this['name'].replace("'", "''"), this['entityType'], this['sub'], this['cb_id'], this['dest_code'], this['park_id'], this['land_id'], this['resort_id'], this['ra_id'], this['ev_id'])
                     # print(query)
                     c.execute(query)
                 except Exception as e:
@@ -266,3 +280,117 @@ class DisneyDatabase:
 
             conn.commit()
             conn.close()
+
+
+
+    def create_facilitystatus_channel(self, channel):
+
+        payload = {
+            "channels": channel,
+            "style": 'all_docs',
+            "filter": 'sync_gateway/bychannel',
+            "feed": 'normal',
+            "heartbeat": 30000
+        }
+
+        r = requests.post("https://realtime-sync-gw.wdprapps.disney.com/park-platform-pub/_changes?feed=normal&heartbeat=30000&style=all_docs&filter=sync_gateway%2Fbychannel", data=json.dumps(payload), headers=couchbaseHeaders())
+        s = json.loads(r.text)
+
+        conn = sqlite3.connect(self.db_path)
+        c = conn.cursor()
+
+        c.execute("""INSERT INTO lastSequence (channel, value, channel_type) VALUES ('{}', '{}', 'facilitystatus')""".format(channel, s['last_seq']))
+
+        # search for deleted: i['deleted'] or i['removed']
+        docs = []
+        for i in s['results']:
+            this = {}
+            this['id'] = i['id']
+
+            docs.append(this)
+
+            split_id = i['id'].split(":")
+            if len(split_id) > 1:
+                this = {}
+                this['id'] = split_id[0]
+                docs.append(this)
+
+        # print('getting {} docs'.format(len(docs)))
+
+        payload = {"docs": docs, "json":True}
+        r = requests.post("https://realtime-sync-gw.wdprapps.disney.com/park-platform-pub/_bulk_get?revs=true&attachments=true", data=json.dumps(payload), headers=couchbaseHeaders())
+        s = r.text
+
+        cont_reg = re.compile("\w+-\w+:\s\w+\/\w+")
+        s = re.sub(cont_reg, "", s)
+        s = s.splitlines()
+        for x in s:
+            if x != '' and x[0] != '-':
+                try:
+                    x = json.loads(x)
+                    query = """INSERT INTO sync (id, rev, body, channel) VALUES ('{}', '{}', '{}', '{}')""".format(x['_id'], x['_rev'], json.dumps(x).replace("'", "''"), channel)
+                    c.execute(query)
+                except Exception as e:
+                    # print(e)
+                    # print(x)
+                    continue
+
+        conn.commit()
+        conn.close()
+
+
+    def sync_facilitystatus_channel(self):
+
+        conn = sqlite3.connect(self.db_path)
+        c = conn.cursor()
+
+        docs = []
+        for row in c.execute("""SELECT * FROM lastSequence WHERE channel_type = 'facilitystatus'""").fetchall():
+            payload = {
+                "channels": row[0],
+                "style": 'all_docs',
+                "filter": 'sync_gateway/bychannel',
+                "feed": 'normal',
+                "heartbeat": 30000
+                }
+            r = requests.post("https://realtime-sync-gw.wdprapps.disney.com/park-platform-pub/_changes?feed=normal&heartbeat=30000&style=all_docs&since={}&filter=sync_gateway%2Fbychannel".format(row[1]), data=json.dumps(payload), headers=couchbaseHeaders())
+            s = json.loads(r.text)
+
+
+
+            c.execute("""REPLACE INTO lastSequence (channel, value, channel_type) VALUES ('{}', '{}', 'facilitystatus')""".format(row[0], s['last_seq']))
+
+            # search for deleted: i['deleted'] or i['removed']
+
+            for i in s['results']:
+                this = {}
+                this['id'] = i['id']
+
+                docs.append(this)
+
+                split_id = i['id'].split(":")
+                if len(split_id) > 1:
+                    this = {}
+                    this['id'] = split_id[0]
+                    docs.append(this)
+
+        # print('getting {} docs'.format(len(docs)))
+
+        payload = {"docs": docs, "json":True}
+        r = requests.post("https://realtime-sync-gw.wdprapps.disney.com/park-platform-pub/_bulk_get?revs=true&attachments=true", data=json.dumps(payload), headers=couchbaseHeaders())
+        s = r.text
+
+        cont_reg = re.compile("\w+-\w+:\s\w+\/\w+")
+        s = re.sub(cont_reg, "", s)
+        s = s.splitlines()
+        for x in s:
+            if x != '' and x[0] != '-':
+                try:
+                    x = json.loads(x)
+                    query = """INSERT OR REPLACE INTO sync (id, rev, body, channel) VALUES ('{}', '{}', '{}', '{}')""".format(x['_id'], x['_rev'], json.dumps(x).replace("'", "''"), channel)
+                    c.execute(query)
+                except:
+                    continue
+
+        conn.commit()
+        conn.close()
