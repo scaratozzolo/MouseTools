@@ -104,7 +104,7 @@ class Attraction(object):
     def get_raw_facilitystatus_data(self):
         """Returns the raw facilitystatus data from the database after syncing with Disney (returns most recent data)"""
         if self.__db.channel_exists('{}.facilitystatus.1_0'.format(self.__dest_code)):
-            self.__db.sync_database()
+            self.__db.sync_facilitystatus_channel()
         else:
             self.__db.create_facilitystatus_channel('{}.facilitystatus.1_0'.format(self.__dest_code))
 
@@ -188,7 +188,7 @@ class Attraction(object):
         end_time = None
 
         if self.__db.channel_exists('{}.today.1_0'.format(self.__dest_code)):
-            self.__db.sync_database()
+            self.__db.sync_today_channel()
             # maybe just sync this channel? and do same for previous methods
         else:
             self.__db.create_today_channel('{}.today.1_0'.format(self.__dest_code))
