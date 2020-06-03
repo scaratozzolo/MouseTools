@@ -39,6 +39,8 @@ class Attraction(object):
                 self.__anc_ra_id = row[9]
                 self.__anc_ev_id = row[10]
 
+            self.__facilities_data = c.execute("""SELECT body FROM sync WHERE id = '{}.facilities.1_0.en_us.{};entityType=Attraction'""".format(self.__dest_code, self.__id)).fetchone()
+
         except Exception as e:
             print(e)
             # conn = sqlite3.connect(DisneyDatabase().db_path)
@@ -93,8 +95,12 @@ class Attraction(object):
         """Return object entertainment venue id"""
         return self.__anc_ev_id
 
-    def get_wait_time(self):
-        """Return current wait time of the object. Returns None if object doesn't have a wait time or no wait currently exists (eg. closed)"""
+    def get_raw_facilities_data(self):
+        """Returns the raw facilities data currently stored in the database"""
+        return self.__facilities_data
+
+    def get_raw_facilitystatus_data(self):
+        """Returns the raw facilitystatus data from the database after syncing with Disney (returns most recent data)"""
         if self.__db.channel_exists('{}.facilitystatus.1_0'.format(self.__dest_code)):
             self.__db.sync_database()
         else:
@@ -104,11 +110,25 @@ class Attraction(object):
         c = conn.cursor()
 
         status_data = c.execute("""SELECT body FROM sync WHERE id = '{}.facilitystatus.1_0.{};entityType=Attraction'""".format(self.__dest_code, self.__id)).fetchone()
+        return status_data
+
+    def get_wait_time(self):
+        """Return current wait time of the object. Returns None if object doesn't have a wait time or no wait currently exists (eg. closed)"""
+        status_data = self.get_raw_facilitystatus_data()
         if status_data is None:
             return None
         else:
             body = json.loads(status_data[0])
             return body['waitMinutes']
+
+    def get_status(self):
+        """Return current wait time of the object. Returns None if object doesn't have a wait time or no wait currently exists (eg. closed)"""
+        status_data = self.get_raw_facilitystatus_data()
+        if status_data is None:
+            return None
+        else:
+            body = json.loads(status_data[0])
+            return body['status']
 
     def __str__(self):
         return 'Attraction object for {}'.format(self.__name)
