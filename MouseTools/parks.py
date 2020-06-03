@@ -1,8 +1,10 @@
 import requests
 import json
 import sys
+import sqlite3
 from datetime import datetime, timedelta
-from .auth import getHeaders
+from .auth import getHeaders, couchbaseHeaders
+from .database import DisneyDatabase
 
 MK_ID = "80007944"
 EPCOT_ID = "80007838"
@@ -24,229 +26,193 @@ class Park(object):
         """
 
         try:
-            #Making sure id and attraction_name are not None, are strings, and exist
-            if id == '':
-                raise ValueError('Park object expects an id value. Must be passed as string.\n Usage: Park(id)')
-            elif id != None and type(id) != str:
-                raise TypeError('Park object expects a string argument.')
 
-            self.__id = id
+            self.__db = DisneyDatabase()
+            conn = sqlite3.connect(self.__db.db_path)
+            c = conn.cursor()
 
-            try:
-                s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/theme-parks/{}".format(self.__id), headers=getHeaders())
-                self.__data = json.loads(s.content)
-                if self.__data['errors'] != []:
-                    s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/water-parks/{}".format(self.__id), headers=getHeaders())
-                    self.__data = json.loads(s.content)
-            except:
-                pass
+            row = c.execute("""SELECT * FROM facilities WHERE id = '{}'""".format(id)).fetchone()
+            if row is None:
+                raise ValueError()
+            else:
+                self.__id = row[0]
+                self.__name = row[1]
+                self.__entityType = row[2]
+                self.__subType = row[3]
+                self.__doc_id = row[4]
+                self.__dest_code = row[5]
+                self.__anc_park_id = row[6]
+                self.__anc_resort_id = row[7]
+                self.__anc_land_id = row[8]
+                self.__anc_ra_id = row[9]
+                self.__anc_ev_id = row[10]
 
-            self.__park_name = self.__data['name'].replace(u"\u2019", "'").replace(u"\u2013", "-").replace(u"\u2122", "").replace(u"\u2022", "-").replace(u"\u00ae", "").replace(u"\u2014", "-").replace(u"\u00a1", "").replace(u"\u00ee", "i").strip()
-
-            links = {}
-            for link in self.__data['links']:
-                links[link] = self.__data['links'][link]['href']
-            self.__links = json.dumps(links)
-
-            self.__long_id = self.__data['id']      #id;entityType=
-            self.__type = self.__data['type']
-            self.__content_type = self.__data['contentType']
-            self.__sub_type = self.__data['subType']
-            #advisories may update even when everything else doesn't. maybe create a seperate request to the data to get updated advisories
-            self.__advisories = self.__data['advisories']
-
-
-        except ValueError as e:
-            print(e)
-            sys.exit()
-        except TypeError as e:
-            print(e)
-            sys.exit()
+            self.__facilities_data = c.execute("""SELECT body FROM sync WHERE id = '{}.facilities.1_0.en_us.{}.{};entityType={}'""".format(self.__dest_code, self.__entityType, self.__id, self.__entityType)).fetchone()[0
+                                                                                                                                                                                                    ]
         except Exception as e:
             print(e)
-            print('That park or ID is not available. ID = {}\nFull list of possible parks and their ID\'s can be found here: https://scaratozzolo.github.io/MouseTools/parks.txt'.format(id))
+            print('That park is not available.')
             sys.exit()
 
-    def getParkID(self):
-        """
-        Returns the ID of the park
-        """
+    def get_possible_ids(self):
+        """Returns a list of possible ids of this entityType"""
+        conn = sqlite3.connect(DisneyDatabase().db_path)
+        c = conn.cursor()
+        pos_ids = [row[0] for row in c.execute("""SELECT id FROM facilities WHERE entityType = 'theme-park' or entityType = 'water-park'""")]
+        return pos_ids
+
+    def get_id(self):
+        """Return object id"""
         return self.__id
 
-    def getParkName(self):
-        """
-        Returns the true park name; the park name as referenced by Disney.
-        """
-        return self.__park_name
+    def get_name(self):
+        """Return object name"""
+        return self.__name
 
-    def getTodayParkHours(self):
-        """
-        Gets the park hours and returns them as a datetime object.
-        Returns the park hours in the following order: operating open, operating close, Extra Magic open, Extra Magic close.
-        Extra Magic hours will return None if there are none for today.
-        """
+    def get_entityType(self):
+        """Return object entityType"""
+        return self.__entityType
 
-        DATE = datetime.today()
-        s = requests.get("https://api.wdpro.disney.go.com/facility-service/schedules/{}?date={}-{}-{}".format(self.__id, DATE.year, self.__formatDate(str(DATE.month)), self.__formatDate(str(DATE.day))), headers=getHeaders())
-        data = json.loads(s.content)
+    def get_subType(self):
+        """Return object subType"""
+        return self.__subType
 
-        operating_hours_start = None
-        operating_hours_end = None
-        extra_hours_start = None
-        extra_hours_end = None
+    def get_doc_id(self):
+        """Return object doc id"""
+        return self.__doc_id
 
-        try:
-            for i in range(len(data['schedules'])):
-                if data['schedules'][i]['type'] == 'Operating':
-                    operating_hours_start = datetime(DATE.year, DATE.month, DATE.day, int(data['schedules'][i]['startTime'][0:2]), int(data['schedules'][i]['startTime'][3:5]))
-                    if int(data['schedules'][i]['endTime'][0:2]) >= 0 and int(data['schedules'][i]['endTime'][0:2]) <= 7:
-                        DATETEMP = DATE + timedelta(days=1)
-                        operating_hours_end = datetime(DATETEMP.year, DATETEMP.month, DATETEMP.day, int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
-                    else:
-                        operating_hours_end = datetime(DATE.year, DATE.month, DATE.day, int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
+    def get_destination_code(self):
+        """Return object destination code"""
+        return self.__dest_code
 
-                if data['schedules'][i]['type'] == 'Extra Magic Hours':
-                    extra_hours_start = datetime(DATE.year, DATE.month, DATE.day, int(data['schedules'][i]['startTime'][0:2]), int(data['schedules'][i]['startTime'][3:5]))
-                    if int(data['schedules'][i]['endTime'][0:2]) >= 0 and int(data['schedules'][i]['endTime'][0:2]) <= 7:
-                        DATETEMP = DATE + timedelta(days=1)
-                        extra_hours_end = datetime(DATETEMP.year, DATETEMP.month, DATETEMP.day, int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
-                    else:
-                        extra_hours_end = datetime(DATE.year, DATE.month, DATE.day, int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
+    def get_ancestor_park_id(self):
+        """Return object ancestor theme or water park id"""
+        return self.__anc_park_id
 
-        except KeyError:
-            pass
-        return operating_hours_start, operating_hours_end, extra_hours_start, extra_hours_end
+    def get_ancestor_resort_id(self):
+        """Return object ancestor resort id"""
+        return self.__anc_resort_id
 
-    def getParkHours(self, year, month, day):
-        """
-        Gets the park hours on a specific day and returns them as a datetime object.
-        Returns the park hours in the following order: operating open, operating close, Extra Magic open, Extra Magic close.
-        Extra Magic hours will return None if there are none for today.
+    def get_ancestor_land_id(self):
+        """Return object land id"""
+        return self.__anc_land_id
 
-        If all hours are None then Disney has no hours for that day.
+    def get_ancestor_resort_area_id(self):
+        """Return object resort area id"""
+        return self.__anc_ra_id
 
-        year = int yyyy
-        month = int mm
-        day = int dd
-        """
+    def get_ancestor_entertainment_venue_id(self):
+        """Return object entertainment venue id"""
+        return self.__anc_ev_id
 
-        DATE = datetime(year, month, day)
-        s = requests.get("https://api.wdpro.disney.go.com/facility-service/schedules/{}?date={}-{}-{}".format(self.__id, DATE.year, self.__formatDate(str(DATE.month)), self.__formatDate(str(DATE.day))), headers=getHeaders())
-        data = json.loads(s.content)
+    def get_raw_facilities_data(self):
+        """Returns the raw facilities data currently stored in the database"""
+        return self.__facilities_data
 
-        operating_hours_start = None
-        operating_hours_end = None
-        extra_hours_start = None
-        extra_hours_end = None
+    def get_wait_times(self):
+        """Returns a list of dictionaries in the form of {rideid:time} for attractions and entertainments for this park"""
+        if self.__db.channel_exists('{}.facilitystatus.1_0'.format(self.__dest_code)):
+            self.__db.sync_facilitystatus_channel()
+        else:
+            self.__db.create_facilitystatus_channel('{}.facilitystatus.1_0'.format(self.__dest_code))
 
-        try:
-            for i in range(len(data['schedules'])):
-                if data['schedules'][i]['type'] == 'Operating':
-                    operating_hours_start = datetime(DATE.year, DATE.month, DATE.day, int(data['schedules'][i]['startTime'][0:2]), int(data['schedules'][i]['startTime'][3:5]))
-                    if int(data['schedules'][i]['endTime'][0:2]) >= 0 and int(data['schedules'][i]['endTime'][0:2]) <= 7:
-                        DATETEMP = DATE + timedelta(days=1)
-                        operating_hours_end = datetime(DATETEMP.year, DATETEMP.month, DATETEMP.day, int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
-                    else:
-                        operating_hours_end = datetime(DATE.year, DATE.month, DATE.day, int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
+        conn = sqlite3.connect(self.__db.db_path)
+        c = conn.cursor()
 
-                if data['schedules'][i]['type'] == 'Extra Magic Hours':
-                    extra_hours_start = datetime(DATE.year, DATE.month, DATE.day, int(data['schedules'][i]['startTime'][0:2]), int(data['schedules'][i]['startTime'][3:5]))
-                    if int(data['schedules'][i]['endTime'][0:2]) >= 0 and int(data['schedules'][i]['endTime'][0:2]) <= 7:
-                        DATETEMP = DATE + timedelta(days=1)
-                        extra_hours_end = datetime(DATETEMP.year, DATETEMP.month, DATETEMP.day, int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
-                    else:
-                        extra_hours_end = datetime(DATE.year, DATE.month, DATE.day, int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
+        ids = [row for row in c.execute("SELECT id, entityType FROM facilities WHERE park_id = ? and (entityType = 'Attraction' or entityType = 'Entertainment')", (self.__id,))]
 
-        except KeyError:
-            pass
-        return operating_hours_start, operating_hours_end, extra_hours_start, extra_hours_end
-
-    def getParkAdvisories(self):
-        """
-        Gets all the advisories for the park and returns them in json: {id:advisory}.
-        May take some time because it has to go to every link for each advisory.
-        """
-
-        print('May take some time. {} advisories to parse.'.format(len(self.__advisories)))
-        advisories = {}
-
-        for i in range(len(self.__advisories)):
-            s = requests.get(self.__advisories[i]['links']['self']['href'], headers=getHeaders())
-            data = json.loads(s.content)
-            advisories[data['id']] = data['name'].replace(u"\u2019", "'").replace(u"\u2013", "-")
-
-        advisories = json.dumps(advisories)
-
-        return advisories
-
-    def getAttractionIDs(self):
-        """
-        Returns a list of all attraction IDs in the park
-        There is a huge discrepancy between the number of attractions reported and the actual number (This is why it errors out so much).
-        I suggest getting the attractions from the Destination class and sorting by Attraction.ancestorThemePark()
-        """
-        ids = []
-        s = requests.get("https://disneyworld.disney.go.com/api/wdpro/facility-service/theme-parks/{}/wait-times".format(self.__id), headers=getHeaders())
-        loaded = json.loads(s.content)
-
-        for i in range(len(loaded['entries'])):
-            if(loaded['entries'][i]['id'].split(';')[1].find('Attraction') > -1):
-                ids.append(loaded['entries'][i]['id'].split(';')[0])
-        return ids
-
-    def getAttractions(self):
-        """
-        Returns a list of Attraction objects
-        There is a huge discrepancy between the number of attractions reported and the actual number (This is why it errors out so much).
-        I suggest getting the attractions from the Destination class and sorting by Attraction.ancestorThemePark()
-        """
-        from .attractions import Attraction
-        attractions = []
-
-        data = self.getAttractionIDs()
-
-        for attract in data:
+        data = {}
+        for row in ids:
+            status_data = c.execute("SELECT body FROM sync WHERE id = ?", ("{}.facilitystatus.1_0.{};entityType={}".format(self.__dest_code, row[0], row[1]),)).fetchone()
             try:
-                attractions.append(Attraction(attract))
+                if status_data is not None:
+                    body = json.loads(status_data[0])
+                    data[row[0]] = body['waitMinutes']
             except:
-                pass
-        return attractions
+                continue
 
-    def getCurrentWaitTimes(self):
-        """
-        Gets all current wait times for the park. Returns them in json {park:time in minutes}. May take some time as it goes through all attractions.
-        """
+        return data
 
-        s = requests.get("https://disneyworld.disney.go.com/api/wdpro/facility-service/theme-parks/{}/wait-times".format(self.__id), headers=getHeaders())
-        loaded_times = json.loads(s.content)
+    def get_wait_times_detailed(self):
+        """Returns a list of dictionaries in the form of {rideid:{name, status, wait_time}} for attractions and entertainments for this park"""
+        if self.__db.channel_exists('{}.facilitystatus.1_0'.format(self.__dest_code)):
+            self.__db.sync_facilitystatus_channel()
+        else:
+            self.__db.create_facilitystatus_channel('{}.facilitystatus.1_0'.format(self.__dest_code))
 
-        times = {}
-        for i in range(len(loaded_times['entries'])):
-            if 'postedWaitMinutes' in loaded_times['entries'][i]['waitTime']:
-                times[loaded_times['entries'][i]['name']] = loaded_times['entries'][i]['waitTime']['postedWaitMinutes']
+        conn = sqlite3.connect(self.__db.db_path)
+        c = conn.cursor()
 
-        json_times = json.dumps(times)
-        return json_times
+        ids = [row for row in c.execute("SELECT id, entityType FROM facilities WHERE park_id = ? and (entityType = 'Attraction' or entityType = 'Entertainment')", (self.__id,))]
 
-    def getAncestorResortArea(self):
-        """
-        Returns ancestor resort area.
-        """
-        return self.__data['links']['ancestorResortArea']['title']
+        data = {}
+        for row in ids:
+            status_data = c.execute("SELECT body FROM sync WHERE id = ?", ("{}.facilitystatus.1_0.{};entityType={}".format(self.__dest_code, row[0], row[1]),)).fetchone()
+            try:
+                if status_data is not None:
+                    body = json.loads(status_data[0])
+                    this = {}
+                    this['name'] = c.execute("SELECT name FROM facilities WHERE id = ?", (row[0],)).fetchone()[0]
+                    this['status'] = body['status']
+                    this['wait_time'] = body['waitMinutes']
+                    data[row[0]] = this
+            except Exception as e:
+                # print(e)
+                continue
 
-    def __formatDate(self, num):
-        """
-        Formats month and day into proper format
-        """
-        if len(num) < 2:
-            num = '0'+num
-        return num
+        return data
+
+    def get_status(self):
+        """Return current status of the object."""
+        if self.__db.channel_exists('{}.today.1_0'.format(self.__dest_code)):
+            self.__db.sync_today_channel()
+            # maybe just sync this channel? and do same for previous methods
+        else:
+            self.__db.create_today_channel('{}.today.1_0'.format(self.__dest_code))
+
+        conn = sqlite3.connect(self.__db.db_path)
+        c = conn.cursor()
+
+        today_data = c.execute("""SELECT body FROM sync WHERE id = '{}.today.1_0.{}'""".format(self.__dest_code, self.__entityType)).fetchone()
+
+        if today_data is None:
+            return None
+        else:
+            body = json.loads(today_data[0])
+
+            return body['facilities'][self.__id + ';entityType=' + self.__entityType][0]['scheduleType']
+
+    def get_last_update(self):
+        """Returns facilities last update time as a datetime object"""
+        facility_data = json.loads(self.__facilities_data)
+        return datetime.strptime(facility_data['lastUpdate'], "%Y-%m-%dT%H:%M:%SZ")
+        # TODO check if facilitystatus has a different last update time
+
+    def get_coordinates(self):
+        """Returns the object's latitude and longitude"""
+        facility_data = json.loads(self.__facilities_data)
+        return facility_data['latitude'], facility_data['longitude']
+
+    def get_description(self):
+        """Returns the object's descriptions"""
+        facility_data = json.loads(self.__facilities_data)
+        return facility_data['description']
+
+    def get_list_image(self):
+        """Returns the url to the object's list image"""
+        facility_data = json.loads(self.__facilities_data)
+        return facility_data['listImageUrl']
+
+    def get_facets(self):
+        """Returns a list of  dictionaries of the object's facets"""
+        facility_data = json.loads(self.__facilities_data)
+        return facility_data['facets']
 
     def __eq__(self, other):
         """
-        Checks if two parks are equal
+        Checks if objects are equal
         """
-        return self.__id == other.getParkID()
+        return self.__id == other.get_id()
 
     def __str__(self):
-        return 'Park object for {}'.format(self.__park_name)
+        return 'Park object for {}'.format(self.__name)
