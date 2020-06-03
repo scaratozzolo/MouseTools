@@ -41,56 +41,60 @@ class Attraction(object):
 
         except Exception as e:
             print(e)
-            print('That destination is not available.')
+            # conn = sqlite3.connect(DisneyDatabase().db_path)
+            # c = conn.cursor()
+            # pos_attrs = [row[0] for row in c.execute("""SELECT id FROM facilities WHERE entityType = 'Attraction'""")]
+            # print('That attraction is not available. Available ids: {}'.format(', '.join(pos_attrs)))
+            print('That attraction is not available.')
             sys.exit()
 
 
     def get_id(self):
-
+        """Return object id"""
         return self.__id
 
     def get_name(self):
-
+        """Return object name"""
         return self.__name
 
     def get_entityType(self):
-
+        """Return object entityType"""
         return self.__entityType
 
     def get_subType(self):
-
+        """Return object subType"""
         return self.__subType
 
     def get_doc_id(self):
-
+        """Return object doc id"""
         return self.__doc_id
 
     def get_destination_code(self):
-
+        """Return object destination code"""
         return self.__dest_code
 
     def get_ancestor_park_id(self):
-
+        """Return object ancestor theme or water park id"""
         return self.__anc_park_id
 
     def get_ancestor_resort_id(self):
-
+        """Return object ancestor resort id"""
         return self.__anc_resort_id
 
     def get_ancestor_land_id(self):
-
+        """Return object land id"""
         return self.__anc_land_id
 
     def get_ancestor_resort_area_id(self):
-
+        """Return object resort area id"""
         return self.__anc_ra_id
 
     def get_ancestor_entertainment_venue_id(self):
-
+        """Return object entertainment venue id"""
         return self.__anc_ev_id
 
     def get_wait_time(self):
-
+        """Return current wait time of the object. Returns None if object doesn't have a wait time or no wait currently exists (eg. closed)"""
         if self.__db.channel_exists('{}.facilitystatus.1_0'.format(self.__dest_code)):
             self.__db.sync_database()
         else:
