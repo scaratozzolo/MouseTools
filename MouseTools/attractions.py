@@ -130,5 +130,21 @@ class Attraction(object):
             body = json.loads(status_data[0])
             return body['status']
 
+    def fastpass_available(self):
+        """Returns a boolean of whether this object has FastPass"""
+        status_data = self.get_raw_facilitystatus_data()
+        if status_data is None:
+            return False
+        else:
+            body = json.loads(status_data[0])
+            return body['fastPassAvailable'] == 'true'
+
+    def fastpass_times(self):
+        """Returns the current start and end time of the FastPass"""
+        # TODO
+        start_time = None
+        end_time = None
+        return start_time, end_time
+
     def __str__(self):
         return 'Attraction object for {}'.format(self.__name)
