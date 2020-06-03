@@ -47,8 +47,7 @@ class Park(object):
                 self.__anc_ra_id = row[9]
                 self.__anc_ev_id = row[10]
 
-            self.__facilities_data = c.execute("""SELECT body FROM sync WHERE id = '{}.facilities.1_0.en_us.{}.{};entityType={}'""".format(self.__dest_code, self.__entityType, self.__id, self.__entityType)).fetchone()[0
-                                                                                                                                                                                                    ]
+            self.__facilities_data = c.execute("""SELECT body FROM sync WHERE id = '{}.facilities.1_0.en_us.{}.{};entityType={}'""".format(self.__dest_code, self.__entityType, self.__id, self.__entityType)).fetchone()[0]
         except Exception as e:
             print(e)
             print('That park is not available.')
@@ -228,7 +227,7 @@ class Park(object):
             return start_time, end_time
         else:
             body = json.loads(today_data[0])
-            
+
             if body['facilities'][self.__id + ';entityType=' + self.__entityType][0]['scheduleType'] == 'Closed' or body['facilities'][self.__id + ';entityType=Attraction'][0]['scheduleType'] == 'Refurbishment':
                 return start_time, end_time
 
