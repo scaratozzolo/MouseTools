@@ -211,5 +211,11 @@ class Attraction(object):
 
             return start_time, end_time
 
+    def __eq__(self, other):
+        """
+        Checks if objects are equal
+        """
+        return self.__id == other.get_id()
+
     def __str__(self):
         return 'Attraction object for {}'.format(self.__name)
