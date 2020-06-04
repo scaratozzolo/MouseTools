@@ -19,7 +19,7 @@ class Character(object):
 
         try:
             error = False
-            self.__data = requests.get("https://api.wdpro.disney.go.com/facility-service/characters/{}".format(self.__id), headers=getHeaders()).json()
+            self.__data = requests.get("https://api.wdpro.disney.go.com/facility-service/characters/{}".format(id), headers=getHeaders()).json()
             try:
                 if len(self.__data['errors']) > 0:
                     error = True
@@ -38,6 +38,19 @@ class Character(object):
             sys.exit()
 
 
+    def get_possible_ids(self):
+        """Returns a list of possible ids of this entityType"""
+        ids = []
+
+        data = requests.get("https://api.wdpro.disney.go.com/facility-service/characters", headers=getHeaders()).json()
+
+        for entry in data['entries']:
+            try:
+                ids.append(entry['links']['self']['href'].split('/')[-1].split('?')[0])
+            except:
+                pass
+
+        return ids
 
     def get_name(self):
         """

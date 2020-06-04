@@ -47,59 +47,46 @@ class Park(object):
             conn = sqlite3.connect(self.__db.db_path)
             c = conn.cursor()
 
-            row = c.execute("SELECT * FROM facilities WHERE id = ?", (id,)).fetchone()
-            if row is not None:
-                self.__id = row[0]
-                self.__name = row[1]
-                self.__entityType = row[2]
-                self.__subType = row[3]
-                self.__doc_id = row[4]
-                self.__dest_code = row[5]
-                self.__anc_park_id = row[6]
-                self.__anc_resort_id = row[7]
-                self.__anc_land_id = row[8]
-                self.__anc_ra_id = row[9]
-                self.__anc_ev_id = row[10]
-                self.__facilities_data = json.loads(c.execute("SELECT body FROM sync WHERE id = ?", (self.__doc_id,)).fetchone()[0])
-            else:
-                self.__id = id
-                self.__name = self.__data['name']
-                self.__entityType = self.__data['type']
-                try:
-                    self.__subType = self.__data['subType']
-                except:
-                    self.__subType = None
-                self.__doc_id = None
-                # self.__anc_destination
-                self.__dest_code = c.execute("SELECT destination_code FROM facilities WHERE id = ?", (self.__data['ancestorDestination']['id'].split(';')[0],)).fetchone()[0]
-                try:
-                    self.__anc_park_id = self.__data['links']['ancestorThemePark']['href'].split('/')[-1].split('?')[0]
-                except:
-                    try:
-                        self.__anc_park_id = self.__data['links']['ancestorWaterPark']['href'].split('/')[-1].split('?')[0]
-                    except:
-                        self.__anc_park_id = None
-                try:
-                    self.__anc_resort_id = self.__data['links']['ancestorResort']['href'].split('/')[-1].split('?')[0]
-                except:
-                    self.__anc_resort_id = None
 
+            self.__id = id
+            self.__name = self.__data['name']
+            self.__entityType = self.__data['type']
+            try:
+                self.__subType = self.__data['subType']
+            except:
+                self.__subType = None
+            doc_id_query = c.execute("SELECT doc_id from facilities where doc_id LIKE ?", ("%{};entityType=point-of-interest".format(self.__id),)).fetchone()
+            self.__doc_id = doc_id_query[0] if doc_id_query is not None else None
+            self.__anc_dest_id = self.__data['ancestorDestination']['id'].split(';')[0]
+            self.__dest_code = c.execute("SELECT destination_code FROM facilities WHERE id = ?", (self.__anc_dest_id,)).fetchone()[0]
+            try:
+                self.__anc_park_id = self.__data['links']['ancestorThemePark']['href'].split('/')[-1].split('?')[0]
+            except:
                 try:
-                    self.__anc_land_id = self.__data['links']['ancestorLand']['href'].split('/')[-1].split('?')[0]
+                    self.__anc_park_id = self.__data['links']['ancestorWaterPark']['href'].split('/')[-1].split('?')[0]
                 except:
-                    self.__anc_land_id = None
+                    self.__anc_park_id = None
+            try:
+                self.__anc_resort_id = self.__data['links']['ancestorResort']['href'].split('/')[-1].split('?')[0]
+            except:
+                self.__anc_resort_id = None
 
-                try:
-                    self.__anc_ra_id = self.__data['links']['ancestorResortArea']['href'].split('/')[-1].split('?')[0]
-                except:
-                    self.__anc_ra_id = None
+            try:
+                self.__anc_land_id = self.__data['links']['ancestorLand']['href'].split('/')[-1].split('?')[0]
+            except:
+                self.__anc_land_id = None
 
-                try:
-                    self.__anc_ev_id = self.__data['links']['ancestorEntertainmentVenue']['href'].split('/')[-1].split('?')[0]
-                except:
-                    self.__anc_ev_id = None
+            try:
+                self.__anc_ra_id = self.__data['links']['ancestorResortArea']['href'].split('/')[-1].split('?')[0]
+            except:
+                self.__anc_ra_id = None
 
-                self.__facilities_data = None
+            try:
+                self.__anc_ev_id = self.__data['links']['ancestorEntertainmentVenue']['href'].split('/')[-1].split('?')[0]
+            except:
+                self.__anc_ev_id = None
+
+            self.__facilities_data = None
 
             conn.commit()
             conn.close()
@@ -110,10 +97,26 @@ class Park(object):
 
     def get_possible_ids(self):
         """Returns a list of possible ids of this entityType"""
-        conn = sqlite3.connect(DisneyDatabase().db_path)
-        c = conn.cursor()
-        pos_ids = [row[0] for row in c.execute("SELECT id FROM facilities WHERE entityType = 'theme-park' or entityType = 'water-park'")]
-        return pos_ids
+        ids = []
+
+        dest_data = requests.get("https://api.wdpro.disney.go.com/facility-service/destinations/{}".format(self.__anc_dest_id), headers=getHeaders()).json()
+        data = requests.get(dest_data['links']['themeParks']['href'], headers=getHeaders()).json()
+
+        for entry in data['entries']:
+            try:
+                ids.append(entry['links']['self']['href'].split('/')[-1].split('?')[0])
+            except:
+                pass
+
+        data = requests.get(dest_data['links']['waterParks']['href'], headers=getHeaders()).json()
+
+        for entry in data['entries']:
+            try:
+                ids.append(entry['links']['self']['href'].split('/')[-1].split('?')[0])
+            except:
+                pass
+
+        return ids
 
     def get_id(self):
         """Return object id"""
@@ -165,7 +168,16 @@ class Park(object):
 
     def get_raw_facilities_data(self):
         """Returns the raw facilities data currently stored in the database"""
-        return self.__facilities_data
+        conn = sqlite3.connect(self.__db.db_path)
+        c = conn.cursor()
+        data = c.execute("SELECT body FROM sync WHERE id = ?", (self.__doc_id,)).fetchone()[0]
+        conn.commit()
+        conn.close()
+
+        if data is None:
+            return None
+        else:
+            return json.loads(data)
 
     def get_wait_times(self):
         """Returns a list of dictionaries in the form of {rideid:time} for attractions and entertainments for this park"""
@@ -220,6 +232,112 @@ class Park(object):
 
         return data
 
+    def get_attraction_wait_times(self):
+        """Returns a list of dictionaries in the form of {rideid:time} for attractions for this park"""
+        if self.__db.channel_exists('{}.facilitystatus.1_0'.format(self.__dest_code)):
+            self.__db.sync_facilitystatus_channel()
+        else:
+            self.__db.create_facilitystatus_channel('{}.facilitystatus.1_0'.format(self.__dest_code))
+
+        conn = sqlite3.connect(self.__db.db_path)
+        c = conn.cursor()
+
+        ids = [row for row in c.execute("SELECT id, entityType FROM facilities WHERE park_id = ? and entityType = 'Attraction'", (self.__id,))]
+
+        data = {}
+        for row in ids:
+            status_data = c.execute("SELECT body FROM sync WHERE id = ?", ("{}.facilitystatus.1_0.{};entityType={}".format(self.__dest_code, row[0], row[1]),)).fetchone()
+            try:
+                if status_data is not None:
+                    body = json.loads(status_data[0])
+                    data[row[0]] = body['waitMinutes']
+            except:
+                continue
+
+        return data
+
+    def get_attraction_wait_times_detailed(self):
+        """Returns a list of dictionaries in the form of {rideid:{name, status, wait_time}} for attractions for this park"""
+        if self.__db.channel_exists('{}.facilitystatus.1_0'.format(self.__dest_code)):
+            self.__db.sync_facilitystatus_channel()
+        else:
+            self.__db.create_facilitystatus_channel('{}.facilitystatus.1_0'.format(self.__dest_code))
+
+        conn = sqlite3.connect(self.__db.db_path)
+        c = conn.cursor()
+
+        ids = [row for row in c.execute("SELECT id, entityType FROM facilities WHERE park_id = ? and entityType = 'Attraction'", (self.__id,))]
+
+        data = {}
+        for row in ids:
+            status_data = c.execute("SELECT body FROM sync WHERE id = ?", ("{}.facilitystatus.1_0.{};entityType={}".format(self.__dest_code, row[0], row[1]),)).fetchone()
+            try:
+                if status_data is not None:
+                    body = json.loads(status_data[0])
+                    this = {}
+                    this['name'] = c.execute("SELECT name FROM facilities WHERE id = ?", (row[0],)).fetchone()[0]
+                    this['status'] = body['status']
+                    this['wait_time'] = body['waitMinutes']
+                    data[row[0]] = this
+            except Exception as e:
+                # print(e)
+                continue
+
+        return data
+
+    def get_entertainment_wait_times(self):
+        """Returns a list of dictionaries in the form of {rideid:time} for entertainments for this park"""
+        if self.__db.channel_exists('{}.facilitystatus.1_0'.format(self.__dest_code)):
+            self.__db.sync_facilitystatus_channel()
+        else:
+            self.__db.create_facilitystatus_channel('{}.facilitystatus.1_0'.format(self.__dest_code))
+
+        conn = sqlite3.connect(self.__db.db_path)
+        c = conn.cursor()
+
+        ids = [row for row in c.execute("SELECT id, entityType FROM facilities WHERE park_id = ? and entityType = 'Entertainment'", (self.__id,))]
+
+        data = {}
+        for row in ids:
+            status_data = c.execute("SELECT body FROM sync WHERE id = ?", ("{}.facilitystatus.1_0.{};entityType={}".format(self.__dest_code, row[0], row[1]),)).fetchone()
+            try:
+                if status_data is not None:
+                    body = json.loads(status_data[0])
+                    data[row[0]] = body['waitMinutes']
+            except:
+                continue
+
+        return data
+
+    def get_entertainment_wait_times_detailed(self):
+        """Returns a list of dictionaries in the form of {rideid:{name, status, wait_time}} for entertainments for this park"""
+        if self.__db.channel_exists('{}.facilitystatus.1_0'.format(self.__dest_code)):
+            self.__db.sync_facilitystatus_channel()
+        else:
+            self.__db.create_facilitystatus_channel('{}.facilitystatus.1_0'.format(self.__dest_code))
+
+        conn = sqlite3.connect(self.__db.db_path)
+        c = conn.cursor()
+
+        ids = [row for row in c.execute("SELECT id, entityType FROM facilities WHERE park_id = ? and entityType = 'Entertainment'", (self.__id,))]
+
+        data = {}
+        for row in ids:
+            status_data = c.execute("SELECT body FROM sync WHERE id = ?", ("{}.facilitystatus.1_0.{};entityType={}".format(self.__dest_code, row[0], row[1]),)).fetchone()
+            try:
+                if status_data is not None:
+                    body = json.loads(status_data[0])
+                    this = {}
+                    this['name'] = c.execute("SELECT name FROM facilities WHERE id = ?", (row[0],)).fetchone()[0]
+                    this['status'] = body['status']
+                    this['wait_time'] = body['waitMinutes']
+                    data[row[0]] = this
+            except Exception as e:
+                # print(e)
+                continue
+
+        return data
+
     def get_status(self):
         """Return current status of the object."""
         if self.__db.channel_exists('{}.today.1_0'.format(self.__dest_code)):
@@ -242,29 +360,43 @@ class Park(object):
 
     def get_last_update(self):
         """Returns facilities last update time as a datetime object"""
-        facility_data = json.loads(self.__facilities_data)
-        return datetime.strptime(facility_data['lastUpdate'], "%Y-%m-%dT%H:%M:%SZ")
-        # TODO check if facilitystatus has a different last update time
+        facility_data = self.get_raw_facilities_data()
+        if facility_data is None:
+            return None
+        else:
+            return datetime.strptime(facility_data['lastUpdate'], "%Y-%m-%dT%H:%M:%SZ")
 
     def get_coordinates(self):
         """Returns the object's latitude and longitude"""
-        facility_data = json.loads(self.__facilities_data)
-        return facility_data['latitude'], facility_data['longitude']
+        facility_data = self.get_raw_facilities_data()
+        if facility_data is None:
+            return None
+        else:
+            return facility_data['latitude'], facility_data['longitude']
 
     def get_description(self):
         """Returns the object's descriptions"""
-        facility_data = json.loads(self.__facilities_data)
-        return facility_data['description']
+        facility_data = self.get_raw_facilities_data()
+        if facility_data is None:
+            return None
+        else:
+            return facility_data['description']
 
     def get_list_image(self):
         """Returns the url to the object's list image"""
-        facility_data = json.loads(self.__facilities_data)
-        return facility_data['listImageUrl']
+        facility_data = self.get_raw_facilities_data()
+        if facility_data is None:
+            return None
+        else:
+            return facility_data['listImageUrl']
 
     def get_facets(self):
         """Returns a list of  dictionaries of the object's facets"""
-        facility_data = json.loads(self.__facilities_data)
-        return facility_data['facets']
+        facility_data = self.get_raw_facilities_data()
+        if facility_data is None:
+            return None
+        else:
+            return facility_data['facets']
 
     def get_todays_hours(self):
         """
@@ -377,3 +509,5 @@ class Park(object):
 
     def __str__(self):
         return 'Park object for {}'.format(self.__name)
+
+# TODO get attraction_ids

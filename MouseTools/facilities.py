@@ -40,8 +40,8 @@ class Facility(object):
 
             self.__facilities_data = c.execute("SELECT body FROM sync WHERE id = ?", (self.__doc_id,)).fetchone()[0]
         except Exception as e:
-            print(e)
-            print('That park is not available.')
+            # print(e)
+            print('That facility is not available.')
             sys.exit()
 
     def get_possible_ids(self):
@@ -97,7 +97,16 @@ class Facility(object):
 
     def get_raw_facilities_data(self):
         """Returns the raw facilities data currently stored in the database"""
-        return self.__facilities_data
+        conn = sqlite3.connect(self.__db.db_path)
+        c = conn.cursor()
+        data = c.execute("SELECT body FROM sync WHERE id = ?", (self.__doc_id,)).fetchone()[0]
+        conn.commit()
+        conn.close()
+
+        if data is None:
+            return None
+        else:
+            return json.loads(data)
 
     def get_status(self):
         """Return current status of the object."""
@@ -121,29 +130,43 @@ class Facility(object):
 
     def get_last_update(self):
         """Returns facilities last update time as a datetime object"""
-        facility_data = json.loads(self.__facilities_data)
-        return datetime.strptime(facility_data['lastUpdate'], "%Y-%m-%dT%H:%M:%SZ")
-        # TODO check if facilitystatus has a different last update time
+        facility_data = self.get_raw_facilities_data()
+        if facility_data is None:
+            return None
+        else:
+            return datetime.strptime(facility_data['lastUpdate'], "%Y-%m-%dT%H:%M:%SZ")
 
     def get_coordinates(self):
         """Returns the object's latitude and longitude"""
-        facility_data = json.loads(self.__facilities_data)
-        return facility_data['latitude'], facility_data['longitude']
+        facility_data = self.get_raw_facilities_data()
+        if facility_data is None:
+            return None
+        else:
+            return facility_data['latitude'], facility_data['longitude']
 
     def get_description(self):
         """Returns the object's descriptions"""
-        facility_data = json.loads(self.__facilities_data)
-        return facility_data['description']
+        facility_data = self.get_raw_facilities_data()
+        if facility_data is None:
+            return None
+        else:
+            return facility_data['description']
 
     def get_list_image(self):
         """Returns the url to the object's list image"""
-        facility_data = json.loads(self.__facilities_data)
-        return facility_data['listImageUrl']
+        facility_data = self.get_raw_facilities_data()
+        if facility_data is None:
+            return None
+        else:
+            return facility_data['listImageUrl']
 
     def get_facets(self):
         """Returns a list of  dictionaries of the object's facets"""
-        facility_data = json.loads(self.__facilities_data)
-        return facility_data['facets']
+        facility_data = self.get_raw_facilities_data()
+        if facility_data is None:
+            return None
+        else:
+            return facility_data['facets']
 
     def get_todays_hours(self):
         """Returns the start and end times for the object. Will return None, None if closed"""

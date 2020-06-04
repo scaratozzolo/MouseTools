@@ -83,7 +83,16 @@ class Destination(object):
 
     def get_raw_facilities_data(self):
         """Returns the raw facilities data currently stored in the database"""
-        return self.__facilities_data
+        conn = sqlite3.connect(self.__db.db_path)
+        c = conn.cursor()
+        data = c.execute("SELECT body FROM sync WHERE id = ?", (self.__doc_id,)).fetchone()[0]
+        conn.commit()
+        conn.close()
+
+        if data is None:
+            return None
+        else:
+            return json.loads(data)
 
     def get_attraction_ids(self):
         """

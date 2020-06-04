@@ -34,58 +34,46 @@ class Entertainment(object):
             conn = sqlite3.connect(self.__db.db_path)
             c = conn.cursor()
 
-            row = c.execute("SELECT * FROM facilities WHERE id = ?", (id,)).fetchone()
-            if row is not None:
-                self.__id = row[0]
-                self.__name = row[1]
-                self.__entityType = row[2]
-                self.__subType = row[3]
-                self.__doc_id = row[4]
-                self.__dest_code = row[5]
-                self.__anc_park_id = row[6]
-                self.__anc_resort_id = row[7]
-                self.__anc_land_id = row[8]
-                self.__anc_ra_id = row[9]
-                self.__anc_ev_id = row[10]
-                self.__facilities_data = json.loads(c.execute("SELECT body FROM sync WHERE id = ?", (self.__doc_id,)).fetchone()[0])
-            else:
-                self.__id = id
-                self.__name = self.__data['name']
-                self.__entityType = self.__data['type']
-                try:
-                    self.__subType = self.__data['subType']
-                except:
-                    self.__subType = None
-                self.__doc_id = None
-                self.__dest_code = c.execute("SELECT destination_code FROM facilities WHERE id = ?", (self.__data['ancestorDestination']['id'].split(';')[0],)).fetchone()[0]
-                try:
-                    self.__anc_park_id = self.__data['links']['ancestorThemePark']['href'].split('/')[-1].split('?')[0]
-                except:
-                    try:
-                        self.__anc_park_id = self.__data['links']['ancestorWaterPark']['href'].split('/')[-1].split('?')[0]
-                    except:
-                        self.__anc_park_id = None
-                try:
-                    self.__anc_resort_id = self.__data['links']['ancestorResort']['href'].split('/')[-1].split('?')[0]
-                except:
-                    self.__anc_resort_id = None
 
+            self.__id = id
+            self.__name = self.__data['name']
+            self.__entityType = self.__data['type']
+            try:
+                self.__subType = self.__data['subType']
+            except:
+                self.__subType = None
+            doc_id_query = c.execute("SELECT doc_id from facilities where doc_id LIKE ?", ("%{};entityType=point-of-interest".format(self.__id),)).fetchone()
+            self.__doc_id = doc_id_query[0] if doc_id_query is not None else None
+            self.__anc_dest_id = self.__data['ancestorDestination']['id'].split(';')[0]
+            self.__dest_code = c.execute("SELECT destination_code FROM facilities WHERE id = ?", (self.__anc_dest_id,)).fetchone()[0]
+            try:
+                self.__anc_park_id = self.__data['links']['ancestorThemePark']['href'].split('/')[-1].split('?')[0]
+            except:
                 try:
-                    self.__anc_land_id = self.__data['links']['ancestorLand']['href'].split('/')[-1].split('?')[0]
+                    self.__anc_park_id = self.__data['links']['ancestorWaterPark']['href'].split('/')[-1].split('?')[0]
                 except:
-                    self.__anc_land_id = None
+                    self.__anc_park_id = None
+            try:
+                self.__anc_resort_id = self.__data['links']['ancestorResort']['href'].split('/')[-1].split('?')[0]
+            except:
+                self.__anc_resort_id = None
 
-                try:
-                    self.__anc_ra_id = self.__data['links']['ancestorResortArea']['href'].split('/')[-1].split('?')[0]
-                except:
-                    self.__anc_ra_id = None
+            try:
+                self.__anc_land_id = self.__data['links']['ancestorLand']['href'].split('/')[-1].split('?')[0]
+            except:
+                self.__anc_land_id = None
 
-                try:
-                    self.__anc_ev_id = self.__data['links']['ancestorEntertainmentVenue']['href'].split('/')[-1].split('?')[0]
-                except:
-                    self.__anc_ev_id = None
+            try:
+                self.__anc_ra_id = self.__data['links']['ancestorResortArea']['href'].split('/')[-1].split('?')[0]
+            except:
+                self.__anc_ra_id = None
 
-                self.__facilities_data = None
+            try:
+                self.__anc_ev_id = self.__data['links']['ancestorEntertainmentVenue']['href'].split('/')[-1].split('?')[0]
+            except:
+                self.__anc_ev_id = None
+
+            self.__facilities_data = None
 
             conn.commit()
             conn.close()
@@ -99,12 +87,12 @@ class Entertainment(object):
         """Returns a list of possible ids of this entityType"""
         entertainments = []
 
-        dest_data = requests.get("https://api.wdpro.disney.go.com/facility-service/destinations/{}".format(self.__id), headers=getHeaders()).json()
+        dest_data = requests.get("https://api.wdpro.disney.go.com/facility-service/destinations/{}".format(self.__anc_dest_id), headers=getHeaders()).json()
         data = requests.get(dest_data['links']['entertainments']['href'], headers=getHeaders()).json()
 
         for enter in data['entries']:
             try:
-                entertainments.append(enter['links']['self']['href'].split('/')[-1])
+                entertainments.append(enter['links']['self']['href'].split('/')[-1].split('?')[0])
             except:
                 pass
 
@@ -134,6 +122,10 @@ class Entertainment(object):
         """Return object destination code"""
         return self.__dest_code
 
+    def get_ancestor_destination_id(self):
+        """Return object ancestor theme or water park id"""
+        return self.__anc_dest_id
+
     def get_ancestor_park_id(self):
         """Return object ancestor theme or water park id"""
         return self.__anc_park_id
@@ -160,7 +152,16 @@ class Entertainment(object):
 
     def get_raw_facilities_data(self):
         """Returns the raw facilities data currently stored in the database"""
-        return self.__facilities_data
+        conn = sqlite3.connect(self.__db.db_path)
+        c = conn.cursor()
+        data = c.execute("SELECT body FROM sync WHERE id = ?", (self.__doc_id,)).fetchone()[0]
+        conn.commit()
+        conn.close()
+
+        if data is None:
+            return None
+        else:
+            return json.loads(data)
 
     def get_raw_facilitystatus_data(self):
         """Returns the raw facilitystatus data from the database after syncing with Disney (returns most recent data)"""
@@ -221,23 +222,43 @@ class Entertainment(object):
 
     def get_last_update(self):
         """Returns facilities last update time as a datetime object"""
-        return datetime.strptime(self.__facilities_data['lastUpdate'], "%Y-%m-%dT%H:%M:%SZ")
+        facility_data = self.get_raw_facilities_data()
+        if facility_data is None:
+            return None
+        else:
+            return datetime.strptime(facility_data['lastUpdate'], "%Y-%m-%dT%H:%M:%SZ")
 
     def get_coordinates(self):
         """Returns the object's latitude and longitude"""
-        return self.__facilities_data['latitude'], self.__facilities_data['longitude']
+        facility_data = self.get_raw_facilities_data()
+        if facility_data is None:
+            return None
+        else:
+            return facility_data['latitude'], facility_data['longitude']
 
     def get_description(self):
         """Returns the object's descriptions"""
-        return self.__facilities_data['description']
+        facility_data = self.get_raw_facilities_data()
+        if facility_data is None:
+            return None
+        else:
+            return facility_data['description']
 
     def get_list_image(self):
         """Returns the url to the object's list image"""
-        return self.__facilities_data['listImageUrl']
+        facility_data = self.get_raw_facilities_data()
+        if facility_data is None:
+            return None
+        else:
+            return facility_data['listImageUrl']
 
     def get_facets(self):
         """Returns a list of  dictionaries of the object's facets"""
-        return self.__facilities_data['facets']
+        facility_data = self.get_raw_facilities_data()
+        if facility_data is None:
+            return None
+        else:
+            return facility_data['facets']
 
     def get_todays_hours(self):
         """Returns the start and end times for the object. Will return None, None if closed"""
