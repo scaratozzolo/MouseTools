@@ -19,35 +19,45 @@ DEST_CODES = [WDW_CODE, DLR_CODE]
 
 class Destination(object):
 
-    def __init__(self, dest_code = '', sync_on_init=True):
+    def __init__(self, id = '', sync_on_init=True):
         """
         Constructor Function
         Allows access to various destination related data.
         dest_code must be a string.
         """
         try:
-            if dest_code not in DEST_CODES:
+            error = False
+            self.__data = requests.get("https://api.wdpro.disney.go.com/facility-service/destinations/{}".format(id), headers=getHeaders()).json()
+            try:
+                if len(self.__data['errors']) > 0:
+                    error = True
+            except:
+                pass
+
+            if error:
                 raise ValueError()
 
-            self.__dest_code = dest_code
+            self.__id = id
 
             self.__db = DisneyDatabase(sync_on_init)
             conn = sqlite3.connect(self.__db.db_path)
             c = conn.cursor()
 
-            dest_data = c.execute("SELECT id, name, doc_id FROM facilities WHERE entityType = 'destination' and destination_code = ?", (self.__dest_code,)).fetchone()
+            dest_data = c.execute("SELECT id, name, doc_id, destination_code FROM facilities WHERE entityType = 'destination' and id = ?", (self.__id,)).fetchone()
             self.__id = dest_data[0]
             self.__name = dest_data[1]
             self.__doc_id = dest_data[2]
+            self.__dest_code = dest_data[3]
+            self.__facilities_data = json.loads(c.execute("SELECT body FROM sync WHERE id = ?", (self.__doc_id,)).fetchone()[0])
 
             conn.commit()
             conn.close()
 
-            self.__data = s = requests.get("https://api.wdpro.disney.go.com/facility-service/destinations/{}".format(self.__id), headers=getHeaders()).json()
+
 
         except Exception as e:
-            print(e)
-            print('That destination is not available. Available destinations: {}'.format(", ".join(DEST_CODES)))
+            # print(e)
+            print('That destination is not available. Available destinations: {}'.format(", ".join(DEST_IDS)))
             sys.exit()
 
 
@@ -71,33 +81,39 @@ class Destination(object):
         """Returns the raw data from global-facility-service"""
         return self.__data
 
+    def get_raw_facilities_data(self):
+        """Returns the raw facilities data currently stored in the database"""
+        return self.__facilities_data
+
     def get_attraction_ids(self):
-        """Returns a list of attraction ids associated with the destination"""
-        conn = sqlite3.connect(self.__db.db_path)
-        c = conn.cursor()
+        """
+        Returns a list of Attraction IDs
+        """
+        attractions = []
 
-        ids = []
-        for row in c.execute("SELECT id FROM facilities WHERE destination_code = ? and entityType = 'Attraction'", (self.__dest_code,)).fetchall():
-            ids.append(row[0])
+        data = requests.get(self.__data['links']['attractions']['href'], headers=getHeaders()).json()
 
-        conn.commit()
-        conn.close()
-
-        return ids
+        for attract in data['entries']:
+            try:
+                attractions.append(attract['links']['self']['href'].split('/')[-1])
+            except:
+                pass
+        return attractions
 
     def get_entertainment_ids(self):
-        """Returns a list of entertainment ids associated with the destination"""
-        conn = sqlite3.connect(self.__db.db_path)
-        c = conn.cursor()
+        """
+        Returns a list of Entertainment IDs
+        """
+        entertainments = []
 
-        ids = []
-        for row in c.execute("SELECT id FROM facilities WHERE destination_code = ? and entityType = 'Entertainment'", (self.__dest_code,)).fetchall():
-            ids.append(row[0])
+        data = requests.get(self.__data['links']['entertainments']['href'], headers=getHeaders()).json()
 
-        conn.commit()
-        conn.close()
-
-        return ids
+        for enter in data['entries']:
+            try:
+                entertainments.append(enter['links']['self']['href'].split('/')[-1])
+            except:
+                pass
+        return entertainments
 
 
 

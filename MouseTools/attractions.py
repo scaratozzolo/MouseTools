@@ -18,13 +18,16 @@ class Attraction(object):
         """
 
         try:
-
+            error = False
             self.__data = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/attractions/{}".format(id), headers=getHeaders()).json()
             try:
                 if len(self.__data['errors']) > 0:
-                    raise ValueError()
+                    error = True
             except:
                 pass
+
+            if error:
+                raise ValueError()
 
             self.__db = DisneyDatabase(sync_on_init)
             conn = sqlite3.connect(self.__db.db_path)
@@ -43,7 +46,7 @@ class Attraction(object):
                 self.__anc_land_id = row[8]
                 self.__anc_ra_id = row[9]
                 self.__anc_ev_id = row[10]
-                self.__facilities_data = c.execute("SELECT body FROM sync WHERE id = ?", (self.__doc_id,)).fetchone()[0]
+                self.__facilities_data = json.loads(c.execute("SELECT body FROM sync WHERE id = ?", (self.__doc_id,)).fetchone()[0])
             else:
                 self.__id = id
                 self.__name = self.__data['name']
@@ -83,10 +86,11 @@ class Attraction(object):
 
                 self.__facilities_data = None
 
-
+            conn.commit()
+            conn.close()
 
         except Exception as e:
-            print(e)
+            # print(e)
             print('That attraction is not available.')
             sys.exit()
 
@@ -94,8 +98,8 @@ class Attraction(object):
         """Returns a list of possible ids of this entityType"""
         attractions = []
 
-        s = requests.get(self.__data['links']['attractions']['href'], headers=getHeaders())
-        data = json.loads(s.content)
+        dest_data = requests.get("https://api.wdpro.disney.go.com/facility-service/destinations/{}".format(self.__id), headers=getHeaders()).json()
+        data = requests.get(dest_data['links']['attractions']['href'], headers=getHeaders()).json()
 
         for attract in data['entries']:
             try:
@@ -166,6 +170,7 @@ class Attraction(object):
         conn = sqlite3.connect(self.__db.db_path)
         c = conn.cursor()
 
+        # TODO test if none, return none otherwise return status_data[0]
         status_data = c.execute("SELECT body FROM sync WHERE id = ?", (self.__doc_id,)).fetchone()
         return status_data
 
@@ -213,29 +218,23 @@ class Attraction(object):
 
     def get_last_update(self):
         """Returns facilities last update time as a datetime object"""
-        facility_data = json.loads(self.__facilities_data)
-        return datetime.strptime(facility_data['lastUpdate'], "%Y-%m-%dT%H:%M:%SZ")
-        # TODO check if facilitystatus has a different last update time
+        return datetime.strptime(self.__facilities_data['lastUpdate'], "%Y-%m-%dT%H:%M:%SZ")
 
     def get_coordinates(self):
         """Returns the object's latitude and longitude"""
-        facility_data = json.loads(self.__facilities_data)
-        return facility_data['latitude'], facility_data['longitude']
+        return self.__facilities_data['latitude'], self.__facilities_data['longitude']
 
     def get_description(self):
         """Returns the object's descriptions"""
-        facility_data = json.loads(self.__facilities_data)
-        return facility_data['description']
+        return self.__facilities_data['description']
 
     def get_list_image(self):
         """Returns the url to the object's list image"""
-        facility_data = json.loads(self.__facilities_data)
-        return facility_data['listImageUrl']
+        return self.__facilities_data['listImageUrl']
 
     def get_facets(self):
         """Returns a list of  dictionaries of the object's facets"""
-        facility_data = json.loads(self.__facilities_data)
-        return facility_data['facets']
+        return self.__facilities_data['facets']
 
     def get_todays_hours(self):
         """

@@ -19,15 +19,23 @@ class Entertainment(object):
         """
 
         try:
+            error = False
+            self.__data = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/entertainments/{}".format(id), headers=getHeaders()).json()
+            try:
+                if len(self.__data['errors']) > 0:
+                    error = True
+            except:
+                pass
+
+            if error:
+                raise ValueError()
 
             self.__db = DisneyDatabase(sync_on_init)
             conn = sqlite3.connect(self.__db.db_path)
             c = conn.cursor()
 
             row = c.execute("SELECT * FROM facilities WHERE id = ?", (id,)).fetchone()
-            if row is None:
-                raise ValueError()
-            else:
+            if row is not None:
                 self.__id = row[0]
                 self.__name = row[1]
                 self.__entityType = row[2]
@@ -39,21 +47,68 @@ class Entertainment(object):
                 self.__anc_land_id = row[8]
                 self.__anc_ra_id = row[9]
                 self.__anc_ev_id = row[10]
+                self.__facilities_data = json.loads(c.execute("SELECT body FROM sync WHERE id = ?", (self.__doc_id,)).fetchone()[0])
+            else:
+                self.__id = id
+                self.__name = self.__data['name']
+                self.__entityType = self.__data['type']
+                try:
+                    self.__subType = self.__data['subType']
+                except:
+                    self.__subType = None
+                self.__doc_id = None
+                self.__dest_code = c.execute("SELECT destination_code FROM facilities WHERE id = ?", (self.__data['ancestorDestination']['id'].split(';')[0],)).fetchone()[0]
+                try:
+                    self.__anc_park_id = self.__data['links']['ancestorThemePark']['href'].split('/')[-1].split('?')[0]
+                except:
+                    try:
+                        self.__anc_park_id = self.__data['links']['ancestorWaterPark']['href'].split('/')[-1].split('?')[0]
+                    except:
+                        self.__anc_park_id = None
+                try:
+                    self.__anc_resort_id = self.__data['links']['ancestorResort']['href'].split('/')[-1].split('?')[0]
+                except:
+                    self.__anc_resort_id = None
 
-            self.__facilities_data = c.execute("SELECT body FROM sync WHERE id = ?", (self.__doc_id,)).fetchone()[0]
-            self.__data = requests.get("https://api.wdpro.disney.go.com/facility-service/entertainments/{}".format(self.__id), headers=getHeaders()).json()
+                try:
+                    self.__anc_land_id = self.__data['links']['ancestorLand']['href'].split('/')[-1].split('?')[0]
+                except:
+                    self.__anc_land_id = None
+
+                try:
+                    self.__anc_ra_id = self.__data['links']['ancestorResortArea']['href'].split('/')[-1].split('?')[0]
+                except:
+                    self.__anc_ra_id = None
+
+                try:
+                    self.__anc_ev_id = self.__data['links']['ancestorEntertainmentVenue']['href'].split('/')[-1].split('?')[0]
+                except:
+                    self.__anc_ev_id = None
+
+                self.__facilities_data = None
+
+            conn.commit()
+            conn.close()
 
         except Exception as e:
-            print(e)
+            # print(e)
             print('That entertainment is not available.')
             sys.exit()
 
     def get_possible_ids(self):
         """Returns a list of possible ids of this entityType"""
-        conn = sqlite3.connect(DisneyDatabase().db_path)
-        c = conn.cursor()
-        pos_ids = [row[0] for row in c.execute("SELECT id FROM facilities WHERE entityType = 'Entertainment'")]
-        return pos_ids
+        entertainments = []
+
+        dest_data = requests.get("https://api.wdpro.disney.go.com/facility-service/destinations/{}".format(self.__id), headers=getHeaders()).json()
+        data = requests.get(dest_data['links']['entertainments']['href'], headers=getHeaders()).json()
+
+        for enter in data['entries']:
+            try:
+                entertainments.append(enter['links']['self']['href'].split('/')[-1])
+            except:
+                pass
+
+        return entertainments
 
     def get_id(self):
         """Return object id"""
@@ -119,6 +174,7 @@ class Entertainment(object):
 
         status_data = c.execute("SELECT body FROM sync WHERE id = ?", ('{}.facilitystatus.1_0.{};entityType=Entertainment'.format(self.__dest_code, self.__id),)).fetchone()
         return status_data
+    # json load before sending
 
     def get_wait_time(self):
         """Return current wait time of the object. Returns None if object doesn't have a wait time or no wait currently exists (eg. closed)"""
@@ -165,28 +221,23 @@ class Entertainment(object):
 
     def get_last_update(self):
         """Returns facilities last update time as a datetime object"""
-        facility_data = json.loads(self.__facilities_data)
-        return datetime.strptime(facility_data['lastUpdate'], "%Y-%m-%dT%H:%M:%SZ")
+        return datetime.strptime(self.__facilities_data['lastUpdate'], "%Y-%m-%dT%H:%M:%SZ")
 
     def get_coordinates(self):
         """Returns the object's latitude and longitude"""
-        facility_data = json.loads(self.__facilities_data)
-        return facility_data['latitude'], facility_data['longitude']
+        return self.__facilities_data['latitude'], self.__facilities_data['longitude']
 
     def get_description(self):
         """Returns the object's descriptions"""
-        facility_data = json.loads(self.__facilities_data)
-        return facility_data['description']
+        return self.__facilities_data['description']
 
     def get_list_image(self):
         """Returns the url to the object's list image"""
-        facility_data = json.loads(self.__facilities_data)
-        return facility_data['listImageUrl']
+        return self.__facilities_data['listImageUrl']
 
     def get_facets(self):
         """Returns a list of  dictionaries of the object's facets"""
-        facility_data = json.loads(self.__facilities_data)
-        return facility_data['facets']
+        return self.__facilities_data['facets']
 
     def get_todays_hours(self):
         """Returns the start and end times for the object. Will return None, None if closed"""
@@ -220,9 +271,9 @@ class Entertainment(object):
 
     def check_associated_characters(self):
         """
-        Checks if an attracion has any associated characters
+        Checks if object has any associated characters
         """
-        s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType=Entertainment".format(self.__id), headers=getHeaders())
+        s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType={}".format(self.__id, self.__entityType), headers=getHeaders())
         data = json.loads(s.content)
 
         if data['total'] > 0:
@@ -232,21 +283,21 @@ class Entertainment(object):
 
     def get_number_associated_characters(self):
         """
-        Gets the total number of characters associated with the attraction_name
+        Gets the total number of characters associated with this object
         """
-        s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType=Entertainment".format(self.__id), headers=getHeaders())
+        s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType={}".format(self.__id, self.__entityType), headers=getHeaders())
         data = json.loads(s.content)
 
         return data['total']
 
     def get_associated_characters(self):
         """
-        Returns a list of associated characters IDs
+        Returns a list of associated characters Character objects
         """
         from .characters import Character
         chars = []
 
-        s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType=Entertainment".format(self.__id), headers=getHeaders())
+        s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType={}".format(self.__id, self.__entityType), headers=getHeaders())
         data = json.loads(s.content)
 
         for i in range(len(data['entries'])):
@@ -258,12 +309,12 @@ class Entertainment(object):
 
     def get_associated_characters(self):
         """
-        Returns a list of associated characters Character objects
+        Returns a list of associated characters IDs
         """
         from .characters import Character
         chars = []
 
-        s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType=Entertainment".format(self.__id), headers=getHeaders())
+        s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType={}".format(self.__id, self.__entityType), headers=getHeaders())
         data = json.loads(s.content)
 
         for i in range(len(data['entries'])):

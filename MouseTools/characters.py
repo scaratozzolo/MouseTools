@@ -18,29 +18,23 @@ class Character(object):
         """
 
         try:
-            #Making sure id and character_name are not None, are strings, and exist
-            if id == '':
-                raise ValueError
-            elif id != None and type(id) != str:
-                raise TypeError
+            error = False
+            self.__data = requests.get("https://api.wdpro.disney.go.com/facility-service/characters/{}".format(self.__id), headers=getHeaders()).json()
+            try:
+                if len(self.__data['errors']) > 0:
+                    error = True
+            except:
+                pass
 
+            if error:
+                raise ValueError()
 
             self.__id = id
-
-            s = requests.get("https://api.wdpro.disney.go.com/facility-service/characters/{}".format(self.__id), headers=getHeaders())
-            self.__data = json.loads(s.content)
-
             self.__character_name = self.__data['name']
 
-        except ValueError:
-            print('Character object expects an id value. Must be passed as string.\n Usage: Character(id)')
-            sys.exit()
-        except TypeError:
-            print('Character object expects a string argument.')
-            sys.exit()
-        except Exception:
-            print('That character or ID is not available.')
-            print('Full list of possible characters and their ID\'s can be found here: https://scaratozzolo.github.io/MouseTools/characters.txt')
+        except Exception as e:
+            # print(e)
+            print('That character is not available.')
             sys.exit()
 
 

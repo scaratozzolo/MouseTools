@@ -27,14 +27,28 @@ class Park(object):
 
         try:
 
+            error = True
+            self.__data = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/theme-parks/{}".format(id), headers=getHeaders()).json()
+            try:
+                if self.__data['id'] is not None:
+                    error = False
+            except:
+                self.__data = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/water-parks/{}".format(id), headers=getHeaders()).json()
+                try:
+                    if self.__data['id'] is not None:
+                        error = False
+                except:
+                    pass
+
+            if error:
+                raise ValueError()
+
             self.__db = DisneyDatabase(sync_on_init)
             conn = sqlite3.connect(self.__db.db_path)
             c = conn.cursor()
 
             row = c.execute("SELECT * FROM facilities WHERE id = ?", (id,)).fetchone()
-            if row is None:
-                raise ValueError()
-            else:
+            if row is not None:
                 self.__id = row[0]
                 self.__name = row[1]
                 self.__entityType = row[2]
@@ -46,12 +60,51 @@ class Park(object):
                 self.__anc_land_id = row[8]
                 self.__anc_ra_id = row[9]
                 self.__anc_ev_id = row[10]
+                self.__facilities_data = json.loads(c.execute("SELECT body FROM sync WHERE id = ?", (self.__doc_id,)).fetchone()[0])
+            else:
+                self.__id = id
+                self.__name = self.__data['name']
+                self.__entityType = self.__data['type']
+                try:
+                    self.__subType = self.__data['subType']
+                except:
+                    self.__subType = None
+                self.__doc_id = None
+                # self.__anc_destination
+                self.__dest_code = c.execute("SELECT destination_code FROM facilities WHERE id = ?", (self.__data['ancestorDestination']['id'].split(';')[0],)).fetchone()[0]
+                try:
+                    self.__anc_park_id = self.__data['links']['ancestorThemePark']['href'].split('/')[-1].split('?')[0]
+                except:
+                    try:
+                        self.__anc_park_id = self.__data['links']['ancestorWaterPark']['href'].split('/')[-1].split('?')[0]
+                    except:
+                        self.__anc_park_id = None
+                try:
+                    self.__anc_resort_id = self.__data['links']['ancestorResort']['href'].split('/')[-1].split('?')[0]
+                except:
+                    self.__anc_resort_id = None
 
-            self.__facilities_data = c.execute("SELECT body FROM sync WHERE id = ?", (self.__doc_id,)).fetchone()[0]
-            self.__data = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/{}s/{}".format(self.__entityType, self.__id), headers=getHeaders()).json()
+                try:
+                    self.__anc_land_id = self.__data['links']['ancestorLand']['href'].split('/')[-1].split('?')[0]
+                except:
+                    self.__anc_land_id = None
 
+                try:
+                    self.__anc_ra_id = self.__data['links']['ancestorResortArea']['href'].split('/')[-1].split('?')[0]
+                except:
+                    self.__anc_ra_id = None
+
+                try:
+                    self.__anc_ev_id = self.__data['links']['ancestorEntertainmentVenue']['href'].split('/')[-1].split('?')[0]
+                except:
+                    self.__anc_ev_id = None
+
+                self.__facilities_data = None
+
+            conn.commit()
+            conn.close()
         except Exception as e:
-            print(e)
+            # print(e)
             print('That park is not available.')
             sys.exit()
 
