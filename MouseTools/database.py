@@ -6,8 +6,7 @@ import requests
 import json
 import re
 
-# Points of interest seem to have multiple locations for the same id, specifically guest services
-# Little Mermaid listed as point-of-interest not attraction
+# The facilities channel either doesn't have everything or parsing the links from global-facility-service has things that don't exist
 class DisneyDatabase:
 
     def __init__(self, sync_on_init=True):
@@ -165,35 +164,33 @@ class DisneyDatabase:
                         try:
                             this['park_id'] = x['ancestorWaterParkId'].split(';')[0]
                         except:
-                            this['park_id'] = '0'
+                            this['park_id'] = None
 
                     try:
                         this['land_id'] = x['ancestorLandId'].split(';')[0]
                     except:
-                        this['land_id'] = '0'
+                        this['land_id'] = None
 
                     try:
                         this['resort_id'] = x['ancestorResortId'].split(';')[0]
                     except:
-                        this['resort_id'] = '0'
+                        this['resort_id'] = None
 
                     try:
                         this['ra_id'] = x['ancestorResortAreaId'].split(';')[0]
                     except:
-                        this['ra_id'] = '0'
+                        this['ra_id'] = None
 
                     try:
                         this['ev_id'] = x['ancestorEntertainmentVenueId'].split(';')[0]
                     except:
-                        this['ev_id'] = '0'
+                        this['ev_id'] = None
 
                     c.execute("INSERT INTO facilities (id, name, entityType, subType, doc_id, destination_code, park_id, land_id, resort_id, resort_area_id, entertainment_venue_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (this['id'], this['name'], this['entityType'], this['sub'], this['cb_id'], this['dest_code'], this['park_id'], this['land_id'], this['resort_id'], this['ra_id'], this['ev_id'],))
                 except Exception as e:
                     # print(x)
                     # print(e)
                     continue
-
-
 
         conn.commit()
         conn.close()
@@ -268,27 +265,27 @@ class DisneyDatabase:
                     try:
                         this['park_id'] = x['ancestorThemeParkId'].split(';')[0]
                     except:
-                        this['park_id'] = '0'
+                        this['park_id'] = None
 
                     try:
                         this['land_id'] = x['ancestorLandId'].split(';')[0]
                     except:
-                        this['land_id'] = '0'
+                        this['land_id'] = None
 
                     try:
                         this['resort_id'] = x['ancestorResortId'].split(';')[0]
                     except:
-                        this['resort_id'] = '0'
+                        this['resort_id'] = None
 
                     try:
                         this['ra_id'] = x['ancestorResortAreaId'].split(';')[0]
                     except:
-                        this['ra_id'] = '0'
+                        this['ra_id'] = None
 
                     try:
                         this['ev_id'] = x['ancestorEntertainmentVenueId'].split(';')[0]
                     except:
-                        this['ev_id'] = '0'
+                        this['ev_id'] = None
 
                     c.execute("INSERT OR REPLACE INTO facilities (id, name, entityType, subType, doc_id, destination_code, park_id, land_id, resort_id, resort_area_id, entertainment_venue_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (this['id'], this['name'], this['entityType'], this['sub'], this['cb_id'], this['dest_code'], this['park_id'], this['land_id'], this['resort_id'], this['ra_id'], this['ev_id'],))
                 except Exception as e:
