@@ -162,6 +162,10 @@ class Park(object):
         """Return object entertainment venue id"""
         return self.__anc_ev_id
 
+    def get_links(self):
+        """Returns a dictionary of related links"""
+        return self.__data['links']
+
     def get_raw_data(self):
         """Returns the raw data from global-facility-service"""
         return self.__data

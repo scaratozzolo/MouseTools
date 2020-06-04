@@ -95,6 +95,10 @@ class Facility(object):
         """Return object entertainment venue id"""
         return self.__anc_ev_id
 
+    def get_links(self):
+        """Returns a dictionary of related links"""
+        return self.__data['links']
+
     def get_raw_facilities_data(self):
         """Returns the raw facilities data currently stored in the database"""
         conn = sqlite3.connect(self.__db.db_path)

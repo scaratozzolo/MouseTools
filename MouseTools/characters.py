@@ -64,6 +64,10 @@ class Character(object):
         """
         return self.__id
 
+    def get_links(self):
+        """Returns a dictionary of related links"""
+        return self.__data['links']
+
     def check_related_locations(self):
         """
         Returns true if it has related locations, false if none

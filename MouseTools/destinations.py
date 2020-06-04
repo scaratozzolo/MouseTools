@@ -77,6 +77,10 @@ class Destination(object):
         """Returns the doc id"""
         return self.__doc_id
 
+    def get_links(self):
+        """Returns a dictionary of related links"""
+        return self.__data['links']
+
     def get_raw_data(self):
         """Returns the raw data from global-facility-service"""
         return self.__data
