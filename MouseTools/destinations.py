@@ -19,7 +19,7 @@ DEST_CODES = [WDW_CODE, DLR_CODE]
 
 class Destination(object):
 
-    def __init__(self, dest_code = ''):
+    def __init__(self, dest_code = '', sync_on_init=True):
         """
         Constructor Function
         Allows access to various destination related data.
@@ -31,13 +31,14 @@ class Destination(object):
 
             self.__dest_code = dest_code
 
-            self.__db = DisneyDatabase()
+            self.__db = DisneyDatabase(sync_on_init)
             conn = sqlite3.connect(self.__db.db_path)
             c = conn.cursor()
 
-            dest_data = c.execute("""SELECT id, name FROM facilities WHERE entityType = 'destination' and destination_code = '{}'""".format(self.__dest_code)).fetchone()
+            dest_data = c.execute("SELECT id, name, doc_id FROM facilities WHERE entityType = 'destination' and destination_code = ?", (self.__dest_code,)).fetchone()
             self.__id = dest_data[0]
             self.__name = dest_data[1]
+            self.__doc_id = dest_data[2]
 
             conn.commit()
             conn.close()
@@ -60,13 +61,17 @@ class Destination(object):
         """Returns the name of the destination"""
         return self.__name
 
+    def get_doc_id(self):
+        """Returns the doc id"""
+        return self.__doc_id
+
     def get_attraction_ids(self):
         """Returns a list of attraction ids associated with the destination"""
         conn = sqlite3.connect(self.__db.db_path)
         c = conn.cursor()
 
         ids = []
-        for row in c.execute("""SELECT id FROM facilities WHERE destination_code = '{}' and entityType = 'Attraction'""".format(self.__dest_code)).fetchall():
+        for row in c.execute("SELECT id FROM facilities WHERE destination_code = ? and entityType = 'Attraction'", (self.__dest_code,)).fetchall():
             ids.append(row[0])
 
         conn.commit()
@@ -80,7 +85,7 @@ class Destination(object):
         c = conn.cursor()
 
         ids = []
-        for row in c.execute("""SELECT id FROM facilities WHERE destination_code = '{}' and entityType = 'Entertainment'""".format(self.__dest_code)).fetchall():
+        for row in c.execute("SELECT id FROM facilities WHERE destination_code = ? and entityType = 'Entertainment'", (self.__dest_code,)).fetchall():
             ids.append(row[0])
 
         conn.commit()

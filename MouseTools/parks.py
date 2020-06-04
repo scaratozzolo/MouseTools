@@ -18,7 +18,7 @@ PARK_IDS = [MK_ID, EPCOT_ID, HS_ID, AK_ID, DLP_ID, CA_ID, TL_ID, BB_ID]
 
 class Park(object):
 
-    def __init__(self, id = ''):
+    def __init__(self, id = '', sync_on_init=True):
         """
         Constructor Function
         Gets all park data available and stores various elements into variables.
@@ -27,11 +27,11 @@ class Park(object):
 
         try:
 
-            self.__db = DisneyDatabase()
+            self.__db = DisneyDatabase(sync_on_init)
             conn = sqlite3.connect(self.__db.db_path)
             c = conn.cursor()
 
-            row = c.execute("""SELECT * FROM facilities WHERE id = '{}'""".format(id)).fetchone()
+            row = c.execute("SELECT * FROM facilities WHERE id = ?", (id,)).fetchone()
             if row is None:
                 raise ValueError()
             else:
@@ -47,7 +47,7 @@ class Park(object):
                 self.__anc_ra_id = row[9]
                 self.__anc_ev_id = row[10]
 
-            self.__facilities_data = c.execute("""SELECT body FROM sync WHERE id = '{}.facilities.1_0.en_us.{}.{};entityType={}'""".format(self.__dest_code, self.__entityType, self.__id, self.__entityType)).fetchone()[0]
+            self.__facilities_data = c.execute("SELECT body FROM sync WHERE id = ?", (self.__doc_id,)).fetchone()[0]
         except Exception as e:
             print(e)
             print('That park is not available.')
@@ -57,7 +57,7 @@ class Park(object):
         """Returns a list of possible ids of this entityType"""
         conn = sqlite3.connect(DisneyDatabase().db_path)
         c = conn.cursor()
-        pos_ids = [row[0] for row in c.execute("""SELECT id FROM facilities WHERE entityType = 'theme-park' or entityType = 'water-park'""")]
+        pos_ids = [row[0] for row in c.execute("SELECT id FROM facilities WHERE entityType = 'theme-park' or entityType = 'water-park'")]
         return pos_ids
 
     def get_id(self):

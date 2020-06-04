@@ -10,7 +10,7 @@ import re
 # Little Mermaid listed as point-of-interest not attraction
 class DisneyDatabase:
 
-    def __init__(self):
+    def __init__(self, sync_on_init=True):
         self.db_path = pkg_resources.resource_filename("MouseTools", "MouseTools.db")
         conn = sqlite3.connect(self.db_path)
         c = conn.cursor()
@@ -22,7 +22,8 @@ class DisneyDatabase:
 
         last_sequence = c.execute("""SELECT COUNT(value) FROM lastSequence""").fetchone()[0]
         if last_sequence != 0:
-            self.sync_database()
+            if sync_on_init:
+                self.sync_database()
         else:
             self.create_facilities_channel('wdw.facilities.1_0.en_us')
             self.create_facilities_channel('dlr.facilities.1_0.en_us')

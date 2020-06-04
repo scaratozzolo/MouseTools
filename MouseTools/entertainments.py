@@ -11,7 +11,7 @@ from .database import DisneyDatabase
 
 class Entertainment(object):
 
-    def __init__(self, id = ''):
+    def __init__(self, id = '', sync_on_init=True):
         """
         Constructor Function
         Gets all entertainment data available and stores various elements into variables.
@@ -20,11 +20,11 @@ class Entertainment(object):
 
         try:
 
-            self.__db = DisneyDatabase()
+            self.__db = DisneyDatabase(sync_on_init)
             conn = sqlite3.connect(self.__db.db_path)
             c = conn.cursor()
 
-            row = c.execute("""SELECT * FROM facilities WHERE id = '{}'""".format(id)).fetchone()
+            row = c.execute("SELECT * FROM facilities WHERE id = ?", (id,)).fetchone()
             if row is None:
                 raise ValueError()
             else:
@@ -40,8 +40,8 @@ class Entertainment(object):
                 self.__anc_ra_id = row[9]
                 self.__anc_ev_id = row[10]
 
-            self.__facilities_data = c.execute("""SELECT body FROM sync WHERE id = '{}.facilities.1_0.en_us.entertainment.{};entityType=Entertainment'""".format(self.__dest_code, self.__id)).fetchone()[0
-                                                                                                                                                                                                    ]
+            self.__facilities_data = c.execute("SELECT body FROM sync WHERE id = ?", (self.__doc_id,)).fetchone()[0]
+
         except Exception as e:
             print(e)
             print('That entertainment is not available.')
@@ -51,7 +51,7 @@ class Entertainment(object):
         """Returns a list of possible ids of this entityType"""
         conn = sqlite3.connect(DisneyDatabase().db_path)
         c = conn.cursor()
-        pos_ids = [row[0] for row in c.execute("""SELECT id FROM facilities WHERE entityType = 'Entertainment'""")]
+        pos_ids = [row[0] for row in c.execute("SELECT id FROM facilities WHERE entityType = 'Entertainment'")]
         return pos_ids
 
     def get_id(self):
@@ -112,7 +112,7 @@ class Entertainment(object):
         conn = sqlite3.connect(self.__db.db_path)
         c = conn.cursor()
 
-        status_data = c.execute("""SELECT body FROM sync WHERE id = '{}.facilitystatus.1_0.{};entityType=Entertainment'""".format(self.__dest_code, self.__id)).fetchone()
+        status_data = c.execute("SELECT body FROM sync WHERE id = ?", ('{}.facilitystatus.1_0.{};entityType=Entertainment'.format(self.__dest_code, self.__id),)).fetchone()
         return status_data
 
     def get_wait_time(self):
@@ -197,7 +197,7 @@ class Entertainment(object):
         conn = sqlite3.connect(self.__db.db_path)
         c = conn.cursor()
 
-        today_data = c.execute("""SELECT body FROM sync WHERE id = '{}.today.1_0.Entertainment'""".format(self.__dest_code, self.__id)).fetchone()
+        today_data = c.execute("SELECT body FROM sync WHERE id = ?", ('{}.today.1_0.Entertainment'.format(self.__dest_code),)).fetchone()
 
         if today_data is None:
             return start_time, end_time
