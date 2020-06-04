@@ -19,14 +19,19 @@ class Attraction(object):
 
         try:
 
+            self.__data = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/attractions/{}".format(id), headers=getHeaders()).json()
+            try:
+                if len(self.__data['errors']) > 0:
+                    raise ValueError()
+            except:
+                pass
+
             self.__db = DisneyDatabase(sync_on_init)
             conn = sqlite3.connect(self.__db.db_path)
             c = conn.cursor()
 
             row = c.execute("SELECT * FROM facilities WHERE id = ?", (id,)).fetchone()
-            if row is None:
-                raise ValueError()
-            else:
+            if row is not None:
                 self.__id = row[0]
                 self.__name = row[1]
                 self.__entityType = row[2]
@@ -38,8 +43,47 @@ class Attraction(object):
                 self.__anc_land_id = row[8]
                 self.__anc_ra_id = row[9]
                 self.__anc_ev_id = row[10]
+                self.__facilities_data = c.execute("SELECT body FROM sync WHERE id = ?", (self.__doc_id,)).fetchone()[0]
+            else:
+                self.__id = id
+                self.__name = self.__data['name']
+                self.__entityType = self.__data['type']
+                try:
+                    self.__subType = self.__data['subType']
+                except:
+                    self.__subType = None
+                self.__doc_id = None
+                self.__dest_code = c.execute("SELECT destination_code FROM facilities WHERE id = ?", (self.__data['ancestorDestination']['id'].split(';')[0],)).fetchone()[0]
+                try:
+                    self.__anc_park_id = self.__data['links']['ancestorThemePark']['href'].split('/')[-1].split('?')[0]
+                except:
+                    try:
+                        self.__anc_park_id = self.__data['links']['ancestorWaterPark']['href'].split('/')[-1].split('?')[0]
+                    except:
+                        self.__anc_park_id = None
+                try:
+                    self.__anc_resort_id = self.__data['links']['ancestorResort']['href'].split('/')[-1].split('?')[0]
+                except:
+                    self.__anc_resort_id = None
 
-            self.__facilities_data = c.execute("SELECT body FROM sync WHERE id = ?", (self.__doc_id,)).fetchone()[0]
+                try:
+                    self.__anc_land_id = self.__data['links']['ancestorLand']['href'].split('/')[-1].split('?')[0]
+                except:
+                    self.__anc_land_id = None
+
+                try:
+                    self.__anc_ra_id = self.__data['links']['ancestorResortArea']['href'].split('/')[-1].split('?')[0]
+                except:
+                    self.__anc_ra_id = None
+
+                try:
+                    self.__anc_ev_id = self.__data['links']['ancestorEntertainmentVenue']['href'].split('/')[-1].split('?')[0]
+                except:
+                    self.__anc_ev_id = None
+
+                self.__facilities_data = None
+
+
 
         except Exception as e:
             print(e)
@@ -48,10 +92,17 @@ class Attraction(object):
 
     def get_possible_ids(self):
         """Returns a list of possible ids of this entityType"""
-        conn = sqlite3.connect(DisneyDatabase().db_path)
-        c = conn.cursor()
-        pos_ids = [row[0] for row in c.execute("SELECT id FROM facilities WHERE entityType = 'Attraction'")]
-        return pos_ids
+        attractions = []
+
+        s = requests.get(self.__data['links']['attractions']['href'], headers=getHeaders())
+        data = json.loads(s.content)
+
+        for attract in data['entries']:
+            try:
+                attractions.append(attract['links']['self']['href'].split('/')[-1])
+            except:
+                pass
+        return attractions
 
     def get_id(self):
         """Return object id"""
@@ -265,6 +316,62 @@ class Attraction(object):
         except KeyError:
             pass
         return operating_hours_start, operating_hours_end, extra_hours_start, extra_hours_end
+
+    def check_associated_characters(self):
+        """
+        Checks if object has any associated characters
+        """
+        s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType={}".format(self.__id, self.__entityType), headers=getHeaders())
+        data = json.loads(s.content)
+
+        if data['total'] > 0:
+            return True
+        else:
+            return False
+
+    def get_number_associated_characters(self):
+        """
+        Gets the total number of characters associated with this object
+        """
+        s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType={}".format(self.__id, self.__entityType), headers=getHeaders())
+        data = json.loads(s.content)
+
+        return data['total']
+
+    def get_associated_characters(self):
+        """
+        Returns a list of associated characters Character objects
+        """
+        from .characters import Character
+        chars = []
+
+        s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType={}".format(self.__id, self.__entityType), headers=getHeaders())
+        data = json.loads(s.content)
+
+        for i in range(len(data['entries'])):
+            try:
+                chars.append(Character(data['entries'][i]['links']['self']['href'].split('/')[-1]))
+            except:
+                pass
+        return chars
+
+    def get_associated_characters(self):
+        """
+        Returns a list of associated characters IDs
+        """
+        from .characters import Character
+        chars = []
+
+        s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType={}".format(self.__id, self.__entityType), headers=getHeaders())
+        data = json.loads(s.content)
+
+        for i in range(len(data['entries'])):
+            try:
+                chars.append(data['entries'][i]['links']['self']['href'].split('/')[-1])
+            except:
+                pass
+
+        return chars
 
     def __formatDate(self, num):
         """
