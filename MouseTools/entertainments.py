@@ -41,6 +41,7 @@ class Entertainment(object):
                 self.__anc_ev_id = row[10]
 
             self.__facilities_data = c.execute("SELECT body FROM sync WHERE id = ?", (self.__doc_id,)).fetchone()[0]
+            self.__data = requests.get("https://api.wdpro.disney.go.com/facility-service/entertainments/{}".format(self.__id), headers=getHeaders()).json()
 
         except Exception as e:
             print(e)
@@ -97,6 +98,10 @@ class Entertainment(object):
     def get_ancestor_entertainment_venue_id(self):
         """Return object entertainment venue id"""
         return self.__anc_ev_id
+
+    def get_raw_data(self):
+        """Returns the raw data from global-facility-service"""
+        return self.__data
 
     def get_raw_facilities_data(self):
         """Returns the raw facilities data currently stored in the database"""
@@ -211,6 +216,137 @@ class Entertainment(object):
             end_time = datetime.strptime(body['facilities'][self.__id + ';entityType=Entertainment'][0]['endTime'], "%Y-%m-%dT%H:%M:%SZ")
 
             return start_time, end_time
+
+
+    def check_associated_characters(self):
+        """
+        Checks if an attracion has any associated characters
+        """
+        s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType=Entertainment".format(self.__id), headers=getHeaders())
+        data = json.loads(s.content)
+
+        if data['total'] > 0:
+            return True
+        else:
+            return False
+
+    def get_number_associated_characters(self):
+        """
+        Gets the total number of characters associated with the attraction_name
+        """
+        s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType=Entertainment".format(self.__id), headers=getHeaders())
+        data = json.loads(s.content)
+
+        return data['total']
+
+    def get_associated_characters(self):
+        """
+        Returns a list of associated characters IDs
+        """
+        from .characters import Character
+        chars = []
+
+        s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType=Entertainment".format(self.__id), headers=getHeaders())
+        data = json.loads(s.content)
+
+        for i in range(len(data['entries'])):
+            try:
+                chars.append(Character(data['entries'][i]['links']['self']['href'].split('/')[-1]))
+            except:
+                pass
+        return chars
+
+    def get_associated_characters(self):
+        """
+        Returns a list of associated characters Character objects
+        """
+        from .characters import Character
+        chars = []
+
+        s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType=Entertainment".format(self.__id), headers=getHeaders())
+        data = json.loads(s.content)
+
+        for i in range(len(data['entries'])):
+            try:
+                chars.append(data['entries'][i]['links']['self']['href'].split('/')[-1])
+            except:
+                pass
+
+        return chars
+
+    def check_related_locations(self):
+        """
+        Returns true if it has related locations, false if none
+        """
+        try:
+            check = self.__data['relatedLocations']
+            return True
+        except:
+            return False
+
+    def get_related_locations(self):
+        """
+        Returns the related locations of the entertainment
+        """
+        locs = []
+        try:
+            if self.check_related_locations():
+                for loc in self.__data['relatedLocations']['primaryLocations']:
+                    type = loc['facilityType']
+                    loc_id = loc['links']['self']['href'].split('/')[-1]
+
+                    if type == 'point-of-interest':
+                        locs.append(PointOfInterest(loc_id))
+                    else:
+                        print('no class for {} at this time'.format(type))
+            return locs
+        except:
+            return locs
+
+
+    def get_start_date(self):
+        """
+        Gets the start date of the entertainment and returns it as a datetime object. If there is no start date, returns None
+        """
+        date = self.__data['startDate']
+        if date == "":
+            return None
+
+        date = date.split('-')
+        return datetime(int(date[0]), int(date[1]), int(date[2]))
+
+    def get_end_date(self):
+        """
+        Gets the start date of the entertainment and returns it as a datetime object. If there is no start date, returns None.
+        """
+        date = self.__data['endDate']
+        if date == "":
+            return None
+
+        date = date.split('-')
+        return datetime(int(date[0]), int(date[1]), int(date[2]))
+
+    def get_duration(self):
+        """
+        Returns the string format of the duration of the entertainment as provided by Disney
+        """
+        return self.__data['duration']
+
+    def get_duration_minutes(self):
+        """
+        Returns the duration of the entertainment in minutes as a float
+        """
+        dur = self.__data['duration'].split(':')
+        return float(int(dur[0])*60 + int(dur[1]) + int(dur[2])/60)
+
+    def get_duration_seconds(self):
+        """
+        Returns the duration of the entertainment in seconds as an integer
+        """
+        dur = self.__data['duration'].split(':')
+        return int(self.getDurationMinutes())*60 + int(dur[2])
+
+
 
     def __eq__(self, other):
         """

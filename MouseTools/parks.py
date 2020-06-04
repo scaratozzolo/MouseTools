@@ -48,6 +48,8 @@ class Park(object):
                 self.__anc_ev_id = row[10]
 
             self.__facilities_data = c.execute("SELECT body FROM sync WHERE id = ?", (self.__doc_id,)).fetchone()[0]
+            self.__data = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/{}s/{}".format(self.__entityType, self.__id), headers=getHeaders()).json()
+
         except Exception as e:
             print(e)
             print('That park is not available.')
@@ -103,6 +105,10 @@ class Park(object):
     def get_ancestor_entertainment_venue_id(self):
         """Return object entertainment venue id"""
         return self.__anc_ev_id
+
+    def get_raw_data(self):
+        """Returns the raw data from global-facility-service"""
+        return self.__data
 
     def get_raw_facilities_data(self):
         """Returns the raw facilities data currently stored in the database"""
@@ -208,33 +214,107 @@ class Park(object):
         return facility_data['facets']
 
     def get_todays_hours(self):
-        """Returns the start and end times for the object. Will return None, None if closed"""
-        start_time = None
-        end_time = None
+        """
+        Gets the park hours and returns them as a datetime object.
+        Returns the park hours in the following order: operating open, operating close, Extra Magic open, Extra Magic close.
+        Extra Magic hours will return None if there are none for today.
+        """
 
-        if self.__db.channel_exists('{}.today.1_0'.format(self.__dest_code)):
-            self.__db.sync_today_channel()
-            # maybe just sync this channel? and do same for previous methods
-        else:
-            self.__db.create_today_channel('{}.today.1_0'.format(self.__dest_code))
+        DATE = datetime.today()
+        data = requests.get("https://api.wdpro.disney.go.com/facility-service/schedules/{}?date={}-{}-{}".format(self.__id, DATE.year, self.__formatDate(str(DATE.month)), self.__formatDate(str(DATE.day))), headers=getHeaders()).json()
 
-        conn = sqlite3.connect(self.__db.db_path)
-        c = conn.cursor()
+        operating_hours_start = None
+        operating_hours_end = None
+        extra_hours_start = None
+        extra_hours_end = None
 
-        today_data = c.execute("SELECT body FROM sync WHERE id = ?", ("{}.today.1_0.{}".format(self.__dest_code, self.__entityType),)).fetchone()
+        try:
+            for i in range(len(data['schedules'])):
+                if data['schedules'][i]['type'] == 'Operating':
+                    operating_hours_start = datetime(DATE.year, DATE.month, DATE.day, int(data['schedules'][i]['startTime'][0:2]), int(data['schedules'][i]['startTime'][3:5]))
+                    if int(data['schedules'][i]['endTime'][0:2]) >= 0 and int(data['schedules'][i]['endTime'][0:2]) <= 7:
+                        DATETEMP = DATE + timedelta(days=1)
+                        operating_hours_end = datetime(DATETEMP.year, DATETEMP.month, DATETEMP.day, int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
+                    else:
+                        operating_hours_end = datetime(DATE.year, DATE.month, DATE.day, int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
 
-        if today_data is None:
-            return start_time, end_time
-        else:
-            body = json.loads(today_data[0])
+                if data['schedules'][i]['type'] == 'Extra Magic Hours':
+                    extra_hours_start = datetime(DATE.year, DATE.month, DATE.day, int(data['schedules'][i]['startTime'][0:2]), int(data['schedules'][i]['startTime'][3:5]))
+                    if int(data['schedules'][i]['endTime'][0:2]) >= 0 and int(data['schedules'][i]['endTime'][0:2]) <= 7:
+                        DATETEMP = DATE + timedelta(days=1)
+                        extra_hours_end = datetime(DATETEMP.year, DATETEMP.month, DATETEMP.day, int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
+                    else:
+                        extra_hours_end = datetime(DATE.year, DATE.month, DATE.day, int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
 
-            if body['facilities'][self.__id + ';entityType=' + self.__entityType][0]['scheduleType'] == 'Closed' or body['facilities'][self.__id + ';entityType=Attraction'][0]['scheduleType'] == 'Refurbishment':
-                return start_time, end_time
+        except KeyError:
+            pass
+        return operating_hours_start, operating_hours_end, extra_hours_start, extra_hours_end
 
-            start_time = datetime.strptime(body['facilities'][self.__id + ';entityType=' + self.__entityType][0]['startTime'], "%Y-%m-%dT%H:%M:%SZ")
-            end_time = datetime.strptime(body['facilities'][self.__id + ';entityType=' + self.__entityType][0]['endTime'], "%Y-%m-%dT%H:%M:%SZ")
+    def get_hours(self, year, month, day):
+        """
+        Gets the park hours on a specific day and returns them as a datetime object.
+        Returns the park hours in the following order: operating open, operating close, Extra Magic open, Extra Magic close.
+        Extra Magic hours will return None if there are none for today.
+        If all hours are None then Disney has no hours for that day.
+        year = int yyyy
+        month = int mm
+        day = int dd
+        """
 
-            return start_time, end_time
+        DATE = datetime(year, month, day)
+        data = requests.get("https://api.wdpro.disney.go.com/facility-service/schedules/{}?date={}-{}-{}".format(self.__id, DATE.year, self.__formatDate(str(DATE.month)), self.__formatDate(str(DATE.day))), headers=getHeaders()).json()
+
+        operating_hours_start = None
+        operating_hours_end = None
+        extra_hours_start = None
+        extra_hours_end = None
+
+        try:
+            for i in range(len(data['schedules'])):
+                if data['schedules'][i]['type'] == 'Operating':
+                    operating_hours_start = datetime(DATE.year, DATE.month, DATE.day, int(data['schedules'][i]['startTime'][0:2]), int(data['schedules'][i]['startTime'][3:5]))
+                    if int(data['schedules'][i]['endTime'][0:2]) >= 0 and int(data['schedules'][i]['endTime'][0:2]) <= 7:
+                        DATETEMP = DATE + timedelta(days=1)
+                        operating_hours_end = datetime(DATETEMP.year, DATETEMP.month, DATETEMP.day, int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
+                    else:
+                        operating_hours_end = datetime(DATE.year, DATE.month, DATE.day, int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
+
+                if data['schedules'][i]['type'] == 'Extra Magic Hours':
+                    extra_hours_start = datetime(DATE.year, DATE.month, DATE.day, int(data['schedules'][i]['startTime'][0:2]), int(data['schedules'][i]['startTime'][3:5]))
+                    if int(data['schedules'][i]['endTime'][0:2]) >= 0 and int(data['schedules'][i]['endTime'][0:2]) <= 7:
+                        DATETEMP = DATE + timedelta(days=1)
+                        extra_hours_end = datetime(DATETEMP.year, DATETEMP.month, DATETEMP.day, int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
+                    else:
+                        extra_hours_end = datetime(DATE.year, DATE.month, DATE.day, int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
+
+        except KeyError:
+            pass
+        return operating_hours_start, operating_hours_end, extra_hours_start, extra_hours_end
+
+    def get_advisories(self):
+        """
+        Gets all the advisories for the park and returns a list in the form of [{id, name}].
+        May take some time because it has to go to every link for each advisory.
+        """
+
+        advisories = []
+
+        for i in range(len(self.__data['advisories'])):
+            data = requests.get(self.__data['advisories'][i]['links']['self']['href'], headers=getHeaders()).json()
+            this = {}
+            this['id'] = data['id']
+            this['name'] = data['name']
+            advisories.append(this)
+
+        return advisories
+
+    def __formatDate(self, num):
+        """
+        Formats month and day into proper format
+        """
+        if len(num) < 2:
+            num = '0'+num
+        return num
 
     def __eq__(self, other):
         """

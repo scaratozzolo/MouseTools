@@ -43,6 +43,8 @@ class Destination(object):
             conn.commit()
             conn.close()
 
+            self.__data = s = requests.get("https://api.wdpro.disney.go.com/facility-service/destinations/{}".format(self.__id), headers=getHeaders()).json()
+
         except Exception as e:
             print(e)
             print('That destination is not available. Available destinations: {}'.format(", ".join(DEST_CODES)))
@@ -64,6 +66,10 @@ class Destination(object):
     def get_doc_id(self):
         """Returns the doc id"""
         return self.__doc_id
+
+    def get_raw_data(self):
+        """Returns the raw data from global-facility-service"""
+        return self.__data
 
     def get_attraction_ids(self):
         """Returns a list of attraction ids associated with the destination"""

@@ -30,7 +30,7 @@ class Character(object):
             s = requests.get("https://api.wdpro.disney.go.com/facility-service/characters/{}".format(self.__id), headers=getHeaders())
             self.__data = json.loads(s.content)
 
-            self.__character_name = self.__data['name'].replace(u"\u2019", "'").replace(u"\u2013", "-").replace(u"\u2122", "").replace(u"\u2022", "-").replace(u"\u00ae", "").replace(u"\u2014", "-").replace(u"\u00a1", "").replace(u"\u00ee", "i").replace(u"\u25cf", " ").replace(u"\u00e9", "e").replace(u"\u00ad", "").replace(u"\u00a0", " ").replace(u"\u00e8", "e").replace(u"\u00eb", "e").replace(u"\u2026", "...").replace(u"\u00e4", "a").replace(u"\u2018", "'").replace(u"\u00ed", "i").replace(u"\u201c", '"').replace(u"\u201d", '"').strip()
+            self.__character_name = self.__data['name']
 
         except ValueError:
             print('Character object expects an id value. Must be passed as string.\n Usage: Character(id)')
@@ -45,19 +45,19 @@ class Character(object):
 
 
 
-    def getCharacterName(self):
+    def get_name(self):
         """
         Returns the name of the Character
         """
         return self.__character_name
 
-    def getCharacterID(self):
+    def get_id(self):
         """
         Returns the ID of the character
         """
         return self.__id
 
-    def checkRelatedLocations(self):
+    def check_related_locations(self):
         """
         Returns true if it has related locations, false if none
         """
@@ -67,13 +67,13 @@ class Character(object):
         except:
             return False
 
-    def getRelatedLocations(self):
+    def get_related_locations(self):
         """
         Gets the locations the character is realted to. Alice:90003819
         """
         locs = []
         try:
-            if self.checkRelatedLocations():
+            if self.check_related_locations():
                 for loc in self.__data['relatedLocations']['primaryLocations']:
                     type = loc['facilityType']
                     loc_id = loc['links']['self']['href'].split('/')[-1]
@@ -88,7 +88,7 @@ class Character(object):
         except:
             return locs
 
-    def getAssociatedEvents(self):
+    def get_associated_events(self):
         """
         Returns a list of Entertainment objects of events associated with the character.
         Will print an error if the ID does not exist anymore. Unfortunately Disney, lists some events that don't exist, and thus will throw the error
