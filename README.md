@@ -32,6 +32,7 @@ print(mk.get_wait_times())
 
 pirates = MouseTools.Attraction(80010177)
 print(pirates.get_wait_time())
+# Returns a list of other possible attraction ids
 print(pirates.get_possible_ids())
 
 ```
