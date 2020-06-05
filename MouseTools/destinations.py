@@ -26,11 +26,11 @@ class Destination(object):
         dest_code must be a string.
         """
         try:
-            error = False
+            error = True
             self.__data = requests.get("https://api.wdpro.disney.go.com/facility-service/destinations/{}".format(id), headers=getHeaders()).json()
             try:
-                if len(self.__data['errors']) > 0:
-                    error = True
+                if self.__data['id'] is not None:
+                    error = False
             except:
                 pass
 
@@ -108,7 +108,7 @@ class Destination(object):
 
         for attract in data['entries']:
             try:
-                attractions.append(attract['links']['self']['href'].split('/')[-1])
+                attractions.append(attract['links']['self']['href'].split('/')[-1].split('?')[0])
             except:
                 pass
         return attractions
@@ -123,10 +123,40 @@ class Destination(object):
 
         for enter in data['entries']:
             try:
-                entertainments.append(enter['links']['self']['href'].split('/')[-1])
+                entertainments.append(enter['links']['self']['href'].split('/')[-1].split('?')[0])
             except:
                 pass
         return entertainments
+
+    def get_park_ids(self):
+        """
+        Returns a list of theme or water park IDs
+        """
+        ids = []
+
+        data = requests.get(self.__data['links']['themeParks']['href'], headers=getHeaders()).json()
+
+        for entry in data['entries']:
+            try:
+                ids.append(entry['links']['self']['href'].split('/')[-1].split('?')[0])
+            except:
+                pass
+
+        data = requests.get(self.__data['links']['waterParks']['href'], headers=getHeaders()).json()
+        try:
+            if data['errors'] is not None:
+                return ids
+        except:
+            pass
+
+        for entry in data['entries']:
+            try:
+                ids.append(entry['links']['self']['href'].split('/')[-1].split('?')[0])
+            except:
+                pass
+
+        return ids
+
 
 
 
