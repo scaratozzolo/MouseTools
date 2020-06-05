@@ -13,18 +13,17 @@ or because version 2.0.0 is in beta right now and might be updated frequently:
 pip install git+https://github.com/scaratozzolo/MouseTools
 ```
 
-Installation will take some time as the initial database is set up and created. There is a lot of data to load and parse so just be patient.
-
-
 
 ### Example usage:
+The first time you load MouseTools in any project, it will take a while to load as the initial database is set up and created. There is a lot of data to load and parse so just be patient. After this it shouldn't take as long as syncing takes less time.
 ```python
 import MouseTools
 
 wdw_dest = MouseTools.Destination(80007798)
 print(wdw_dest.get_park_ids())
 
-dlr_dest = MouseTools.Destination(80008297)
+# sync_on_init means
+dlr_dest = MouseTools.Destination(80008297, sync_on_init=True)
 print(dlr_dest.get_attraction_ids())
 
 mk = MouseTools.Park(80007944)
@@ -41,3 +40,5 @@ print(pirates.get_possible_ids())
 I created this project to help with another project found [here](https://github.com/scaratozzolo/WDWWaits). Some parts of the wrapper were created with that in mind.
 
 As I said above, this is currently a beta and not everything has been tested. If you notice any issues please open a new issue with a "bug" label. Furthermore, if you have any feature requests, open a new issue with a "feature request" label.
+
+This update would not have been possible without the work being done on the [themeparks package](https://github.com/cubehouse/themeparks). A lot of this update has inspiration taken from this.
