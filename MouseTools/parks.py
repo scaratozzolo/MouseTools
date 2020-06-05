@@ -497,6 +497,20 @@ class Park(object):
 
         return advisories
 
+    def get_entertainment_ids(self):
+        """Returns a list of entertainments for this object"""
+        ids = []
+
+        data = requests.get("https://api.wdpro.disney.go.com/facility-service/theme-parks/{}/entertainments?region=us".format(self.__id), headers=getHeaders()).json()
+
+        for entry in data['entries']:
+            try:
+                ids.append(entry['links']['self']['href'].split('/')[-1].split('?')[0])
+            except:
+                pass
+
+        return ids
+
     def __formatDate(self, num):
         """
         Formats month and day into proper format
