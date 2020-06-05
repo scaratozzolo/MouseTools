@@ -3,12 +3,12 @@
 A Python wrapper for the Disney API. Data is pulled directly from Disney. This package supports Walt Disney World and Disneyland.
 
 
-#### Installation
+### Installation
 You can install using pip:
 ```bash
 pip install MouseTools
 ```
-or because version 2.0.0 is a beta right now and might be updated frequently
+or because version 2.0.0 is in beta right now and might be updated frequently:
 ```bash
 pip install git+https://github.com/scaratozzolo/MouseTools
 ```
@@ -17,7 +17,7 @@ Installation will take some time as the initial database is set up and created. 
 
 
 
-#### Example usage:
+### Example usage:
 ```python
 import MouseTools
 
