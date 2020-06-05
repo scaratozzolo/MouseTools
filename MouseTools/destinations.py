@@ -1,195 +1,165 @@
 import requests
 import json
 import sys
+import sqlite3
 from datetime import datetime, timedelta
 from .auth import getHeaders
 from .parks import Park
 from .entertainments import Entertainment
 from .attractions import Attraction
+from .database import DisneyDatabase
 
 WDW_ID = '80007798'
-DL_ID = '80008297'
-DEST_IDS = [WDW_ID, DL_ID]
+DLR_ID = '80008297'
+DEST_IDS = [WDW_ID, DLR_ID]
+
+WDW_CODE = 'wdw'
+DLR_CODE = 'dlr'
+DEST_CODES = [WDW_CODE, DLR_CODE]
 
 class Destination(object):
 
-    def __init__(self, id = ''):
+    def __init__(self, id = '', sync_on_init=True):
         """
         Constructor Function
-        Gets all destination data available and stores various elements into variables.
-        ID must be a string.
+        Allows access to various destination related data.
+        dest_code must be a string.
         """
         try:
+            error = True
+            self.__data = requests.get("https://api.wdpro.disney.go.com/facility-service/destinations/{}".format(id), headers=getHeaders()).json()
+            try:
+                if self.__data['id'] is not None:
+                    error = False
+            except:
+                pass
 
-            if id == '':
-                raise ValueError('Destination object expects an id value. Must be passed as string.\n Usage: Destination(id)')
-            elif id != None and type(id) != str:
-                raise TypeError('Destination object expects a string argument.')
+            if error:
+                raise ValueError()
 
             self.__id = id
 
-            s = requests.get("https://api.wdpro.disney.go.com/facility-service/destinations/{}".format(self.__id), headers=getHeaders())
-            self.__data = json.loads(s.content)
+            self.__db = DisneyDatabase(sync_on_init)
+            conn = sqlite3.connect(self.__db.db_path)
+            c = conn.cursor()
 
-            self.__destination_name = self.__data['name'].replace(u"\u2019", "'").replace(u"\u2013", "-").replace(u"\u2122", "").replace(u"\u2022", "-").replace(u"\u00ae", "").replace(u"\u2014", "-").replace(u"\u00a1", "").replace(u"\u00ee", "i").replace(u"\u25cf", " ").replace(u"\u00e9", "e").replace(u"\u00ad", "").replace(u"\u00a0", " ").replace(u"\u00e8", "e").replace(u"\u00eb", "e").replace(u"\u2026", "...").replace(u"\u00e4", "a").replace(u"\u2018", "'").replace(u"\u00ed", "i").replace(u"\u201c", '"').replace(u"\u201d", '"').strip()
-            self.__type = self.__data['type']
+            dest_data = c.execute("SELECT id, name, doc_id, destination_code FROM facilities WHERE entityType = 'destination' and id = ?", (self.__id,)).fetchone()
+            self.__id = dest_data[0]
+            self.__name = dest_data[1]
+            self.__doc_id = dest_data[2]
+            self.__dest_code = dest_data[3]
+            self.__facilities_data = json.loads(c.execute("SELECT body FROM sync WHERE id = ?", (self.__doc_id,)).fetchone()[0])
 
-        except ValueError as e:
-            print(e)
-            sys.exit()
-        except TypeError as e:
-            print(e)
-            sys.exit()
+            conn.commit()
+            conn.close()
+
+
+
         except Exception as e:
-            print(e)
-            print('That destination or ID is not available. ID = {}\nFull list of possible destinations and their ID\'s can be found here: https://scaratozzolo.github.io/MouseTools/destinations.txt'.format(id))
+            # print(e)
+            print('That destination is not available. Available destinations: {}'.format(", ".join(DEST_IDS)))
             sys.exit()
 
-    def getName(self):
-        """
-        Returns name of destination
-        """
-        return self.__destination_name
 
-    def getID(self):
-        """
-        Returns destination ID
-        """
+    def get_destination_code(self):
+        """Returns the destination code"""
+        return self.__dest_code
+
+    def get_id(self):
+        """Returns the id of the destination"""
         return self.__id
 
-    def getType(self):
-        """
-        Returns location type
-        """
-        return self.__type
+    def get_destination_name(self):
+        """Returns the name of the destination"""
+        return self.__name
 
-    def getThemeParks(self):
-        """
-        Returns a list of theme park Park objects
-        """
-        parks = []
+    def get_doc_id(self):
+        """Returns the doc id"""
+        return self.__doc_id
 
-        s = requests.get(self.__data['links']['themeParks']['href'], headers=getHeaders())
-        data = json.loads(s.content)
+    def get_links(self):
+        """Returns a dictionary of related links"""
+        return self.__data['links']
 
-        for park in data['entries']:
-            parks.append(Park(park['links']['self']['href'].split('/')[-1]))
+    def get_raw_data(self):
+        """Returns the raw data from global-facility-service"""
+        return self.__data
 
-        return parks
+    def get_raw_facilities_data(self):
+        """Returns the raw facilities data currently stored in the database"""
+        conn = sqlite3.connect(self.__db.db_path)
+        c = conn.cursor()
+        data = c.execute("SELECT body FROM sync WHERE id = ?", (self.__doc_id,)).fetchone()[0]
+        conn.commit()
+        conn.close()
 
-    def getThemeParkIDs(self):
-        """
-        Returns a list of theme park IDs
-        """
-        parks = []
+        if data is None:
+            return None
+        else:
+            return json.loads(data)
 
-        s = requests.get(self.__data['links']['themeParks']['href'], headers=getHeaders())
-        data = json.loads(s.content)
-
-        for park in data['entries']:
-            parks.append(park['links']['self']['href'].split('/')[-1])
-
-        return parks
-
-    def getWaterParks(self):
-        """
-        Returns a list of water park Park objects
-        """
-        parks = []
-
-        s = requests.get(self.__data['links']['waterParks']['href'], headers=getHeaders())
-        data = json.loads(s.content)
-
-        for park in data['entries']:
-            parks.append(Park(park['links']['self']['href'].split('/')[-1]))
-
-        return parks
-
-    def getWaterParkIDs(self):
-        """
-        Returns a list of water park IDs
-        """
-        parks = []
-
-        s = requests.get(self.__data['links']['waterParks']['href'], headers=getHeaders())
-        data = json.loads(s.content)
-
-        for park in data['entries']:
-            parks.append(park['links']['self']['href'].split('/')[-1])
-
-        return parks
-
-    def getEntertainments(self):
-        """
-        Returns a list of Entertainment objects
-        """
-        entertainments = []
-
-        s = requests.get(self.__data['links']['entertainments']['href'], headers=getHeaders())
-        data = json.loads(s.content)
-
-        for enter in data['entries']:
-            try:
-                entertainments.append(Entertainment(enter['links']['self']['href'].split('/')[-1]))
-            except:
-                pass
-        return entertainments
-
-    def getEntertainmentIDs(self):
-        """
-        Returns a list of Entertainment IDs
-        """
-        entertainments = []
-
-        s = requests.get(self.__data['links']['entertainments']['href'], headers=getHeaders())
-        data = json.loads(s.content)
-
-        for enter in data['entries']:
-            try:
-                entertainments.append(enter['links']['self']['href'].split('/')[-1])
-            except:
-                pass
-        return entertainments
-
-    def getAttractions(self):
-        """
-        Returns a list of Attraction objects
-        """
-        attractions = []
-
-        s = requests.get(self.__data['links']['attractions']['href'], headers=getHeaders())
-        data = json.loads(s.content)
-
-        for attract in data['entries']:
-            try:
-                attractions.append(Attraction(attract['links']['self']['href'].split('/')[-1]))
-            except:
-                pass
-        return attractions
-
-    def getAttractionIDs(self):
+    def get_attraction_ids(self):
         """
         Returns a list of Attraction IDs
         """
         attractions = []
 
-        s = requests.get(self.__data['links']['attractions']['href'], headers=getHeaders())
-        data = json.loads(s.content)
+        data = requests.get(self.__data['links']['attractions']['href'], headers=getHeaders()).json()
 
         for attract in data['entries']:
             try:
-                attractions.append(attract['links']['self']['href'].split('/')[-1])
+                attractions.append(attract['links']['self']['href'].split('/')[-1].split('?')[0])
             except:
                 pass
         return attractions
 
-    def __formatDate(self, num):
+    def get_entertainment_ids(self):
         """
-        Formats month and day into proper format
+        Returns a list of Entertainment IDs
         """
-        if len(num) < 2:
-            num = '0'+num
-        return num
+        entertainments = []
+
+        data = requests.get(self.__data['links']['entertainments']['href'], headers=getHeaders()).json()
+
+        for enter in data['entries']:
+            try:
+                entertainments.append(enter['links']['self']['href'].split('/')[-1].split('?')[0])
+            except:
+                pass
+        return entertainments
+
+    def get_park_ids(self):
+        """
+        Returns a list of theme or water park IDs
+        """
+        ids = []
+
+        data = requests.get(self.__data['links']['themeParks']['href'], headers=getHeaders()).json()
+
+        for entry in data['entries']:
+            try:
+                ids.append(entry['links']['self']['href'].split('/')[-1].split('?')[0])
+            except:
+                pass
+
+        data = requests.get(self.__data['links']['waterParks']['href'], headers=getHeaders()).json()
+        try:
+            if data['errors'] is not None:
+                return ids
+        except:
+            pass
+
+        for entry in data['entries']:
+            try:
+                ids.append(entry['links']['self']['href'].split('/')[-1].split('?')[0])
+            except:
+                pass
+
+        return ids
+
+
+
 
     def __str__(self):
-        return 'Destination object for {}'.format(self.__destination_name)
+
+        return 'Destination object for {}'.format(self.__name)

@@ -1,10 +1,44 @@
 # MouseTools
 
-A Python wrapper for the Disney API. Data is pulled directly from Disney.
-Yeah you could look at the code and figure it out yourself, but here's a library incase you're lazy.
+A Python wrapper for the Disney API. Data is pulled directly from Disney. This package supports Walt Disney World and Disneyland.
 
-If you needs something specific from the API open a new issue with a "feature request" label.
 
-The creation of this was for a project I created called [WDWWaits](https://github.com/scaratozzolo/WDWWaits). Some parts of the wrapper were created with that in mind. The goal was to create a data set of the Walt Disney World wait times to perform analysis on at some point. The program now incorporates Disneyland as well.
+### Installation
+You can install using pip:
+```bash
+pip install MouseTools
+```
+or because version 2.0.0 is in beta right now and might be updated frequently:
+```bash
+pip install git+https://github.com/scaratozzolo/MouseTools
+```
 
-IDs can be found [here](https://github.com/scaratozzolo/scaratozzolo.github.io/tree/master/MouseTools).
+
+### Example usage:
+The first time you load MouseTools in any project, it will take a while to load as the initial database is set up and created. There is a lot of data to load and parse so just be patient. After this it shouldn't take as long as syncing takes less time.
+```python
+import MouseTools
+
+wdw_dest = MouseTools.Destination(80007798)
+print(wdw_dest.get_park_ids())
+
+# sync_on_init means
+dlr_dest = MouseTools.Destination(80008297, sync_on_init=True)
+print(dlr_dest.get_attraction_ids())
+
+mk = MouseTools.Park(80007944)
+print(mk.get_wait_times())
+
+pirates = MouseTools.Attraction(80010177)
+print(pirates.get_wait_time())
+# Returns a list of other possible attraction ids
+print(pirates.get_possible_ids())
+
+```
+
+
+I created this project to help with another project found [here](https://github.com/scaratozzolo/WDWWaits). Some parts of the wrapper were created with that in mind.
+
+As I said above, this is currently a beta and not everything has been tested. If you notice any issues please open a new issue with a "bug" label. Furthermore, if you have any feature requests, open a new issue with a "feature request" label.
+
+This update would not have been possible without the work being done on the [themeparks package](https://github.com/cubehouse/themeparks). A lot of this update has inspiration taken from this.
