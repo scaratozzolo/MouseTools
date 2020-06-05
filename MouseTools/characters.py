@@ -116,6 +116,23 @@ class Character(object):
         except:
             return entertainments
 
+    def get_associated_event_ids(self):
+        """
+        Returns a list of Entertainment ids of events associated with the character.
+        Will print an error if the ID does not exist anymore. Unfortunately Disney, lists some events that don't exist, and thus will throw the error
+        when it tries to create the Entertainment object.
+        """
+        entertainments = []
+        try:
+            for entertainment in self.__data['associatedEvents']:
+                try:
+                    entertainments.append(entertainment['links']['self']['href'].split('/')[-1].split('?')[0])
+                except:
+                    pass
+            return entertainments
+        except:
+            return entertainments
+
     def __formatDate(self, num):
         """
         Formats month and day into proper format
