@@ -22,7 +22,8 @@ import MouseTools
 wdw_dest = MouseTools.Destination(80007798)
 print(wdw_dest.get_park_ids())
 
-# sync_on_init means
+# sync_on_init means sync the database with Disney on object instantiation. Default is True.
+# This parameter is helpful when creating many objects back to back as syncing only once is necessary.
 dlr_dest = MouseTools.Destination(80008297, sync_on_init=True)
 print(dlr_dest.get_attraction_ids())
 
