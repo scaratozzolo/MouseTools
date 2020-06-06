@@ -422,7 +422,36 @@ class Entertainment(object):
         dur = self.__data['duration'].split(':')
         return int(self.getDurationMinutes())*60 + int(dur[2])
 
+    def get_todays_schedule(self):
+        """Returns a list of datetime objects for todat's schedule in the form of [{start_time, end_time}]"""
+        DATE = datetime.today()
+        DATE = datetime(2020, 7, 15)
+        strdate = "{}-{}-{}".format(DATE.year, self.__formatDate(str(DATE.month)), self.__formatDate(str(DATE.day)))
+        data = requests.get("https://api.wdpro.disney.go.com/facility-service/schedules/{}?date={}".format(self.__id, strdate), headers=getHeaders()).json()
 
+        schedule = []
+
+        try:
+            for entry in data['schedules']:
+                if entry['type'] == 'Performance Time':
+                    this = {}
+                    this['start_time'] = datetime.strptime("{} {}".format(entry['date'], entry['startTime']), "%Y-%m-%d %H:%M:%S")
+                    this['end_time'] = datetime.strptime("{} {}".format(entry['date'], entry['endTime']), "%Y-%m-%d %H:%M:%S")
+                    schedule.append(this)
+        except Exception as e:
+            # print(e)
+            pass
+
+        return schedule
+
+
+    def __formatDate(self, num):
+        """
+        Formats month and day into proper format
+        """
+        if len(num) < 2:
+            num = '0'+num
+        return num
 
     def __eq__(self, other):
         """
