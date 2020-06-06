@@ -17,6 +17,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/scaratozzolo/MouseTools",
     packages=setuptools.find_packages(),
+    package_data = {'MouseTools': ['MouseTools.db']},
     install_requires=["requests"],
     classifiers=(
         "Programming Language :: Python :: 3.7",
