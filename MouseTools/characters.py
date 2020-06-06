@@ -18,11 +18,11 @@ class Character(object):
         """
 
         try:
-            error = False
+            error = True
             self.__data = requests.get("https://api.wdpro.disney.go.com/facility-service/characters/{}".format(id), headers=getHeaders()).json()
             try:
-                if len(self.__data['errors']) > 0:
-                    error = True
+                if self.__data['id'] is not None:
+                    error = False
             except:
                 pass
 
