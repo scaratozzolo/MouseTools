@@ -10,6 +10,6 @@ from MouseTools.database import *
 
 name = "MouseTools"
 
-__version__ = "2.0.0-beta"
+__version__ = "2.0.0b1"
 
 __all__ = ["Destination", "Park", "Attraction", "Entertainment", "Facility", "Character", "PointOfInterest"]
