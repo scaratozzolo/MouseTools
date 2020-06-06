@@ -424,8 +424,8 @@ class Entertainment(object):
 
     def get_todays_schedule(self):
         """Returns a list of datetime objects for todat's schedule in the form of [{start_time, end_time}]"""
+
         DATE = datetime.today()
-        DATE = datetime(2020, 7, 15)
         strdate = "{}-{}-{}".format(DATE.year, self.__formatDate(str(DATE.month)), self.__formatDate(str(DATE.day)))
         data = requests.get("https://api.wdpro.disney.go.com/facility-service/schedules/{}?date={}".format(self.__id, strdate), headers=getHeaders()).json()
 
