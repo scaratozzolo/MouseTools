@@ -256,56 +256,22 @@ class Attraction(object):
         else:
             return facility_data['facets']
 
-    def get_todays_hours(self):
+    def get_hours(self, date = ""):
         """
-        Gets the park hours and returns them as a datetime object.
-        Returns the park hours in the following order: operating open, operating close, Extra Magic open, Extra Magic close.
-        Extra Magic hours will return None if there are none for today.
-        """
-
-        DATE = datetime.today()
-        s = requests.get("https://api.wdpro.disney.go.com/facility-service/schedules/{}?date={}-{}-{}".format(self.__id, DATE.year, self.__formatDate(str(DATE.month)), self.__formatDate(str(DATE.day))), headers=getHeaders())
-        data = json.loads(s.content)
-
-        operating_hours_start = None
-        operating_hours_end = None
-        extra_hours_start = None
-        extra_hours_end = None
-
-        try:
-            for i in range(len(data['schedules'])):
-                if data['schedules'][i]['type'] == 'Operating':
-                    operating_hours_start = datetime(DATE.year, DATE.month, DATE.day, int(data['schedules'][i]['startTime'][0:2]), int(data['schedules'][i]['startTime'][3:5]))
-                    if int(data['schedules'][i]['endTime'][0:2]) >= 0 and int(data['schedules'][i]['endTime'][0:2]) <= 7:
-                        DATETEMP = DATE + timedelta(days=1)
-                        operating_hours_end = datetime(DATETEMP.year, DATETEMP.month, DATETEMP.day, int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
-                    else:
-                        operating_hours_end = datetime(DATE.year, DATE.month, DATE.day, int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
-
-                if data['schedules'][i]['type'] == 'Extra Magic Hours':
-                    extra_hours_start = datetime(DATE.year, DATE.month, DATE.day, int(data['schedules'][i]['startTime'][0:2]), int(data['schedules'][i]['startTime'][3:5]))
-                    if int(data['schedules'][i]['endTime'][0:2]) >= 0 and int(data['schedules'][i]['endTime'][0:2]) <= 7:
-                        DATETEMP = DATE + timedelta(days=1)
-                        extra_hours_end = datetime(DATETEMP.year, DATETEMP.month, DATETEMP.day, int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
-                    else:
-                        operating_hours_end = datetime(DATE.year, DATE.month, DATE.day, int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
-
-        except KeyError:
-            pass
-        return operating_hours_start, operating_hours_end, extra_hours_start, extra_hours_end
-
-    def get_attraction_hours(self, year, month, day):
-        """
-        Gets the park hours on a specific day and returns them as a datetime object.
-        Returns the park hours in the following order: operating open, operating close, Extra Magic open, Extra Magic close.
+        Gets the object's hours on a specific day and returns them as a datetime object.
+        Returns the object's hours in the following order: operating open, operating close, Extra Magic open, Extra Magic close.
         Extra Magic hours will return None if there are none for today.
         If all hours are None then Disney has no hours for that day.
-        year = int yyyy
-        month = int mm
-        day = int dd
+        date = "YEAR-MONTH-DATE"
+        If you don't pass a date, it will get today's hours
         """
 
-        DATE = datetime(year, month, day)
+        if date == "":
+            DATE = datetime.today()
+        else:
+            year, month, day = date.split('-')
+            DATE = datetime(int(year), int(month), int(day))
+
         s = requests.get("https://api.wdpro.disney.go.com/facility-service/schedules/{}?date={}-{}-{}".format(self.__id, DATE.year, self.__formatDate(str(DATE.month)), self.__formatDate(str(DATE.day))), headers=getHeaders())
         data = json.loads(s.content)
 
