@@ -55,7 +55,7 @@ class Park(object):
                 self.__subType = self.__data['subType']
             except:
                 self.__subType = None
-            doc_id_query = c.execute("SELECT doc_id from facilities where doc_id LIKE ?", ("%{};entityType=point-of-interest".format(self.__id),)).fetchone()
+            doc_id_query = c.execute("SELECT doc_id from facilities where doc_id LIKE ?", ("%{};entityType={}".format(self.__id, self.__entityType),)).fetchone()
             self.__doc_id = doc_id_query[0] if doc_id_query is not None else None
             self.__anc_dest_id = self.__data['ancestorDestination']['id'].split(';')[0]
             self.__dest_code = c.execute("SELECT destination_code FROM facilities WHERE id = ?", (self.__anc_dest_id,)).fetchone()[0]
@@ -372,19 +372,15 @@ class Park(object):
 
     def get_coordinates(self):
         """Returns the object's latitude and longitude"""
-        facility_data = self.get_raw_facilities_data()
-        if facility_data is None:
-            return None
-        else:
-            return facility_data['latitude'], facility_data['longitude']
+        return self.__data['coordinates']['Guest Entrance']['gps']
 
     def get_description(self):
         """Returns the object's descriptions"""
-        facility_data = self.get_raw_facilities_data()
-        if facility_data is None:
+        try:
+            long_desc = self.__data["descriptions"]["MM - " + self.__name]["text"].replace("<p>", "").split('</p>')[0]
+            return long_desc
+        except:
             return None
-        else:
-            return facility_data['description']
 
     def get_list_image(self):
         """Returns the url to the object's list image"""
@@ -394,13 +390,13 @@ class Park(object):
         else:
             return facility_data['listImageUrl']
 
-    def get_facets(self):
-        """Returns a list of  dictionaries of the object's facets"""
+    def get_detail_image(self):
+        """Returns the url to the object's detail image"""
         facility_data = self.get_raw_facilities_data()
         if facility_data is None:
             return None
         else:
-            return facility_data['facets']
+            return facility_data['detailImageUrl']
 
     def get_todays_hours(self):
         """
