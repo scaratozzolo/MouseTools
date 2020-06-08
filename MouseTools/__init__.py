@@ -1,4 +1,5 @@
 from MouseTools.parks import *
+from MouseTools.entertainmentvenues import *
 from MouseTools.attractions import *
 from MouseTools.entertainments import *
 from MouseTools.characters import *
@@ -12,4 +13,4 @@ name = "MouseTools"
 
 __version__ = "2.0.0b2"
 
-__all__ = ["Destination", "Park", "Attraction", "Entertainment", "Facility", "Character", "PointOfInterest"]
+__all__ = ["Destination", "Park", "EntertainmentVenue", "Attraction", "Entertainment", "Facility", "Character", "PointOfInterest"]
