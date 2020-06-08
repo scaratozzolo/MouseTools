@@ -271,7 +271,6 @@ class Entertainment(object):
 
         if self.__db.channel_exists('{}.today.1_0'.format(self.__dest_code)):
             self.__db.sync_today_channel()
-            # maybe just sync this channel? and do same for previous methods
         else:
             self.__db.create_today_channel('{}.today.1_0'.format(self.__dest_code))
 
@@ -285,13 +284,16 @@ class Entertainment(object):
         else:
             body = json.loads(today_data[0])
 
-            if body['facilities'][self.__id + ';entityType=Entertainment'][0]['scheduleType'] == 'Closed' or body['facilities'][self.__id + ';entityType=Entertainment'][0]['scheduleType'] == 'Refurbishment':
+            try:
+                if body['facilities'][str(self.__id) + ';entityType=Entertainment'][0]['scheduleType'] == 'Closed' or body['facilities'][str(self.__id) + ';entityType=Entertainment'][0]['scheduleType'] == 'Refurbishment':
+                    return start_time, end_time
+
+                start_time = datetime.strptime(body['facilities'][str(self.__id) + ';entityType=Entertainment'][0]['startTime'], "%Y-%m-%dT%H:%M:%SZ")
+                end_time = datetime.strptime(body['facilities'][str(self.__id) + ';entityType=Entertainment'][0]['endTime'], "%Y-%m-%dT%H:%M:%SZ")
+
                 return start_time, end_time
-
-            start_time = datetime.strptime(body['facilities'][self.__id + ';entityType=Entertainment'][0]['startTime'], "%Y-%m-%dT%H:%M:%SZ")
-            end_time = datetime.strptime(body['facilities'][self.__id + ';entityType=Entertainment'][0]['endTime'], "%Y-%m-%dT%H:%M:%SZ")
-
-            return start_time, end_time
+            except:
+                return None, None
 
 
     def check_associated_characters(self):
