@@ -173,7 +173,7 @@ class Destination(object):
         return entertainments
 
     def get_wait_times(self):
-        """Returns a list of dictionaries in the form of {rideid:time} for attractions and entertainments for this park"""
+        """Returns a list of dictionaries in the form of {rideid:time} for attractions and entertainments for this destination"""
         if self.__db.channel_exists('{}.facilitystatus.1_0'.format(self.__dest_code)):
             self.__db.sync_facilitystatus_channel()
         else:
@@ -197,7 +197,7 @@ class Destination(object):
         return data
 
     def get_wait_times_detailed(self):
-        """Returns a list of dictionaries in the form of {rideid:{name, status, wait_time}} for attractions and entertainments for this park"""
+        """Returns a list of dictionaries in the form of {rideid:{name, status, wait_time}} for attractions and entertainments for this destination"""
         if self.__db.channel_exists('{}.facilitystatus.1_0'.format(self.__dest_code)):
             self.__db.sync_facilitystatus_channel()
         else:
@@ -227,7 +227,7 @@ class Destination(object):
         return data
 
     def get_attraction_wait_times(self):
-        """Returns a list of dictionaries in the form of {rideid:time} for attractions for this park"""
+        """Returns a list of dictionaries in the form of {rideid:time} for attractions for this destination"""
         if self.__db.channel_exists('{}.facilitystatus.1_0'.format(self.__dest_code)):
             self.__db.sync_facilitystatus_channel()
         else:
@@ -251,7 +251,7 @@ class Destination(object):
         return data
 
     def get_attraction_wait_times_detailed(self):
-        """Returns a list of dictionaries in the form of {rideid:{name, status, wait_time}} for attractions for this park"""
+        """Returns a list of dictionaries in the form of {rideid:{name, status, wait_time}} for attractions for this destination"""
         if self.__db.channel_exists('{}.facilitystatus.1_0'.format(self.__dest_code)):
             self.__db.sync_facilitystatus_channel()
         else:
@@ -281,7 +281,7 @@ class Destination(object):
         return data
 
     def get_entertainment_wait_times(self):
-        """Returns a list of dictionaries in the form of {rideid:time} for entertainments for this park"""
+        """Returns a list of dictionaries in the form of {rideid:time} for entertainments for this destination"""
         if self.__db.channel_exists('{}.facilitystatus.1_0'.format(self.__dest_code)):
             self.__db.sync_facilitystatus_channel()
         else:
@@ -305,7 +305,7 @@ class Destination(object):
         return data
 
     def get_entertainment_wait_times_detailed(self):
-        """Returns a list of dictionaries in the form of {rideid:{name, status, wait_time}} for entertainments for this park"""
+        """Returns a list of dictionaries in the form of {rideid:{name, status, wait_time}} for entertainments for this destination"""
         if self.__db.channel_exists('{}.facilitystatus.1_0'.format(self.__dest_code)):
             self.__db.sync_facilitystatus_channel()
         else:
