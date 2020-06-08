@@ -219,6 +219,7 @@ class Destination(object):
                     this['status'] = body['status']
                     this['wait_time'] = body['waitMinutes']
                     this['last_updated'] = datetime.strptime(body['lastUpdate'], "%Y-%m-%dT%H:%M:%SZ")
+                    this['entityType'] = row[1]
                     data[row[0]] = this
             except Exception as e:
                 # print(e)
