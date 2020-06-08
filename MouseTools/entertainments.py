@@ -42,7 +42,7 @@ class Entertainment(object):
                 self.__subType = self.__data['subType']
             except:
                 self.__subType = None
-            doc_id_query = c.execute("SELECT doc_id from facilities where doc_id LIKE ?", ("%{};entityType=point-of-interest".format(self.__id),)).fetchone()
+            doc_id_query = c.execute("SELECT doc_id from facilities where doc_id LIKE ?", ("%{};entityType={}".format(self.__id, self.__entityType),)).fetchone()
             self.__doc_id = doc_id_query[0] if doc_id_query is not None else None
             self.__anc_dest_id = self.__data['ancestorDestination']['id'].split(';')[0]
             self.__dest_code = c.execute("SELECT destination_code FROM facilities WHERE id = ?", (self.__anc_dest_id,)).fetchone()[0]
@@ -422,7 +422,7 @@ class Entertainment(object):
         Returns the duration of the entertainment in seconds as an integer
         """
         dur = self.__data['duration'].split(':')
-        return int(self.getDurationMinutes())*60 + int(dur[2])
+        return int(self.get_duration_minutes())*60 + int(dur[2])
 
     def get_todays_schedule(self):
         """Returns a list of datetime objects for todat's schedule in the form of [{start_time, end_time}]"""
