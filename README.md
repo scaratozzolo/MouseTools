@@ -37,6 +37,11 @@ print(pirates.get_possible_ids())
 
 ```
 
+For more documentation go to the [wiki](https://github.com/scaratozzolo/MouseTools/wiki) or run the following command from a termainal:
+```Bash
+python -m pydoc MouseTools
+```
+
 
 I created this project to help with another project found [here](https://github.com/scaratozzolo/WDWWaits). Some parts of the wrapper were created with that in mind.
 
