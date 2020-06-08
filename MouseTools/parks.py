@@ -229,6 +229,7 @@ class Park(object):
                     this['name'] = c.execute("SELECT name FROM facilities WHERE id = ?", (row[0],)).fetchone()[0]
                     this['status'] = body['status']
                     this['wait_time'] = body['waitMinutes']
+                    this['last_updated'] = datetime.strptime(body['lastUpdate'], "%Y-%m-%dT%H:%M:%SZ")
                     data[row[0]] = this
             except Exception as e:
                 # print(e)
@@ -282,6 +283,7 @@ class Park(object):
                     this['name'] = c.execute("SELECT name FROM facilities WHERE id = ?", (row[0],)).fetchone()[0]
                     this['status'] = body['status']
                     this['wait_time'] = body['waitMinutes']
+                    this['last_updated'] = datetime.strptime(body['lastUpdate'], "%Y-%m-%dT%H:%M:%SZ")
                     data[row[0]] = this
             except Exception as e:
                 # print(e)
@@ -335,6 +337,7 @@ class Park(object):
                     this['name'] = c.execute("SELECT name FROM facilities WHERE id = ?", (row[0],)).fetchone()[0]
                     this['status'] = body['status']
                     this['wait_time'] = body['waitMinutes']
+                    this['last_updated'] = datetime.strptime(body['lastUpdate'], "%Y-%m-%dT%H:%M:%SZ")
                     data[row[0]] = this
             except Exception as e:
                 # print(e)
@@ -502,7 +505,7 @@ class Park(object):
         """Returns a list of entertainments for this object"""
         ids = []
 
-        data = requests.get("https://api.wdpro.disney.go.com/facility-service/theme-parks/{}/entertainments?region=us".format(self.__id), headers=getHeaders()).json()
+        data = requests.get("https://api.wdpro.disney.go.com/facility-service/{}s/{}/entertainments?region=us".format(self.__entityType, self.__id), headers=getHeaders()).json()
 
         for entry in data['entries']:
             try:
