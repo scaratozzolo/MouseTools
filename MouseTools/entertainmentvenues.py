@@ -339,9 +339,11 @@ class EntertainmentVenue(object):
             return None
         else:
             body = json.loads(today_data[0])
-
-            return body['facilities'][str(self.__id) + ';entityType=' + self.__entityType][0]['scheduleType']
-
+            try:
+                return body['facilities'][str(self.__id) + ';entityType=' + self.__entityType][0]['scheduleType']
+            except:
+                return None
+            
     def get_last_update(self):
         """Returns facilities last update time as a datetime object"""
         facility_data = self.get_raw_facilities_data()
