@@ -171,7 +171,7 @@ class Attraction(object):
         c = conn.cursor()
 
         # TODO test if none, return none otherwise return status_data[0]
-        status_data = c.execute("SELECT body FROM sync WHERE id = ?", (self.__doc_id,)).fetchone()
+        status_data = c.execute("SELECT body FROM sync WHERE id = ?", ("{}.facilitystatus.1_0.{};entityType=Attraction".format(self.__dest_code, self.__id),)).fetchone()
         return status_data
 
     def get_wait_time(self):
