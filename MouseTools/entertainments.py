@@ -253,7 +253,10 @@ class Entertainment(object):
         if facility_data is None:
             return None
         else:
-            return facility_data['facets']
+            try:
+                return facility_data['facets']
+            except:
+                return None
 
     def admission_required(self):
         """Returns boolean of admission required"""
