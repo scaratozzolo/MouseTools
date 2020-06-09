@@ -354,7 +354,10 @@ class EntertainmentVenue(object):
 
     def get_coordinates(self):
         """Returns the object's latitude and longitude"""
-        return self.__data['coordinates']['Guest Entrance']['gps']
+        try:
+            return self.__data['coordinates']['Guest Entrance']['gps']
+        except:
+            return None
 
     def get_description(self):
         """Returns the object's descriptions"""
