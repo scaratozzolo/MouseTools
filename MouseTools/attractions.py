@@ -151,14 +151,14 @@ class Attraction(object):
         """Returns the raw facilities data currently stored in the database"""
         conn = sqlite3.connect(self.__db.db_path)
         c = conn.cursor()
-        data = c.execute("SELECT body FROM sync WHERE id = ?", (self.__doc_id,)).fetchone()[0]
+        data = c.execute("SELECT body FROM sync WHERE id = ?", (self.__doc_id,)).fetchone()
         conn.commit()
         conn.close()
 
         if data is None:
             return None
         else:
-            return json.loads(data)
+            return json.loads(data[0])
 
     def get_raw_facilitystatus_data(self):
         """Returns the raw facilitystatus data from the database after syncing with Disney (returns most recent data)"""
@@ -170,37 +170,36 @@ class Attraction(object):
         conn = sqlite3.connect(self.__db.db_path)
         c = conn.cursor()
 
-        # TODO test if none, return none otherwise return status_data[0]
-        status_data = c.execute("SELECT body FROM sync WHERE id = ?", ("{}.facilitystatus.1_0.{};entityType=Attraction".format(self.__dest_code, self.__id),)).fetchone()
-        return status_data
+        data = c.execute("SELECT body FROM sync WHERE id = ?", ("{}.facilitystatus.1_0.{};entityType=Attraction".format(self.__dest_code, self.__id),)).fetchone()
+        if data is None:
+            return None
+        else:
+            return json.loads(data[0])
 
     def get_wait_time(self):
         """Return current wait time of the object. Returns None if object doesn't have a wait time or no wait currently exists (eg. closed)"""
-        status_data = self.get_raw_facilitystatus_data()
-        if status_data is None:
+        data = self.get_raw_facilitystatus_data()
+        if data is None:
             return None
         else:
-            body = json.loads(status_data[0])
-            return body['waitMinutes']
+            return data['waitMinutes']
 
     def get_status(self):
         """Return current status of the object."""
-        status_data = self.get_raw_facilitystatus_data()
-        if status_data is None:
+        data = self.get_raw_facilitystatus_data()
+        if data is None:
             return None
         else:
-            body = json.loads(status_data[0])
-            return body['status']
+            return data['status']
         # TODO might have to change this from facilitystatus data to scheduleType from today, or test if none from status then get from today instead
 
     def fastpass_available(self):
         """Returns a boolean of whether this object has FastPass"""
-        status_data = self.get_raw_facilitystatus_data()
-        if status_data is None:
+        data = self.get_raw_facilitystatus_data()
+        if data is None:
             return False
         else:
-            body = json.loads(status_data[0])
-            return body['fastPassAvailable'] == 'true'
+            return data['fastPassAvailable'] == 'true'
 
     def fastpass_times(self):
         """Returns the current start and end time of the FastPass"""
@@ -208,11 +207,10 @@ class Attraction(object):
         end_time = None
 
         if self.fastpass_available():
-            status_data = self.get_raw_facilitystatus_data()
-            body = json.loads(status_data[0])
+            data = self.get_raw_facilitystatus_data()
 
-            start_time = datetime.strptime(body['fastPassStartTime'], "%Y-%m-%dT%H:%M:%SZ")
-            end_time = datetime.strptime(body['fastPassEndTime'], "%Y-%m-%dT%H:%M:%SZ")
+            start_time = datetime.strptime(data['fastPassStartTime'], "%Y-%m-%dT%H:%M:%SZ")
+            end_time = datetime.strptime(data['fastPassEndTime'], "%Y-%m-%dT%H:%M:%SZ")
 
         return start_time, end_time
 
@@ -254,7 +252,10 @@ class Attraction(object):
         if facility_data is None:
             return None
         else:
-            return facility_data['facets']
+            try:
+                return facility_data['facets']
+            except:
+                return None
 
     def admission_required(self):
         """Returns boolean of admission required"""
