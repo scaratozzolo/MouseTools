@@ -340,7 +340,7 @@ class Attraction(object):
                 pass
         return chars
 
-    def get_associated_characters(self):
+    def get_associated_characters_ids(self):
         """
         Returns a list of associated characters IDs
         """
