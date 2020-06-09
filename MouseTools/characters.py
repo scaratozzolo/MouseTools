@@ -26,7 +26,7 @@ class Character(object):
             pass
 
         if error:
-            raise ValueError('That character is not available.')
+            raise ValueError('That character is not available. id: ' + id')
 
         self.__id = id
         self.__character_name = self.__data['name']
@@ -82,7 +82,7 @@ class Character(object):
             if self.check_related_locations():
                 for loc in self.__data['relatedLocations']['primaryLocations']:
                     type = loc['facilityType']
-                    loc_id = loc['links']['self']['href'].split('/')[-1]
+                    loc_id = loc['links']['self']['href'].split('/')[-1].split('?')[0]
 
                     if type == 'Attraction':
                         locs.append(Attraction(loc_id))
@@ -103,7 +103,7 @@ class Character(object):
             if self.check_related_locations():
                 for loc in self.__data['relatedLocations']['primaryLocations']:
                     type = loc['facilityType']
-                    loc_id = loc['links']['self']['href'].split('/')[-1]
+                    loc_id = loc['links']['self']['href'].split('/')[-1].split('?')[0]
 
                     locs.append((loc_id, type))
 

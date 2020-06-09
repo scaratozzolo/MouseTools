@@ -16,14 +16,14 @@ class Facility(object):
         ID must be a string
         """
         # TODO Maybe turn this into a base class
-        
+
         self.__db = DisneyDatabase(sync_on_init)
         conn = sqlite3.connect(self.__db.db_path)
         c = conn.cursor()
 
         row = c.execute("SELECT * FROM facilities WHERE id = ?", (id,)).fetchone()
         if row is None:
-            raise ValueError('That facility is not available.')
+            raise ValueError('That facility is not available. id: ' + id)
         else:
             self.__id = row[0]
             self.__name = row[1]

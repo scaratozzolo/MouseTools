@@ -27,7 +27,7 @@ class Entertainment(object):
             pass
 
         if error:
-            raise ValueError('That entertainment is not available.')
+            raise ValueError('That entertainment is not available. id: ' + id)
 
         self.__db = DisneyDatabase(sync_on_init)
         conn = sqlite3.connect(self.__db.db_path)
@@ -366,7 +366,7 @@ class Entertainment(object):
             if self.check_related_locations():
                 for loc in self.__data['relatedLocations']['primaryLocations']:
                     type = loc['facilityType']
-                    loc_id = loc['links']['self']['href'].split('/')[-1]
+                    loc_id = loc['links']['self']['href'].split('/')[-1].split('?')[0]
 
                     if type == 'point-of-interest':
                         locs.append(PointOfInterest(loc_id))
@@ -385,7 +385,7 @@ class Entertainment(object):
             if self.check_related_locations():
                 for loc in self.__data['relatedLocations']['primaryLocations']:
                     type = loc['facilityType']
-                    loc_id = loc['links']['self']['href'].split('/')[-1]
+                    loc_id = loc['links']['self']['href'].split('/')[-1].split('?')[0]
 
                     locs.append((loc_id, type))
 

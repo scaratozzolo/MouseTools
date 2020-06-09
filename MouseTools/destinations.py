@@ -34,7 +34,7 @@ class Destination(object):
             pass
 
         if error:
-            raise ValueError('That destination is not available. Available destinations: {}'.format(", ".join(DEST_IDS)))
+            raise ValueError('That destination is not available. id: ' + id + '. Available destinations: {}'.format(", ".join(DEST_IDS)))
 
         self.__id = id
 

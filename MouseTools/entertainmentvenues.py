@@ -24,7 +24,7 @@ class EntertainmentVenue(object):
             pass
 
         if error:
-            raise ValueError('That entertainment venue is not available.')
+            raise ValueError('That entertainment venue is not available. id: ' + id)
 
         self.__db = DisneyDatabase(sync_on_init)
         conn = sqlite3.connect(self.__db.db_path)

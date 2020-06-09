@@ -39,7 +39,7 @@ class Park(object):
                 pass
 
         if error:
-            raise ValueError('That park is not available.')
+            raise ValueError('That park is not available. id: ' + id)
 
         self.__db = DisneyDatabase(sync_on_init)
         conn = sqlite3.connect(self.__db.db_path)
