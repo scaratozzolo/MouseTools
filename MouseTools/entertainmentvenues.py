@@ -160,10 +160,6 @@ class EntertainmentVenue(object):
         else:
             return json.loads(data)
 
-    def admission_required(self):
-        """Returns boolean of admission required"""
-        return self.__data['admissionRequired']
-
     def get_wait_times(self):
         """Returns a list of dictionaries in the form of {rideid:time} for attractions and entertainments for this venue"""
         if self.__db.channel_exists('{}.facilitystatus.1_0'.format(self.__dest_code)):

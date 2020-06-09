@@ -84,7 +84,7 @@ class PointOfInterest(object):
         """Returns a list of possible ids of this entityType"""
         conn = sqlite3.connect(DisneyDatabase().db_path)
         c = conn.cursor()
-        pos_ids = [row[0] for row in c.execute("SELECT id FROM facilities WHERE entityType ?", (self.__entityType,))]
+        pos_ids = [row[0] for row in c.execute("SELECT id FROM facilities WHERE entityType = ?", (self.__entityType,))]
         return pos_ids
 
     def get_id(self):
@@ -183,14 +183,6 @@ class PointOfInterest(object):
             return None
         else:
             return facility_data['listImageUrl']
-
-    def get_facets(self):
-        """Returns a list of  dictionaries of the object's facets"""
-        facility_data = self.get_raw_facilities_data()
-        if facility_data is None:
-            return None
-        else:
-            return facility_data['facets']
 
     def admission_required(self):
         """Returns boolean of admission required"""
