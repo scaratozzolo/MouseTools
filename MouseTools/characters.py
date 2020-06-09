@@ -17,20 +17,19 @@ class Character(object):
         ID must be a string
         """
 
+        error = True
+        self.__data = requests.get("https://api.wdpro.disney.go.com/facility-service/characters/{}".format(id), headers=getHeaders()).json()
         try:
-            error = True
-            self.__data = requests.get("https://api.wdpro.disney.go.com/facility-service/characters/{}".format(id), headers=getHeaders()).json()
-            try:
-                if self.__data['id'] is not None:
-                    error = False
-            except:
-                pass
+            if self.__data['id'] is not None:
+                error = False
+        except:
+            pass
 
-            if error:
-                raise ValueError('That character is not available.')
+        if error:
+            raise ValueError('That character is not available.')
 
-            self.__id = id
-            self.__character_name = self.__data['name']
+        self.__id = id
+        self.__character_name = self.__data['name']
 
 
 
