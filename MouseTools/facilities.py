@@ -16,33 +16,28 @@ class Facility(object):
         ID must be a string
         """
         # TODO Maybe turn this into a base class
-        try:
+        
+        self.__db = DisneyDatabase(sync_on_init)
+        conn = sqlite3.connect(self.__db.db_path)
+        c = conn.cursor()
 
-            self.__db = DisneyDatabase(sync_on_init)
-            conn = sqlite3.connect(self.__db.db_path)
-            c = conn.cursor()
+        row = c.execute("SELECT * FROM facilities WHERE id = ?", (id,)).fetchone()
+        if row is None:
+            raise ValueError('That facility is not available.')
+        else:
+            self.__id = row[0]
+            self.__name = row[1]
+            self.__entityType = row[2]
+            self.__subType = row[3]
+            self.__doc_id = row[4]
+            self.__dest_code = row[5]
+            self.__anc_park_id = row[6]
+            self.__anc_resort_id = row[7]
+            self.__anc_land_id = row[8]
+            self.__anc_ra_id = row[9]
+            self.__anc_ev_id = row[10]
 
-            row = c.execute("SELECT * FROM facilities WHERE id = ?", (id,)).fetchone()
-            if row is None:
-                raise ValueError()
-            else:
-                self.__id = row[0]
-                self.__name = row[1]
-                self.__entityType = row[2]
-                self.__subType = row[3]
-                self.__doc_id = row[4]
-                self.__dest_code = row[5]
-                self.__anc_park_id = row[6]
-                self.__anc_resort_id = row[7]
-                self.__anc_land_id = row[8]
-                self.__anc_ra_id = row[9]
-                self.__anc_ev_id = row[10]
-
-            self.__facilities_data = c.execute("SELECT body FROM sync WHERE id = ?", (self.__doc_id,)).fetchone()[0]
-        except Exception as e:
-            # print(e)
-            print('That facility is not available.')
-            sys.exit()
+        self.__facilities_data = c.execute("SELECT body FROM sync WHERE id = ?", (self.__doc_id,)).fetchone()[0]
 
     def get_possible_ids(self):
         """Returns a list of possible ids of this entityType"""

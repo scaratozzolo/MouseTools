@@ -25,41 +25,33 @@ class Destination(object):
         Allows access to various destination related data.
         dest_code must be a string.
         """
+        error = True
+        self.__data = requests.get("https://api.wdpro.disney.go.com/facility-service/destinations/{}".format(id), headers=getHeaders()).json()
         try:
-            error = True
-            self.__data = requests.get("https://api.wdpro.disney.go.com/facility-service/destinations/{}".format(id), headers=getHeaders()).json()
-            try:
-                if self.__data['id'] is not None:
-                    error = False
-            except:
-                pass
+            if self.__data['id'] is not None:
+                error = False
+        except:
+            pass
 
-            if error:
-                raise ValueError()
+        if error:
+            raise ValueError('That destination is not available. Available destinations: {}'.format(", ".join(DEST_IDS)))
 
-            self.__id = id
+        self.__id = id
 
-            self.__db = DisneyDatabase(sync_on_init)
-            conn = sqlite3.connect(self.__db.db_path)
-            c = conn.cursor()
+        self.__db = DisneyDatabase(sync_on_init)
+        conn = sqlite3.connect(self.__db.db_path)
+        c = conn.cursor()
 
-            dest_data = c.execute("SELECT id, name, doc_id, destination_code, entityType FROM facilities WHERE entityType = 'destination' and id = ?", (self.__id,)).fetchone()
-            self.__id = dest_data[0]
-            self.__name = dest_data[1]
-            self.__doc_id = dest_data[2]
-            self.__dest_code = dest_data[3]
-            self.__entityType = dest_data[4]
-            self.__facilities_data = json.loads(c.execute("SELECT body FROM sync WHERE id = ?", (self.__doc_id,)).fetchone()[0])
+        dest_data = c.execute("SELECT id, name, doc_id, destination_code, entityType FROM facilities WHERE entityType = 'destination' and id = ?", (self.__id,)).fetchone()
+        self.__id = dest_data[0]
+        self.__name = dest_data[1]
+        self.__doc_id = dest_data[2]
+        self.__dest_code = dest_data[3]
+        self.__entityType = dest_data[4]
+        self.__facilities_data = json.loads(c.execute("SELECT body FROM sync WHERE id = ?", (self.__doc_id,)).fetchone()[0])
 
-            conn.commit()
-            conn.close()
-
-
-
-        except Exception as e:
-            # print(e)
-            print('That destination is not available. Available destinations: {}'.format(", ".join(DEST_IDS)))
-            sys.exit()
+        conn.commit()
+        conn.close()
 
 
     def get_possible_ids(self):

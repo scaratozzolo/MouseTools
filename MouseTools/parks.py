@@ -25,75 +25,69 @@ class Park(object):
         ID must be a string
         """
 
+        error = True
+        self.__data = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/theme-parks/{}".format(id), headers=getHeaders()).json()
         try:
-
-            error = True
-            self.__data = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/theme-parks/{}".format(id), headers=getHeaders()).json()
+            if self.__data['id'] is not None:
+                error = False
+        except:
+            self.__data = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/water-parks/{}".format(id), headers=getHeaders()).json()
             try:
                 if self.__data['id'] is not None:
                     error = False
             except:
-                self.__data = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/water-parks/{}".format(id), headers=getHeaders()).json()
-                try:
-                    if self.__data['id'] is not None:
-                        error = False
-                except:
-                    pass
+                pass
 
-            if error:
-                raise ValueError()
+        if error:
+            raise ValueError('That park is not available.')
 
-            self.__db = DisneyDatabase(sync_on_init)
-            conn = sqlite3.connect(self.__db.db_path)
-            c = conn.cursor()
+        self.__db = DisneyDatabase(sync_on_init)
+        conn = sqlite3.connect(self.__db.db_path)
+        c = conn.cursor()
 
 
-            self.__id = id
-            self.__name = self.__data['name']
-            self.__entityType = self.__data['type']
+        self.__id = id
+        self.__name = self.__data['name']
+        self.__entityType = self.__data['type']
+        try:
+            self.__subType = self.__data['subType']
+        except:
+            self.__subType = None
+        doc_id_query = c.execute("SELECT doc_id from facilities where doc_id LIKE ?", ("%{};entityType={}".format(self.__id, self.__entityType),)).fetchone()
+        self.__doc_id = doc_id_query[0] if doc_id_query is not None else None
+        self.__anc_dest_id = self.__data['ancestorDestination']['id'].split(';')[0]
+        self.__dest_code = c.execute("SELECT destination_code FROM facilities WHERE id = ?", (self.__anc_dest_id,)).fetchone()[0]
+        try:
+            self.__anc_park_id = self.__data['links']['ancestorThemePark']['href'].split('/')[-1].split('?')[0]
+        except:
             try:
-                self.__subType = self.__data['subType']
+                self.__anc_park_id = self.__data['links']['ancestorWaterPark']['href'].split('/')[-1].split('?')[0]
             except:
-                self.__subType = None
-            doc_id_query = c.execute("SELECT doc_id from facilities where doc_id LIKE ?", ("%{};entityType={}".format(self.__id, self.__entityType),)).fetchone()
-            self.__doc_id = doc_id_query[0] if doc_id_query is not None else None
-            self.__anc_dest_id = self.__data['ancestorDestination']['id'].split(';')[0]
-            self.__dest_code = c.execute("SELECT destination_code FROM facilities WHERE id = ?", (self.__anc_dest_id,)).fetchone()[0]
-            try:
-                self.__anc_park_id = self.__data['links']['ancestorThemePark']['href'].split('/')[-1].split('?')[0]
-            except:
-                try:
-                    self.__anc_park_id = self.__data['links']['ancestorWaterPark']['href'].split('/')[-1].split('?')[0]
-                except:
-                    self.__anc_park_id = None
-            try:
-                self.__anc_resort_id = self.__data['links']['ancestorResort']['href'].split('/')[-1].split('?')[0]
-            except:
-                self.__anc_resort_id = None
+                self.__anc_park_id = None
+        try:
+            self.__anc_resort_id = self.__data['links']['ancestorResort']['href'].split('/')[-1].split('?')[0]
+        except:
+            self.__anc_resort_id = None
 
-            try:
-                self.__anc_land_id = self.__data['links']['ancestorLand']['href'].split('/')[-1].split('?')[0]
-            except:
-                self.__anc_land_id = None
+        try:
+            self.__anc_land_id = self.__data['links']['ancestorLand']['href'].split('/')[-1].split('?')[0]
+        except:
+            self.__anc_land_id = None
 
-            try:
-                self.__anc_ra_id = self.__data['links']['ancestorResortArea']['href'].split('/')[-1].split('?')[0]
-            except:
-                self.__anc_ra_id = None
+        try:
+            self.__anc_ra_id = self.__data['links']['ancestorResortArea']['href'].split('/')[-1].split('?')[0]
+        except:
+            self.__anc_ra_id = None
 
-            try:
-                self.__anc_ev_id = self.__data['links']['ancestorEntertainmentVenue']['href'].split('/')[-1].split('?')[0]
-            except:
-                self.__anc_ev_id = None
+        try:
+            self.__anc_ev_id = self.__data['links']['ancestorEntertainmentVenue']['href'].split('/')[-1].split('?')[0]
+        except:
+            self.__anc_ev_id = None
 
-            self.__facilities_data = None
+        self.__facilities_data = None
 
-            conn.commit()
-            conn.close()
-        except Exception as e:
-            # print(e)
-            print('That park is not available.')
-            sys.exit()
+        conn.commit()
+        conn.close()
 
     def get_possible_ids(self):
         """Returns a list of possible ids of this entityType"""

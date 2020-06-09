@@ -27,15 +27,11 @@ class Character(object):
                 pass
 
             if error:
-                raise ValueError()
+                raise ValueError('That character is not available.')
 
             self.__id = id
             self.__character_name = self.__data['name']
 
-        except Exception as e:
-            # print(e)
-            print('That character is not available.')
-            sys.exit()
 
 
     def get_possible_ids(self):
