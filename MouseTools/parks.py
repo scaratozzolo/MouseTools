@@ -109,12 +109,14 @@ class Park(object):
                 pass
 
         data = requests.get(dest_data['links']['waterParks']['href'], headers=getHeaders()).json()
-
-        for entry in data['entries']:
-            try:
-                ids.append(entry['links']['self']['href'].split('/')[-1].split('?')[0])
-            except:
-                pass
+        try:
+            for entry in data['entries']:
+                try:
+                    ids.append(entry['links']['self']['href'].split('/')[-1].split('?')[0])
+                except:
+                    pass
+        except:
+            pass
 
         return ids
 
