@@ -43,6 +43,7 @@ class Entertainment(object):
             self.__subType = None
         doc_id_query = c.execute("SELECT doc_id from facilities where doc_id LIKE ?", ("%{};entityType={}".format(self.__id, self.__entityType),)).fetchone()
         self.__doc_id = doc_id_query[0] if doc_id_query is not None else None
+        # ID: 266858 doesn't have any of this information which causes a problem.
         self.__anc_dest_id = self.__data['ancestorDestination']['id'].split(';')[0]
         self.__dest_code = c.execute("SELECT destination_code FROM facilities WHERE id = ?", (self.__anc_dest_id,)).fetchone()[0]
         try:
@@ -152,14 +153,14 @@ class Entertainment(object):
         """Returns the raw facilities data currently stored in the database"""
         conn = sqlite3.connect(self.__db.db_path)
         c = conn.cursor()
-        data = c.execute("SELECT body FROM sync WHERE id = ?", (self.__doc_id,)).fetchone()[0]
+        data = c.execute("SELECT body FROM sync WHERE id = ?", (self.__doc_id,)).fetchone()
         conn.commit()
         conn.close()
 
         if data is None:
             return None
         else:
-            return json.loads(data)
+            return json.loads(data[0])
 
     def get_raw_facilitystatus_data(self):
         """Returns the raw facilitystatus data from the database after syncing with Disney (returns most recent data)"""
