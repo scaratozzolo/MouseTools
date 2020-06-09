@@ -177,38 +177,36 @@ class Entertainment(object):
         conn = sqlite3.connect(self.__db.db_path)
         c = conn.cursor()
 
-        status_data = c.execute("SELECT body FROM sync WHERE id = ?", ('{}.facilitystatus.1_0.{};entityType=Entertainment'.format(self.__dest_code, self.__id),)).fetchone()
-        return status_data
-    # json load before sending
+        data = c.execute("SELECT body FROM sync WHERE id = ?", ("{}.facilitystatus.1_0.{};entityType=Entertainment".format(self.__dest_code, self.__id),)).fetchone()
+        if data is None:
+            return None
+        else:
+            return json.loads(data[0])
 
     def get_wait_time(self):
         """Return current wait time of the object. Returns None if object doesn't have a wait time or no wait currently exists (eg. closed)"""
-        status_data = self.get_raw_facilitystatus_data()
-        if status_data is None:
+        data = self.get_raw_facilitystatus_data()
+        if data is None:
             return None
         else:
-            body = json.loads(status_data[0])
-            return body['waitMinutes']
+            return data['waitMinutes']
 
     def get_status(self):
         """Return current status of the object."""
-        status_data = self.get_raw_facilitystatus_data()
-        if status_data is None:
+        data = self.get_raw_facilitystatus_data()
+        if data is None:
             return None
         else:
-            body = json.loads(status_data[0])
-            return body['status']
-
-        # today.Entertainment channel was deleted?
+            return data['status']
+        # TODO might have to change this from facilitystatus data to scheduleType from today, or test if none from status then get from today instead
 
     def fastpass_available(self):
         """Returns a boolean of whether this object has FastPass"""
-        status_data = self.get_raw_facilitystatus_data()
-        if status_data is None:
+        data = self.get_raw_facilitystatus_data()
+        if data is None:
             return False
         else:
-            body = json.loads(status_data[0])
-            return body['fastPassAvailable'] == 'true'
+            return data['fastPassAvailable'] == 'true'
 
     def fastpass_times(self):
         """Returns the current start and end time of the FastPass"""
@@ -216,11 +214,10 @@ class Entertainment(object):
         end_time = None
 
         if self.fastpass_available():
-            status_data = self.get_raw_facilitystatus_data()
-            body = json.loads(status_data[0])
+            data = self.get_raw_facilitystatus_data()
 
-            start_time = datetime.strptime(body['fastPassStartTime'], "%Y-%m-%dT%H:%M:%SZ")
-            end_time = datetime.strptime(body['fastPassEndTime'], "%Y-%m-%dT%H:%M:%SZ")
+            start_time = datetime.strptime(data['fastPassStartTime'], "%Y-%m-%dT%H:%M:%SZ")
+            end_time = datetime.strptime(data['fastPassEndTime'], "%Y-%m-%dT%H:%M:%SZ")
 
         return start_time, end_time
 
@@ -381,6 +378,23 @@ class Entertainment(object):
                         locs.append(PointOfInterest(loc_id))
                     else:
                         print('no class for {} at this time'.format(type))
+            return locs
+        except:
+            return locs
+
+    def get_related_location_ids(self):
+        """
+        Returns the related locations of the entertainment as a tuple (id, type)
+        """
+        locs = []
+        try:
+            if self.check_related_locations():
+                for loc in self.__data['relatedLocations']['primaryLocations']:
+                    type = loc['facilityType']
+                    loc_id = loc['links']['self']['href'].split('/')[-1]
+
+                    locs.append((loc_id, type))
+
             return locs
         except:
             return locs
