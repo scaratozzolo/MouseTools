@@ -76,7 +76,7 @@ class Character(object):
 
     def get_related_locations(self):
         """
-        Gets the locations the character is realted to. Alice:90003819
+        Gets the locations the character is realted to.
         """
         locs = []
         try:
@@ -91,6 +91,23 @@ class Character(object):
                         locs.append(Facility(loc_id))
                     else:
                         print('no class for {} at this time'.format(type))
+            return locs
+        except:
+            return locs
+
+    def get_related_location_ids(self):
+        """
+        Gets the locations the character is realted to as a list of tuples [(id, type)]
+        """
+        locs = []
+        try:
+            if self.check_related_locations():
+                for loc in self.__data['relatedLocations']['primaryLocations']:
+                    type = loc['facilityType']
+                    loc_id = loc['links']['self']['href'].split('/')[-1]
+
+                    locs.append((loc_id, type))
+
             return locs
         except:
             return locs
