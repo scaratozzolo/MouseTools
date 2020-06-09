@@ -43,11 +43,12 @@ class Destination(object):
             conn = sqlite3.connect(self.__db.db_path)
             c = conn.cursor()
 
-            dest_data = c.execute("SELECT id, name, doc_id, destination_code FROM facilities WHERE entityType = 'destination' and id = ?", (self.__id,)).fetchone()
+            dest_data = c.execute("SELECT id, name, doc_id, destination_code, entityType FROM facilities WHERE entityType = 'destination' and id = ?", (self.__id,)).fetchone()
             self.__id = dest_data[0]
             self.__name = dest_data[1]
             self.__doc_id = dest_data[2]
             self.__dest_code = dest_data[3]
+            self.__entityType = dest_data[4]
             self.__facilities_data = json.loads(c.execute("SELECT body FROM sync WHERE id = ?", (self.__doc_id,)).fetchone()[0])
 
             conn.commit()
@@ -60,6 +61,13 @@ class Destination(object):
             print('That destination is not available. Available destinations: {}'.format(", ".join(DEST_IDS)))
             sys.exit()
 
+
+    def get_possible_ids(self):
+        """Returns a list of possible ids of this entityType"""
+        conn = sqlite3.connect(DisneyDatabase().db_path)
+        c = conn.cursor()
+        pos_ids = [row[0] for row in c.execute("SELECT id FROM facilities WHERE entityType = ?", (self.__entityType,))]
+        return pos_ids
 
     def get_destination_code(self):
         """Returns the destination code"""
@@ -76,6 +84,10 @@ class Destination(object):
     def get_doc_id(self):
         """Returns the doc id"""
         return self.__doc_id
+
+    def get_entityType(self):
+        """Returns the entityType"""
+        return self.__entityType
 
     def get_links(self):
         """Returns a dictionary of related links"""
