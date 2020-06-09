@@ -160,6 +160,10 @@ class EntertainmentVenue(object):
         else:
             return json.loads(data)
 
+    def admission_required(self):
+        """Returns boolean of admission required"""
+        return self.__data['admissionRequired']
+
     def get_wait_times(self):
         """Returns a list of dictionaries in the form of {rideid:time} for attractions and entertainments for this venue"""
         if self.__db.channel_exists('{}.facilitystatus.1_0'.format(self.__dest_code)):
@@ -343,7 +347,7 @@ class EntertainmentVenue(object):
                 return body['facilities'][str(self.__id) + ';entityType=' + self.__entityType][0]['scheduleType']
             except:
                 return None
-            
+
     def get_last_update(self):
         """Returns facilities last update time as a datetime object"""
         facility_data = self.get_raw_facilities_data()
@@ -379,43 +383,6 @@ class EntertainmentVenue(object):
             return None
         else:
             return facility_data['detailImageUrl']
-
-    def get_todays_hours(self):
-        """
-        Gets the venue hours and returns them as a datetime object.
-        Returns the venue hours in the following order: operating open, operating close, Extra Magic open, Extra Magic close.
-        Extra Magic hours will return None if there are none for today.
-        """
-
-        DATE = datetime.today()
-        data = requests.get("https://api.wdpro.disney.go.com/facility-service/schedules/{}?date={}-{}-{}".format(self.__id, DATE.year, self.__formatDate(str(DATE.month)), self.__formatDate(str(DATE.day))), headers=getHeaders()).json()
-
-        operating_hours_start = None
-        operating_hours_end = None
-        extra_hours_start = None
-        extra_hours_end = None
-
-        try:
-            for i in range(len(data['schedules'])):
-                if data['schedules'][i]['type'] == 'Operating':
-                    operating_hours_start = datetime(DATE.year, DATE.month, DATE.day, int(data['schedules'][i]['startTime'][0:2]), int(data['schedules'][i]['startTime'][3:5]))
-                    if int(data['schedules'][i]['endTime'][0:2]) >= 0 and int(data['schedules'][i]['endTime'][0:2]) <= 7:
-                        DATETEMP = DATE + timedelta(days=1)
-                        operating_hours_end = datetime(DATETEMP.year, DATETEMP.month, DATETEMP.day, int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
-                    else:
-                        operating_hours_end = datetime(DATE.year, DATE.month, DATE.day, int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
-
-                if data['schedules'][i]['type'] == 'Extra Magic Hours':
-                    extra_hours_start = datetime(DATE.year, DATE.month, DATE.day, int(data['schedules'][i]['startTime'][0:2]), int(data['schedules'][i]['startTime'][3:5]))
-                    if int(data['schedules'][i]['endTime'][0:2]) >= 0 and int(data['schedules'][i]['endTime'][0:2]) <= 7:
-                        DATETEMP = DATE + timedelta(days=1)
-                        extra_hours_end = datetime(DATETEMP.year, DATETEMP.month, DATETEMP.day, int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
-                    else:
-                        extra_hours_end = datetime(DATE.year, DATE.month, DATE.day, int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
-
-        except KeyError:
-            pass
-        return operating_hours_start, operating_hours_end, extra_hours_start, extra_hours_end
 
     def get_hours(self, date = ""):
         """

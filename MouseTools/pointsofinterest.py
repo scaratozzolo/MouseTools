@@ -192,6 +192,10 @@ class PointOfInterest(object):
         else:
             return facility_data['facets']
 
+    def admission_required(self):
+        """Returns boolean of admission required"""
+        return self.__data['admissionRequired']
+
     def __formatDate(self, num):
         """
         Formats month and day into proper format

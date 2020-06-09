@@ -402,6 +402,10 @@ class Park(object):
         else:
             return facility_data['detailImageUrl']
 
+    def admission_required(self):
+        """Returns boolean of admission required"""
+        return self.__data['admissionRequired']
+
     def get_hours(self, date = ""):
         """
         Gets the object's hours on a specific day and returns them as a datetime object.

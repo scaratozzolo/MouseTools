@@ -264,6 +264,10 @@ class Entertainment(object):
         else:
             return facility_data['facets']
 
+    def admission_required(self):
+        """Returns boolean of admission required"""
+        return self.__data['admissionRequired']
+
     def get_todays_hours(self):
         """Returns the start and end times for the object. Will return None, None if closed"""
         start_time = None
