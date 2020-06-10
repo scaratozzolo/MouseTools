@@ -40,36 +40,59 @@ class EntertainmentVenue(object):
             self.__subType = None
         doc_id_query = c.execute("SELECT doc_id from facilities where doc_id LIKE ?", ("%{};entityType={}".format(self.__id, self.__entityType),)).fetchone()
         self.__doc_id = doc_id_query[0] if doc_id_query is not None else None
-        self.__anc_dest_id = self.__data['ancestorDestination']['id'].split(';')[0]
-        self.__dest_code = c.execute("SELECT destination_code FROM facilities WHERE id = ?", (self.__anc_dest_id,)).fetchone()[0]
+        self.__facilities_data = self.get_raw_facilities_data()
+        try:
+            self.__anc_dest_id = self.__data['ancestorDestination']['id'].split(';')[0]
+            self.__dest_code = c.execute("SELECT destination_code FROM facilities WHERE id = ?", (self.__anc_dest_id,)).fetchone()[0]
+        except:
+            self.__anc_dest_id = None
+            self.__dest_code = None
+
         try:
             self.__anc_park_id = self.__data['links']['ancestorThemePark']['href'].split('/')[-1].split('?')[0]
         except:
             try:
                 self.__anc_park_id = self.__data['links']['ancestorWaterPark']['href'].split('/')[-1].split('?')[0]
             except:
-                self.__anc_park_id = None
+                try:
+                    self.__anc_park_id = self.__facilities_data['ancestorThemeParkId'].split(';')[0]
+                except:
+                    try:
+                        self.__anc_park_id = self.__facilities_data['ancestorWaterParkId'].split(';')[0]
+                    except:
+                        self.__anc_park_id = None
+
         try:
             self.__anc_resort_id = self.__data['links']['ancestorResort']['href'].split('/')[-1].split('?')[0]
         except:
-            self.__anc_resort_id = None
+            try:
+                self.__anc_resort_id = self.__facilities_data['ancestorResortId'].split(';')[0]
+            except:
+                self.__anc_resort_id = None
 
         try:
             self.__anc_land_id = self.__data['links']['ancestorLand']['href'].split('/')[-1].split('?')[0]
         except:
-            self.__anc_land_id = None
+            try:
+                self.__anc_land_id = self.__facilities_data['ancestorLandId'].split(';')[0]
+            except:
+                self.__anc_land_id = None
 
         try:
             self.__anc_ra_id = self.__data['links']['ancestorResortArea']['href'].split('/')[-1].split('?')[0]
         except:
-            self.__anc_ra_id = None
+            try:
+                self.__anc_ra_id = self.__facilities_data['ancestorResortAreaId'].split(';')[0]
+            except:
+                self.__anc_ra_id = None
 
         try:
             self.__anc_ev_id = self.__data['links']['ancestorEntertainmentVenue']['href'].split('/')[-1].split('?')[0]
         except:
-            self.__anc_ev_id = None
-
-        self.__facilities_data = None
+            try:
+                self.__anc_ev_id = self.__facilities_data['ancestorEntertainmentVenueId'].split(';')[0]
+            except:
+                self.__anc_ev_id = None
 
         conn.commit()
         conn.close()
