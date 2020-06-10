@@ -1,16 +1,18 @@
 from .auth import couchbaseHeaders
+from pathlib import Path
 import datetime
 import pkg_resources
 import sqlite3
 import requests
 import json
 import re
+import os
 
 # The facilities channel either doesn't have everything or parsing the links from global-facility-service has things that don't exist
 class DisneyDatabase:
 
     def __init__(self, sync_on_init=True):
-        self.db_path = pkg_resources.resource_filename("MouseTools", "MouseTools.db")
+        self.db_path = os.path.join(Path(os.path.abspath(__file__)).parent, "MouseTools.db")
         conn = sqlite3.connect(self.db_path)
         c = conn.cursor()
 
