@@ -1,23 +1,14 @@
-from .destinations import *
-from .parks import *
-from .entertainmentvenues import *
-from .attractions import *
-from .entertainments import *
-from .characters import *
-from .pointsofinterest import *
-
+WDW_ID = '80007798'
+DLR_ID = '80008297'
 DESTINATION_IDS = [WDW_ID, DLR_ID]
-wdw_dest = Destination(WDW_ID)
-dlr_dest = Destination(DLR_ID)
 
-WDW_PARK_IDS = wdw_dest.get_park_ids()
-DLR_PARK_IDS = dlr_dest.get_park_ids()
-
-WDW_EV_IDS = wdw_dest.get_entertainment_venue_ids()
-DLR_EV_IDS = dlr_dest.get_entertainment_venue_ids()
-
-WDW_ATTRACTION_IDS = wdw_dest.get_attraction_ids()
-DLR_ATTRACTION_IDS = dlr_dest.get_attraction_ids()
-
-WDW_ENTERTAINMENT_IDS = wdw_dest.get_entertainment_ids()
-DLR_ENTERTAINMENT_IDS = dlr_dest.get_entertainment_ids()
+MK_ID = "80007944"
+EPCOT_ID = "80007838"
+HS_ID = "80007998"
+AK_ID = "80007823"
+DLP_ID = "330339"
+CA_ID = "336894"
+TL_ID = "80007981"
+BB_ID = "80007834"
+WDW_PARK_IDS = [MK_ID, EPCOT_ID, HS_ID, AK_ID, TL_ID, BB_ID]
+DLR_PARK_IDS = [DLP_ID, CA_ID]

@@ -9,9 +9,6 @@ from .entertainments import Entertainment
 from .attractions import Attraction
 from .database import DisneyDatabase
 
-WDW_ID = '80007798'
-DLR_ID = '80008297'
-
 WDW_CODE = 'wdw'
 DLR_CODE = 'dlr'
 DEST_CODES = [WDW_CODE, DLR_CODE]

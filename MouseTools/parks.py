@@ -6,16 +6,6 @@ from datetime import datetime, timedelta
 from .auth import getHeaders, couchbaseHeaders
 from .database import DisneyDatabase
 
-MK_ID = "80007944"
-EPCOT_ID = "80007838"
-HS_ID = "80007998"
-AK_ID = "80007823"
-DLP_ID = "330339"
-CA_ID = "336894"
-TL_ID = "80007981"
-BB_ID = "80007834"
-
-
 class Park(object):
 
     def __init__(self, id = '', sync_on_init=True):
