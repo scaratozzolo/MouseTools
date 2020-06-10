@@ -14,7 +14,7 @@ DLP_ID = "330339"
 CA_ID = "336894"
 TL_ID = "80007981"
 BB_ID = "80007834"
-PARK_IDS = [MK_ID, EPCOT_ID, HS_ID, AK_ID, DLP_ID, CA_ID, TL_ID, BB_ID]
+
 
 class Park(object):
 

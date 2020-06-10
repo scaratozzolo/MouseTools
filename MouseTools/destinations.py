@@ -11,7 +11,6 @@ from .database import DisneyDatabase
 
 WDW_ID = '80007798'
 DLR_ID = '80008297'
-DEST_IDS = [WDW_ID, DLR_ID]
 
 WDW_CODE = 'wdw'
 DLR_CODE = 'dlr'
