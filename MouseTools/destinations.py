@@ -19,7 +19,7 @@ DEST_CODES = [WDW_CODE, DLR_CODE]
 
 class Destination(object):
 
-    def __init__(self, id = '', sync_on_init=True):
+    def __init__(self, id = None, sync_on_init=True):
         """
         Constructor Function
         Allows access to various destination related data.
@@ -58,7 +58,7 @@ class Destination(object):
         """Returns a list of possible ids of this entityType"""
         conn = sqlite3.connect(DisneyDatabase().db_path)
         c = conn.cursor()
-        pos_ids = [row[0] for row in c.execute("SELECT id FROM facilities WHERE entityType = ?", (self.__entityType,))]
+        pos_ids = [row[0] for row in c.execute("SELECT id FROM facilities WHERE entityType = 'destination'")]
         return pos_ids
 
     def get_destination_code(self):
