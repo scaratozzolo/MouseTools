@@ -38,8 +38,22 @@ print(pirates.get_wait_time())
 MouseTools.ids.WDW_ID # Walt Disney World destination id
 MouseTools.ids.DLR_ID # Disneyland Resort destination id
 
+# List of ids
+# Parks
 MouseTools.ids.WDW_PARK_IDS
 MouseTools.ids.DLR_PARK_IDS
+
+# Entertainment Venues
+MouseTools.ids.WDW_EV_IDS
+MouseTools.ids.DLR_EV_IDS
+
+# Attractions
+MouseTools.ids.WDW_ATTRACTION_IDS
+MouseTools.ids.DLR_ATTRACTION_IDS
+
+# Entertainments
+MouseTools.ids.WDW_ENTERTAINMENT_IDS
+MouseTools.ids.DLR_ENTERTAINMENT_IDS
 
 ```
 
