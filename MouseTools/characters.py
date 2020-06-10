@@ -10,7 +10,7 @@ from .facilities import Facility
 
 class Character(object):
 
-    def __init__(self, id = ''):
+    def __init__(self, id = '', sync_on_init=True):
         """
         Constructor Function
         Gets all character data available and stores various elements into variables.
