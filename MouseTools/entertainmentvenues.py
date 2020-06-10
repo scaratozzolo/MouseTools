@@ -415,7 +415,7 @@ class EntertainmentVenue(object):
                     else:
                         operating_hours_end = datetime(DATE.year, DATE.month, DATE.day, int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
 
-                if data['schedules'][i]['type'] == 'Extra Magic Hours':
+                if data['schedules'][i]['type'] == "Special Ticketed Event":
                     extra_hours_start = datetime(DATE.year, DATE.month, DATE.day, int(data['schedules'][i]['startTime'][0:2]), int(data['schedules'][i]['startTime'][3:5]))
                     if int(data['schedules'][i]['endTime'][0:2]) >= 0 and int(data['schedules'][i]['endTime'][0:2]) <= 7:
                         DATETEMP = DATE + timedelta(days=1)
