@@ -444,10 +444,19 @@ class Entertainment(object):
         dur = self.__data['duration'].split(':')
         return int(self.get_duration_minutes())*60 + int(dur[2])
 
-    def get_todays_schedule(self):
-        """Returns a list of datetime objects for todat's schedule in the form of [{start_time, end_time}]"""
+    def get_schedule(self, date=""):
+        """
+        Returns a list of dictionaries of datetime objects for the specified date's schedule in the form of [{start_time, end_time}]
+        date = "YYYY-MM-DD"
+        If you don't pass a date, it will get today's schedule
+        """
 
-        DATE = datetime.today()
+        if date == "":
+            DATE = datetime.today()
+        else:
+            year, month, day = date.split('-')
+            DATE = datetime(int(year), int(month), int(day))
+
         strdate = "{}-{}-{}".format(DATE.year, self.__formatDate(str(DATE.month)), self.__formatDate(str(DATE.day)))
         data = requests.get("https://api.wdpro.disney.go.com/facility-service/schedules/{}?date={}".format(self.__id, strdate), headers=getHeaders()).json()
 

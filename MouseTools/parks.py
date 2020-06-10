@@ -412,7 +412,7 @@ class Park(object):
         Returns the object's hours in the following order: operating open, operating close, Extra Magic open, Extra Magic close.
         Extra Magic hours will return None if there are none for today.
         If all hours are None then Disney has no hours for that day.
-        date = "YEAR-MONTH-DATE"
+        date = "YYYY-MM-DD"
         If you don't pass a date, it will get today's hours
         """
 

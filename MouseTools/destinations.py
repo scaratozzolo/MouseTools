@@ -69,7 +69,7 @@ class Destination(object):
         """Returns the id of the destination"""
         return self.__id
 
-    def get_destination_name(self):
+    def get_name(self):
         """Returns the name of the destination"""
         return self.__name
 
