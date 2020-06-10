@@ -35,8 +35,18 @@ print(pirates.get_wait_time())
 
 
 # You don't have to know any ids to get started.
-MouseTools.ids.WDW_ID # Walt Disney World destination id
-MouseTools.ids.DLR_ID # Disneyland Resort destination id
+MouseTools.ids.WDW_ID     # Walt Disney World Resort
+MouseTools.ids.DLR_ID     # Disneyland Resort
+
+# Single park ids
+MouseTools.ids.MK_ID      # Magic Kingdom
+MouseTools.ids.EPCOT_ID   # EPCOT
+MouseTools.ids.HS_ID      # Hollywood Studios
+MouseTools.ids.AK_ID      # Animal Kingdom
+MouseTools.ids.TL_ID      # Typhoon Lagoon
+MouseTools.ids.BB_ID      # Blizzard Beach
+MouseTools.ids.DLP_ID     # Disneyland Park
+MouseTools.ids.CA_ID      # California Adventure
 
 # List of ids
 # Parks
