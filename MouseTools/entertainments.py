@@ -43,6 +43,7 @@ class Entertainment(object):
             self.__subType = None
         doc_id_query = c.execute("SELECT doc_id from facilities where doc_id LIKE ?", ("%{};entityType={}".format(self.__id, self.__entityType),)).fetchone()
         self.__doc_id = doc_id_query[0] if doc_id_query is not None else None
+        self.__facilities_data = self.get_raw_facilities_data()
         # ID: 266858 doesn't have any of this information which causes a problem.
         try:
             self.__anc_dest_id = self.__data['ancestorDestination']['id'].split(';')[0]
@@ -50,34 +51,54 @@ class Entertainment(object):
         except:
             self.__anc_dest_id = None
             self.__dest_code = None
+
         try:
             self.__anc_park_id = self.__data['links']['ancestorThemePark']['href'].split('/')[-1].split('?')[0]
         except:
             try:
                 self.__anc_park_id = self.__data['links']['ancestorWaterPark']['href'].split('/')[-1].split('?')[0]
             except:
-                self.__anc_park_id = None
+                try:
+                    self.__anc_park_id = self.__facilities_data['ancestorThemeParkId'].split(';')[0]
+                except:
+                    try:
+                        self.__anc_park_id = self.__facilities_data['ancestorWaterParkId'].split(';')[0]
+                    except:
+                        self.__anc_park_id = None
+
         try:
             self.__anc_resort_id = self.__data['links']['ancestorResort']['href'].split('/')[-1].split('?')[0]
         except:
-            self.__anc_resort_id = None
+            try:
+                self.__anc_resort_id = self.__facilities_data['ancestorResortId'].split(';')[0]
+            except:
+                self.__anc_resort_id = None
 
         try:
             self.__anc_land_id = self.__data['links']['ancestorLand']['href'].split('/')[-1].split('?')[0]
         except:
-            self.__anc_land_id = None
+            try:
+                self.__anc_land_id = self.__facilities_data['ancestorLandId'].split(';')[0]
+            except:
+                self.__anc_land_id = None
 
         try:
             self.__anc_ra_id = self.__data['links']['ancestorResortArea']['href'].split('/')[-1].split('?')[0]
         except:
-            self.__anc_ra_id = None
+            try:
+                self.__anc_ra_id = self.__facilities_data['ancestorResortAreaId'].split(';')[0]
+            except:
+                self.__anc_ra_id = None
 
         try:
             self.__anc_ev_id = self.__data['links']['ancestorEntertainmentVenue']['href'].split('/')[-1].split('?')[0]
         except:
-            self.__anc_ev_id = None
+            try:
+                self.__anc_ev_id = self.__facilities_data['ancestorEntertainmentVenueId'].split(';')[0]
+            except:
+                self.__anc_ev_id = None
 
-        self.__facilities_data = None
+
 
         conn.commit()
         conn.close()
@@ -444,11 +465,13 @@ class Entertainment(object):
         dur = self.__data['duration'].split(':')
         return int(self.get_duration_minutes())*60 + int(dur[2])
 
-    def get_schedule(self, date=""):
+    def get_schedule(self, date="", timestamp=False):
         """
-        Returns a list of dictionaries of datetime objects for the specified date's schedule in the form of [{start_time, end_time}]
+        Returns a list of dictionaries for the specified date's schedule in the form of [{start_time, end_time}]
         date = "YYYY-MM-DD"
         If you don't pass a date, it will get today's schedule
+        timestamp = False
+        Whether to return datetime objects or timestamps
         """
 
         if date == "":
@@ -466,8 +489,14 @@ class Entertainment(object):
             for entry in data['schedules']:
                 if entry['type'] == 'Performance Time':
                     this = {}
-                    this['start_time'] = datetime.strptime("{} {}".format(entry['date'], entry['startTime']), "%Y-%m-%d %H:%M:%S")
-                    this['end_time'] = datetime.strptime("{} {}".format(entry['date'], entry['endTime']), "%Y-%m-%d %H:%M:%S")
+                    start_time = datetime.strptime("{} {}".format(entry['date'], entry['startTime']), "%Y-%m-%d %H:%M:%S")
+                    end_time = datetime.strptime("{} {}".format(entry['date'], entry['endTime']), "%Y-%m-%d %H:%M:%S")
+                    if timestamp:
+                        this['start_time'] = start_time.timestamp()
+                        this['end_time'] = end_time.timestamp()
+                    else:
+                        this['start_time'] = start_time
+                        this['end_time'] = end_time
                     schedule.append(this)
         except Exception as e:
             # print(e)
