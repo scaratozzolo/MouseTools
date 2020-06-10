@@ -113,6 +113,10 @@ class Attraction(object):
         """Return object destination code"""
         return self.__dest_code
 
+    def get_ancestor_destination_id(self):
+        """Return object ancestor destination id"""
+        return self.__anc_dest_id
+
     def get_ancestor_park_id(self):
         """Return object ancestor theme or water park id"""
         return self.__anc_park_id

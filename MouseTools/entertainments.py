@@ -44,8 +44,12 @@ class Entertainment(object):
         doc_id_query = c.execute("SELECT doc_id from facilities where doc_id LIKE ?", ("%{};entityType={}".format(self.__id, self.__entityType),)).fetchone()
         self.__doc_id = doc_id_query[0] if doc_id_query is not None else None
         # ID: 266858 doesn't have any of this information which causes a problem.
-        self.__anc_dest_id = self.__data['ancestorDestination']['id'].split(';')[0]
-        self.__dest_code = c.execute("SELECT destination_code FROM facilities WHERE id = ?", (self.__anc_dest_id,)).fetchone()[0]
+        try:
+            self.__anc_dest_id = self.__data['ancestorDestination']['id'].split(';')[0]
+            self.__dest_code = c.execute("SELECT destination_code FROM facilities WHERE id = ?", (self.__anc_dest_id,)).fetchone()[0]
+        except:
+            self.__anc_dest_id = None
+            self.__dest_code = None
         try:
             self.__anc_park_id = self.__data['links']['ancestorThemePark']['href'].split('/')[-1].split('?')[0]
         except:

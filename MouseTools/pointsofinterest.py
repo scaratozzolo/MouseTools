@@ -42,7 +42,13 @@ class PointOfInterest(object):
             self.__subType = None
         doc_id_query = c.execute("SELECT doc_id from facilities where doc_id LIKE ?", ("%{};entityType=point-of-interest".format(self.__id),)).fetchone()
         self.__doc_id = doc_id_query[0] if doc_id_query is not None else None
-        self.__dest_code = c.execute("SELECT destination_code FROM facilities WHERE id = ?", (self.__data['ancestorDestination']['id'].split(';')[0],)).fetchone()[0]
+        # Have to find way to get dest_code without
+        try:
+            self.__anc_dest_id = self.__data['ancestorDestination']['id'].split(';')[0]
+            self.__dest_code = c.execute("SELECT destination_code FROM facilities WHERE id = ?", (self.__anc_dest_id,)).fetchone()[0]
+        except:
+            self.__anc_dest_id = None
+            self.__dest_code = None
         try:
             self.__anc_park_id = self.__data['links']['ancestorThemePark']['href'].split('/')[-1].split('?')[0]
         except:
@@ -105,6 +111,10 @@ class PointOfInterest(object):
     def get_destination_code(self):
         """Return object destination code"""
         return self.__dest_code
+
+    def get_ancestor_destination_id(self):
+        """Return object ancestor destination id"""
+        return self.__anc_dest_id
 
     def get_ancestor_park_id(self):
         """Return object ancestor theme or water park id"""
@@ -177,7 +187,10 @@ class PointOfInterest(object):
         if facility_data is None:
             return None
         else:
-            return facility_data['listImageUrl']
+            try:
+                return facility_data['listImageUrl']
+            except:
+                return None
 
     def admission_required(self):
         """Returns boolean of admission required"""
