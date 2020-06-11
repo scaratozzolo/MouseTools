@@ -17,27 +17,86 @@ class Facility(object):
         """
         # TODO Maybe turn this into a base class
 
+        error = True
+        self.__data = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/facilities/{}".format(id), headers=getHeaders()).json()
+        try:
+            if self.__data['id'] is not None:
+                error = False
+        except:
+            pass
+
+        if error:
+            raise ValueError('That facility is not available. id: ' + str(id))
+
         self.__db = DisneyDatabase(sync_on_init)
         conn = sqlite3.connect(self.__db.db_path)
         c = conn.cursor()
 
-        row = c.execute("SELECT * FROM facilities WHERE id = ?", (id,)).fetchone()
-        if row is None:
-            raise ValueError('That facility is not available. id: ' + str(id))
-        else:
-            self.__id = row[0]
-            self.__name = row[1]
-            self.__entityType = row[2]
-            self.__subType = row[3]
-            self.__doc_id = row[4]
-            self.__dest_code = row[5]
-            self.__anc_park_id = row[6]
-            self.__anc_resort_id = row[7]
-            self.__anc_land_id = row[8]
-            self.__anc_ra_id = row[9]
-            self.__anc_ev_id = row[10]
+        self.__id = id
+        self.__name = self.__data['name']
+        self.__entityType = self.__data['type']
+        try:
+            self.__subType = self.__data['subType']
+        except:
+            self.__subType = None
+        doc_id_query = c.execute("SELECT doc_id from facilities where doc_id LIKE ?", ("%{};entityType={}".format(self.__id, self.__entityType),)).fetchone()
+        self.__doc_id = doc_id_query[0] if doc_id_query is not None else None
+        self.__facilities_data = self.get_raw_facilities_data()
+        try:
+            self.__anc_dest_id = self.__data['ancestorDestination']['id'].split(';')[0]
+            self.__dest_code = c.execute("SELECT destination_code FROM facilities WHERE id = ?", (self.__anc_dest_id,)).fetchone()[0]
+        except:
+            self.__anc_dest_id = None
+            self.__dest_code = None
 
-        self.__facilities_data = c.execute("SELECT body FROM sync WHERE id = ?", (self.__doc_id,)).fetchone()[0]
+        try:
+            self.__anc_park_id = self.__data['links']['ancestorThemePark']['href'].split('/')[-1].split('?')[0]
+        except:
+            try:
+                self.__anc_park_id = self.__data['links']['ancestorWaterPark']['href'].split('/')[-1].split('?')[0]
+            except:
+                try:
+                    self.__anc_park_id = self.__facilities_data['ancestorThemeParkId'].split(';')[0]
+                except:
+                    try:
+                        self.__anc_park_id = self.__facilities_data['ancestorWaterParkId'].split(';')[0]
+                    except:
+                        self.__anc_park_id = None
+
+        try:
+            self.__anc_resort_id = self.__data['links']['ancestorResort']['href'].split('/')[-1].split('?')[0]
+        except:
+            try:
+                self.__anc_resort_id = self.__facilities_data['ancestorResortId'].split(';')[0]
+            except:
+                self.__anc_resort_id = None
+
+        try:
+            self.__anc_land_id = self.__data['links']['ancestorLand']['href'].split('/')[-1].split('?')[0]
+        except:
+            try:
+                self.__anc_land_id = self.__facilities_data['ancestorLandId'].split(';')[0]
+            except:
+                self.__anc_land_id = None
+
+        try:
+            self.__anc_ra_id = self.__data['links']['ancestorResortArea']['href'].split('/')[-1].split('?')[0]
+        except:
+            try:
+                self.__anc_ra_id = self.__facilities_data['ancestorResortAreaId'].split(';')[0]
+            except:
+                self.__anc_ra_id = None
+
+        try:
+            self.__anc_ev_id = self.__data['links']['ancestorEntertainmentVenue']['href'].split('/')[-1].split('?')[0]
+        except:
+            try:
+                self.__anc_ev_id = self.__facilities_data['ancestorEntertainmentVenueId'].split(';')[0]
+            except:
+                self.__anc_ev_id = None
+
+        conn.commit()
+        conn.close()
 
     def get_possible_ids(self):
         """Returns a list of possible ids of this entityType"""
@@ -98,14 +157,14 @@ class Facility(object):
         """Returns the raw facilities data currently stored in the database"""
         conn = sqlite3.connect(self.__db.db_path)
         c = conn.cursor()
-        data = c.execute("SELECT body FROM sync WHERE id = ?", (self.__doc_id,)).fetchone()[0]
+        data = c.execute("SELECT body FROM sync WHERE id = ?", (self.__doc_id,)).fetchone()
         conn.commit()
         conn.close()
 
         if data is None:
             return None
         else:
-            return json.loads(data)
+            return json.loads(data[0])
 
     def get_status(self):
         """Return current status of the object."""
