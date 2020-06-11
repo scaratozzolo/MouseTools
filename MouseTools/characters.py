@@ -26,7 +26,7 @@ class Character(object):
             pass
 
         if error:
-            raise ValueError('That character is not available. id: ' + id)
+            raise ValueError('That character is not available. id: ' + str(id))
 
         self.__id = id
         self.__character_name = self.__data['name']

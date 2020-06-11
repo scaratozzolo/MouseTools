@@ -23,7 +23,7 @@ class Facility(object):
 
         row = c.execute("SELECT * FROM facilities WHERE id = ?", (id,)).fetchone()
         if row is None:
-            raise ValueError('That facility is not available. id: ' + id)
+            raise ValueError('That facility is not available. id: ' + str(id))
         else:
             self.__id = row[0]
             self.__name = row[1]

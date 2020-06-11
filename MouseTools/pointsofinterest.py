@@ -26,7 +26,7 @@ class PointOfInterest(object):
             pass
 
         if error:
-            raise ValueError('That point of interest is not available. id: ' + id)
+            raise ValueError('That point of interest is not available. id: ' + str(id))
 
         self.__db = DisneyDatabase(sync_on_init)
         conn = sqlite3.connect(self.__db.db_path)

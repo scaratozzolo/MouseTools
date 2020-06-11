@@ -30,7 +30,7 @@ class Destination(object):
             pass
 
         if error:
-            raise ValueError('That destination is not available. id: ' + id + '. Available destinations: {}'.format(", ".join(DEST_IDS)))
+            raise ValueError('That destination is not available. id: ' + str(id) + '. Available destinations: {}'.format(", ".join(DEST_IDS)))
 
         self.__id = id
 
@@ -171,6 +171,22 @@ class Destination(object):
             except:
                 pass
         return entertainments
+
+    def get_character_ids(self):
+        """
+        Returns a list of theme or water park IDs
+        """
+        ids = []
+
+        data = requests.get("https://api.wdpro.disney.go.com/facility-service/characters", headers=getHeaders()).json()
+
+        for entry in data['entries']:
+            try:
+                ids.append(entry['links']['self']['href'].split('/')[-1].split('?')[0])
+            except:
+                pass
+
+        return ids
 
     def get_wait_times(self):
         """Returns a list of dictionaries in the form of {rideid:time} for attractions and entertainments for this destination"""
