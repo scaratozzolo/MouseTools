@@ -220,8 +220,11 @@ class DisneyDatabase:
 
             for i in s['results']:
                 try:
-                    i['deleted']
-                    continue
+                    test = i['deleted']
+                    c.execute("DELETE FROM facilities WHERE doc_id = ?", (i['id'],))
+                    c.execute("DELETE FROM sync WHERE id = ?", (i['id'],))
+                    num_id = i['id'].split(".")[-1].split(";")[0]
+                    c.execute("DELETE FROM sync WHERE id LIKE '%facilitystatus.1_0.{}%'".format(num_id))
                 except:
                     this = {}
                     this['id'] = i['id']
