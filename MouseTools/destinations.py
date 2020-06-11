@@ -373,7 +373,7 @@ class Destination(object):
 
     def get_refurbishments(self, date=""):
         """
-        Returns a list of ids that are under refurbishment on a specified date
+        Returns a list of tuples in the form of (id, entityType) that are under refurbishment on a specified date
         date = "YYY-MM-DD"
         """
         if date == "":
@@ -388,7 +388,36 @@ class Destination(object):
         ids = []
         try:
             for i in date['refurbishments']:
-                ids.append(i['facilityId'].split(";")[0])
+                split = i['facilityId'].split(";")
+                id = split[0]
+                entityType = split[1].split("=")[-1]
+                ids.append((id, entityType))
+        except Exception as e:
+            print(e)
+
+        return ids
+
+    def get_closed(self, date=""):
+        """
+        Returns a list of tuples in the form of (id, entityType) that are under closed on a specified date
+        date = "YYY-MM-DD"
+        """
+        if date == "":
+            DATE = datetime.today()
+        else:
+            year, month, day = date.split('-')
+            DATE = datetime(int(year), int(month), int(day))
+
+        STRDATE = "{}-{}-{}".format(DATE.year, self.__formatDate(str(DATE.month)), self.__formatDate(str(DATE.day)))
+        date = self.get_raw_calendar_data(STRDATE)
+
+        ids = []
+        try:
+            for i in date['closed']:
+                split = i['facilityId'].split(";")
+                id = split[0]
+                entityType = split[1].split("=")[-1]
+                ids.append((id, entityType))
         except Exception as e:
             print(e)
 
