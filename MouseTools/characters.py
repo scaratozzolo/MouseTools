@@ -1,11 +1,13 @@
 import requests
 import json
 import sys
+import sqlite3
 from datetime import datetime, timedelta
 from .auth import getHeaders
 from .attractions import Attraction
 from .entertainments import Entertainment
 from .facilities import Facility
+from .database import DisneyDatabase
 
 
 class Character(object):
@@ -28,8 +30,75 @@ class Character(object):
         if error:
             raise ValueError('That character is not available. id: ' + str(id))
 
+        self.__db = DisneyDatabase(sync_on_init)
+        conn = sqlite3.connect(self.__db.db_path)
+        c = conn.cursor()
+
         self.__id = id
-        self.__character_name = self.__data['name']
+        self.__name = self.__data['name']
+        self.__entityType = self.__data['type']
+        try:
+            self.__subType = self.__data['subType']
+        except:
+            self.__subType = None
+        doc_id_query = c.execute("SELECT doc_id from facilities where doc_id LIKE ?", ("%{};entityType={}".format(self.__id, self.__entityType),)).fetchone()
+        self.__doc_id = doc_id_query[0] if doc_id_query is not None else None
+        self.__facilities_data = self.get_raw_facilities_data()
+        try:
+            self.__anc_dest_id = self.__data['ancestorDestination']['id'].split(';')[0]
+            self.__dest_code = c.execute("SELECT destination_code FROM facilities WHERE id = ?", (self.__anc_dest_id,)).fetchone()[0]
+        except:
+            self.__anc_dest_id = None
+            self.__dest_code = None
+
+        try:
+            self.__anc_park_id = self.__data['links']['ancestorThemePark']['href'].split('/')[-1].split('?')[0]
+        except:
+            try:
+                self.__anc_park_id = self.__data['links']['ancestorWaterPark']['href'].split('/')[-1].split('?')[0]
+            except:
+                try:
+                    self.__anc_park_id = self.__facilities_data['ancestorThemeParkId'].split(';')[0]
+                except:
+                    try:
+                        self.__anc_park_id = self.__facilities_data['ancestorWaterParkId'].split(';')[0]
+                    except:
+                        self.__anc_park_id = None
+
+        try:
+            self.__anc_resort_id = self.__data['links']['ancestorResort']['href'].split('/')[-1].split('?')[0]
+        except:
+            try:
+                self.__anc_resort_id = self.__facilities_data['ancestorResortId'].split(';')[0]
+            except:
+                self.__anc_resort_id = None
+
+        try:
+            self.__anc_land_id = self.__data['links']['ancestorLand']['href'].split('/')[-1].split('?')[0]
+        except:
+            try:
+                self.__anc_land_id = self.__facilities_data['ancestorLandId'].split(';')[0]
+            except:
+                self.__anc_land_id = None
+
+        try:
+            self.__anc_ra_id = self.__data['links']['ancestorResortArea']['href'].split('/')[-1].split('?')[0]
+        except:
+            try:
+                self.__anc_ra_id = self.__facilities_data['ancestorResortAreaId'].split(';')[0]
+            except:
+                self.__anc_ra_id = None
+
+        try:
+            self.__anc_ev_id = self.__data['links']['ancestorEntertainmentVenue']['href'].split('/')[-1].split('?')[0]
+        except:
+            try:
+                self.__anc_ev_id = self.__facilities_data['ancestorEntertainmentVenueId'].split(';')[0]
+            except:
+                self.__anc_ev_id = None
+
+        conn.commit()
+        conn.close()
 
 
 
@@ -47,21 +116,70 @@ class Character(object):
 
         return ids
 
-    def get_name(self):
-        """
-        Returns the name of the Character
-        """
-        return self.__character_name
-
     def get_id(self):
-        """
-        Returns the ID of the character
-        """
+        """Return object id"""
         return self.__id
+
+    def get_name(self):
+        """Return object name"""
+        return self.__name
+
+    def get_entityType(self):
+        """Return object entityType"""
+        return self.__entityType
+
+    def get_subType(self):
+        """Return object subType"""
+        return self.__subType
+
+    def get_doc_id(self):
+        """Return object doc id"""
+        return self.__doc_id
+
+    def get_destination_code(self):
+        """Return object destination code"""
+        return self.__dest_code
+
+    def get_ancestor_destination_id(self):
+        """Return object ancestor destination id"""
+        return self.__anc_dest_id
+
+    def get_ancestor_park_id(self):
+        """Return object ancestor theme or water park id"""
+        return self.__anc_park_id
+
+    def get_ancestor_resort_id(self):
+        """Return object ancestor resort id"""
+        return self.__anc_resort_id
+
+    def get_ancestor_land_id(self):
+        """Return object land id"""
+        return self.__anc_land_id
+
+    def get_ancestor_resort_area_id(self):
+        """Return object resort area id"""
+        return self.__anc_ra_id
+
+    def get_ancestor_entertainment_venue_id(self):
+        """Return object entertainment venue id"""
+        return self.__anc_ev_id
 
     def get_links(self):
         """Returns a dictionary of related links"""
         return self.__data['links']
+
+    def get_raw_facilities_data(self):
+        """Returns the raw facilities data currently stored in the database"""
+        conn = sqlite3.connect(self.__db.db_path)
+        c = conn.cursor()
+        data = c.execute("SELECT body FROM sync WHERE id = ?", (self.__doc_id,)).fetchone()
+        conn.commit()
+        conn.close()
+
+        if data is None:
+            return None
+        else:
+            return json.loads(data[0])
 
     def check_related_locations(self):
         """
@@ -154,4 +272,4 @@ class Character(object):
         return num
 
     def __str__(self):
-        return 'Character object for {}'.format(self.__character_name)
+        return 'Character object for {}'.format(self.__name)
