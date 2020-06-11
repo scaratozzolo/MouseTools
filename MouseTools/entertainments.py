@@ -288,38 +288,6 @@ class Entertainment(object):
         """Returns boolean of admission required"""
         return self.__data['admissionRequired']
 
-    def get_todays_hours(self):
-        """Returns the start and end times for the object. Will return None, None if closed"""
-        start_time = None
-        end_time = None
-
-        if self.__db.channel_exists('{}.today.1_0'.format(self.__dest_code)):
-            self.__db.sync_today_channel()
-        else:
-            self.__db.create_today_channel('{}.today.1_0'.format(self.__dest_code))
-
-        conn = sqlite3.connect(self.__db.db_path)
-        c = conn.cursor()
-
-        today_data = c.execute("SELECT body FROM sync WHERE id = ?", ('{}.today.1_0.Entertainment'.format(self.__dest_code),)).fetchone()
-
-        if today_data is None:
-            return start_time, end_time
-        else:
-            body = json.loads(today_data[0])
-
-            try:
-                if body['facilities'][str(self.__id) + ';entityType=Entertainment'][0]['scheduleType'] == 'Closed' or body['facilities'][str(self.__id) + ';entityType=Entertainment'][0]['scheduleType'] == 'Refurbishment':
-                    return start_time, end_time
-
-                start_time = datetime.strptime(body['facilities'][str(self.__id) + ';entityType=Entertainment'][0]['startTime'], "%Y-%m-%dT%H:%M:%SZ")
-                end_time = datetime.strptime(body['facilities'][str(self.__id) + ';entityType=Entertainment'][0]['endTime'], "%Y-%m-%dT%H:%M:%SZ")
-
-                return start_time, end_time
-            except:
-                return None, None
-
-
     def check_associated_characters(self):
         """
         Checks if object has any associated characters
