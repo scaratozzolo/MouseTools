@@ -89,14 +89,14 @@ class Destination(object):
         """Returns the raw facilities data currently stored in the database"""
         conn = sqlite3.connect(self.__db.db_path)
         c = conn.cursor()
-        data = c.execute("SELECT body FROM sync WHERE id = ?", (self.__doc_id,)).fetchone()[0]
+        data = c.execute("SELECT body FROM sync WHERE id = ?", (self.__doc_id,)).fetchone()
         conn.commit()
         conn.close()
 
         if data is None:
             return None
         else:
-            return json.loads(data)
+            return json.loads(data[0])
 
     def get_attraction_ids(self):
         """
@@ -351,8 +351,56 @@ class Destination(object):
 
         return data
 
+    def get_raw_calendar_data(self, date=""):
+        """
+        Returns raw calendar data on a date
+        """
+        if self.__db.channel_exists('{}.calendar.1_0'.format(self.__dest_code)):
+            self.__db.sync_calendar_channel()
+        else:
+            self.__db.create_calendar_channel('{}.calendar.1_0'.format(self.__dest_code))
 
+        conn = sqlite3.connect(self.__db.db_path)
+        c = conn.cursor()
+        data = c.execute("SELECT body FROM calendar WHERE date = ?", (date,)).fetchone()
+        conn.commit()
+        conn.close()
 
+        if data is None:
+            return None
+        else:
+            return json.loads(data[0])
+
+    def get_refurbishments(self, date=""):
+        """
+        Returns a list of ids that are under refurbishment on a specified date
+        date = "YYY-MM-DD"
+        """
+        if date == "":
+            DATE = datetime.today()
+        else:
+            year, month, day = date.split('-')
+            DATE = datetime(int(year), int(month), int(day))
+
+        STRDATE = "{}-{}-{}".format(DATE.year, self.__formatDate(str(DATE.month)), self.__formatDate(str(DATE.day)))
+        date = self.get_raw_calendar_data(STRDATE)
+
+        ids = []
+        try:
+            for i in date['refurbishments']:
+                ids.append(i['facilityId'].split(";")[0])
+        except Exception as e:
+            print(e)
+
+        return ids
+
+    def __formatDate(self, num):
+        """
+        Formats month and day into proper format
+        """
+        if len(num) < 2:
+            num = '0'+num
+        return num
 
     def __str__(self):
 
