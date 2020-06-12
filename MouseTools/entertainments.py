@@ -255,7 +255,7 @@ class Entertainment(object):
         if facility_data is None:
             return None
         else:
-            return facility_data['latitude'], facility_data['longitude']
+            return {"latitude": facility_data['latitude'], "longitude": facility_data['longitude']}
 
     def get_description(self):
         """Returns the object's descriptions"""

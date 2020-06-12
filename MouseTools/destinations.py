@@ -19,7 +19,6 @@ class Destination(object):
         """
         Constructor Function
         Allows access to various destination related data.
-        dest_code must be a string.
         """
         error = True
         self.__data = requests.get("https://api.wdpro.disney.go.com/facility-service/destinations/{}".format(id), headers=getHeaders()).json()
