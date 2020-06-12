@@ -42,7 +42,6 @@ class Attraction(object):
         doc_id_query = c.execute("SELECT doc_id from facilities where doc_id LIKE ?", ("%{};entityType={}".format(self.__id, self.__entityType),)).fetchone()
         self.__doc_id = doc_id_query[0] if doc_id_query is not None else None
         self.__facilities_data = self.get_raw_facilities_data()
-        # ID: 266858 doesn't have any of this information which causes a problem.
         try:
             self.__anc_dest_id = self.__data['ancestorDestination']['id'].split(';')[0]
             self.__dest_code = c.execute("SELECT destination_code FROM facilities WHERE id = ?", (self.__anc_dest_id,)).fetchone()[0]

@@ -14,4 +14,4 @@ name = "MouseTools"
 
 __version__ = "2.0.0b7"
 
-__all__ = ["Destination", "Park", "EntertainmentVenue", "Attraction", "Entertainment", "Facility", "Character", "PointOfInterest"]
+__all__ = ["Destination", "Park", "EntertainmentVenue", "Attraction", "Entertainment", "Facility", "Character", "PointOfInterest", "DisneyDatabase"]
