@@ -8,14 +8,11 @@ from .database import DisneyDatabase
 
 class PointOfInterest(object):
 
-    def __init__(self, id = '', sync_on_init=True):
+    def __init__(self, id = None, sync_on_init=True):
         """
         Constructor Function
         Gets all points of interest data available and stores various elements into variables.
-        ID must be a string.
         """
-        # TODO POI don't have facilitystatus data, self.__doc_id should work for everything
-        # Should probably use that for every class instead of string formatting it
 
         error = True
         self.__data = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/points-of-interest/{}".format(id), headers=getHeaders()).json()

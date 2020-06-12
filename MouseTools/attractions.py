@@ -10,11 +10,10 @@ from .database import DisneyDatabase
 
 class Attraction(object):
 
-    def __init__(self, id = '', sync_on_init=True):
+    def __init__(self, id = None, sync_on_init=True):
         """
         Constructor Function
         Gets all attraction data available and stores various elements into variables.
-        Must pass id as string
         """
 
         error = True

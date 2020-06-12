@@ -9,13 +9,11 @@ from .database import DisneyDatabase
 
 class Facility(object):
 
-    def __init__(self, id = '', sync_on_init=True):
+    def __init__(self, id = None, sync_on_init=True):
         """
         Constructor Function
         Gets all facility data available and stores various elements into variables.
-        ID must be a string
         """
-        # TODO Maybe turn this into a base class
 
         error = True
         self.__data = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/facilities/{}".format(id), headers=getHeaders()).json()

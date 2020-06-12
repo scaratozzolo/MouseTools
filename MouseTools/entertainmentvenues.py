@@ -8,11 +8,10 @@ from .database import DisneyDatabase
 
 class EntertainmentVenue(object):
 
-    def __init__(self, id = '', sync_on_init=True):
+    def __init__(self, id = None, sync_on_init=True):
         """
         Constructor Function
         Gets all venue data available and stores various elements into variables.
-        ID must be a string
         """
 
         error = True
