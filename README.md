@@ -75,6 +75,6 @@ python -m pydoc MouseTools
 
 I created this project to help with another project found [here](https://github.com/scaratozzolo/WDWWaits). Some parts of the wrapper were created with that in mind.
 
-As I said above, this is currently a beta and not everything has been tested. If you notice any issues please open a new issue with a "bug" label. Furthermore, if you have any feature requests, open a new issue with a "feature request" label.
+If you notice any issues please open a new issue with a "bug" label. Furthermore, if you have any feature requests, open a new issue with a "feature request" label.
 
 This update would not have been possible without the work being done on the [themeparks package](https://github.com/cubehouse/themeparks). A lot of this update has inspiration taken from this.
