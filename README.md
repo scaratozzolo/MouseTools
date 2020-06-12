@@ -6,9 +6,9 @@ A Python wrapper for the Disney API. Data is pulled directly from Disney. This p
 ### Installation
 You can install using pip:
 ```bash
-pip install MouseTools==2.0.0b7
+pip install MouseTools
 ```
-or because version 2.0.0 is in beta right now and might be updated frequently:
+You can also install directly from this repo in case of any changes not uploaded to Pypi.
 ```bash
 pip install git+https://github.com/scaratozzolo/MouseTools
 ```
