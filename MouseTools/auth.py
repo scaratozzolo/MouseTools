@@ -28,8 +28,3 @@ def getHeaders():
         headers = {"Authorization":"BEARER {}".format(access_token), "User-Agent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36", "Content-Type":"application/json;charset=UTF-8","Accept":"*/*"}
 
     return headers
-
-def couchbaseHeaders():
-
-    header = {"Authorization":"Basic RFBFQ1AtTU9CSUxFLldEVy5BTkRST0lELVBST0Q6RGhyeHMyZHVReGdiVjZ5Mg==","User-Agent":"CouchbaseLite/1.3 (1.4.1/8a21c5927a273a038fb3b66ec29c86425e871b11)","Content-Type":"application/json","Accept":"multipart/related"}
-    return header
