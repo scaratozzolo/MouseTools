@@ -9,7 +9,7 @@ from .ids import themeparkapi_ids
 
 class Park(object):
 
-    def __init__(self, id = None, sync_on_init=True):
+    def __init__(self, id = None):
         """
         Constructor Function
         Gets all park data available and stores various elements into variables.
