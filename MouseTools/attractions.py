@@ -184,8 +184,7 @@ class Attraction(object):
         if facility_data is None:
             return None
         else:
-            return facility_data['meta']['latitude'], facility_data['meta']['longitude']
-
+            return {"latitude": facility_data['meta']['latitude'], "longitude": facility_data['meta']['longitude']}
 
     def get_description(self):
         """Returns the object's description"""
