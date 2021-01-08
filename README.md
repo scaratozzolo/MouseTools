@@ -79,7 +79,7 @@ I created this project to help with another project found [here](https://github.
 
 If you notice any issues please open a new issue with a "bug" label. Furthermore, if you have any feature requests, open a new issue with a "feature request" label.
 
-This update would not have been possible without the work being done on the [themeparks package](https://github.com/cubehouse/themeparks). Parts of this update were inspired by them.
+This package uses the [ThemeParks.wiki API](https://api.themeparks.wiki/). 
 
 ### License
 This project is distributed under the MIT license. For more information see [LICENSE](https://github.com/scaratozzolo/MouseTools/blob/master/LICENSE)
