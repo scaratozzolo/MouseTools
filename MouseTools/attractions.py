@@ -88,20 +88,6 @@ class Attraction(object):
                 self.__anc_ev_id = None
 
 
-    def get_possible_ids(self):
-        """Returns a list of possible ids of this entityType"""
-        attractions = []
-
-        dest_data = requests.get("https://api.wdpro.disney.go.com/facility-service/destinations/{}".format(self.__anc_dest_id), headers=getHeaders()).json()
-        data = requests.get(dest_data['links']['attractions']['href'], headers=getHeaders()).json()
-
-        for attract in data['entries']:
-            try:
-                attractions.append(attract['links']['self']['href'].split('/')[-1].split('?')[0])
-            except:
-                pass
-        return attractions
-
     def get_id(self):
         """Return object id"""
         return self.__id
@@ -151,14 +137,13 @@ class Attraction(object):
         return self.__data
 
     def get_themeparkapi_data(self):
-        """Returns the dictionary from the themepark api"""
+        """Returns the dictionary from the themepark api for the given id"""
         park = themeparkapi_ids[self.__anc_park_id]
         themepark_id = f"{park}_{self.__id}"
         all_data = requests.get(f"https://api.themeparks.wiki/preview/parks/{park}/waittime").json()
         for i in all_data:
             if i["id"] == themepark_id:
                 return i
-
         return None
 
     def get_wait_time(self):
@@ -185,20 +170,6 @@ class Attraction(object):
         else:
             return data['fastPass']
 
-    # Deprecated
-    # def fastpass_times(self):
-    #     """Returns the current start and end time of the FastPass"""
-    #     start_time = None
-    #     end_time = None
-    #
-    #     if self.fastpass_available():
-    #         data = self.get_raw_facilitystatus_data()
-    #
-    #         start_time = datetime.strptime(data['fastPassStartTime'], "%Y-%m-%dT%H:%M:%SZ")
-    #         end_time = datetime.strptime(data['fastPassEndTime'], "%Y-%m-%dT%H:%M:%SZ")
-    #
-    #     return start_time, end_time
-
     def get_last_update(self):
         """Returns facilities last update time as a datetime object"""
         facility_data = self.get_themeparkapi_data()
@@ -215,33 +186,53 @@ class Attraction(object):
         else:
             return facility_data['meta']['latitude'], facility_data['meta']['longitude']
 
-    # Check self.__data
-    # def get_description(self):
-    #     """Returns the object's descriptions"""
-    #     facility_data = self.get_raw_facilities_data()
-    #     if facility_data is None:
-    #         return None
-    #     else:
-    #         return facility_data['description']
-    #
-    # def get_list_image(self):
-    #     """Returns the url to the object's list image"""
-    #     facility_data = self.get_raw_facilities_data()
-    #     if facility_data is None:
-    #         return None
-    #     else:
-    #         return facility_data['listImageUrl']
-    #
-    # def get_facets(self):
-    #     """Returns a list of  dictionaries of the object's facets"""
-    #     facility_data = self.get_raw_facilities_data()
-    #     if facility_data is None:
-    #         return None
-    #     else:
-    #         try:
-    #             return facility_data['facets']
-    #         except:
-    #             return None
+
+    def get_description(self):
+        """Returns the object's description"""
+        facility_data = self.__data
+        if facility_data is None:
+            return None
+        else:
+            try:
+                return facility_data['descriptions']['shortDescription']['sections']['body']
+            except:
+                return None
+
+    def get_media(self):
+        """Returns a dictionary of dictionaries of media relating to the entity"""
+        facility_data = self.__data
+        if facility_data is None:
+            return None
+        else:
+            return facility_data['media']
+
+    def get_facets(self):
+        """Returns a list of  dictionaries of the object's facets"""
+        facility_data = self.get_themeparkapi_data()
+        if facility_data is None:
+            return None
+        else:
+            try:
+                return facility_data['facets']
+            except:
+                return None
+
+    def get_classifications(self):
+        """Returns a dictionary of lists of classifications related to the entity"""
+
+        classifications = {}
+
+        try:
+            for i in self.__data['classifications']:
+                id = i['id'].split("/")[-1]
+                if id not in classifications:
+                    classifications[id] = [i['text']]
+                else:
+                    classifications[id].append(i['text'])
+        except:
+            pass
+
+        return classifications
 
     def admission_required(self):
         """Returns boolean of admission required"""
@@ -253,7 +244,7 @@ class Attraction(object):
         Returns the object's hours in the following order: operating open, operating close, Extra Magic open, Extra Magic close.
         Extra Magic hours will return None if there are none for today.
         If all hours are None then Disney has no hours for that day.
-        date = "YEAR-MONTH-DATE"
+        date = "yyyy-mm-dd"
         If you don't pass a date, it will get today's hours
         """
 
