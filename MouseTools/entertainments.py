@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from .auth import getHeaders
 from .parks import Park
 from .pointsofinterest import PointOfInterest
-from .database import DisneyDatabase
+
 
 
 class Entertainment(object):

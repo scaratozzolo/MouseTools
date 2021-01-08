@@ -7,7 +7,7 @@ from .auth import getHeaders
 from .attractions import Attraction
 from .entertainments import Entertainment
 from .facilities import Facility
-from .database import DisneyDatabase
+
 
 
 class Character(object):

@@ -4,7 +4,7 @@ import sys
 import sqlite3
 from datetime import datetime, timedelta
 from .auth import getHeaders
-from .database import DisneyDatabase
+
 
 
 class Facility(object):

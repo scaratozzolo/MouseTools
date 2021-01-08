@@ -7,7 +7,7 @@ from .auth import getHeaders
 from .parks import Park
 from .entertainments import Entertainment
 from .attractions import Attraction
-from .database import DisneyDatabase
+
 
 WDW_CODE = 'wdw'
 DLR_CODE = 'dlr'

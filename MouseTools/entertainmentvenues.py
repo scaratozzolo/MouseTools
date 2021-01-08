@@ -3,8 +3,8 @@ import json
 import sys
 import sqlite3
 from datetime import datetime, timedelta
-from .auth import getHeaders, couchbaseHeaders
-from .database import DisneyDatabase
+from .auth import getHeaders
+
 
 class EntertainmentVenue(object):
 
