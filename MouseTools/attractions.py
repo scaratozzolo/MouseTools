@@ -11,7 +11,7 @@ from .ids import themeparkapi_ids
 
 class Attraction(object):
 
-    def __init__(self, id = None, sync_on_init=True):
+    def __init__(self, id = None):
         """
         Constructor Function
         Gets all attraction data available and stores various elements into variables.
