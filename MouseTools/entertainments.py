@@ -197,11 +197,10 @@ class Entertainment(object):
 
     def get_coordinates(self):
         """Returns the object's latitude and longitude"""
-        facility_data = self.get_themeparkapi_data()
-        if facility_data is None:
+        try:
+            return self.__data['coordinates']['Guest Entrance']['gps']
+        except:
             return None
-        else:
-            return {"latitude": facility_data['meta']['latitude'], "longitude": facility_data['meta']['longitude']}
 
     def get_description(self):
         """Returns the object's description"""

@@ -9,7 +9,7 @@ from .auth import getHeaders
 
 class Facility(object):
 
-    def __init__(self, id = None, sync_on_init=True):
+    def __init__(self, id = None):
         """
         Constructor Function
         Gets all facility data available and stores various elements into variables.
@@ -26,10 +26,6 @@ class Facility(object):
         if error:
             raise ValueError('That facility is not available. id: ' + str(id))
 
-        self.__db = DisneyDatabase(sync_on_init)
-        conn = sqlite3.connect(self.__db.db_path)
-        c = conn.cursor()
-
         self.__id = id
         self.__name = self.__data['name']
         self.__entityType = self.__data['type']
@@ -37,15 +33,11 @@ class Facility(object):
             self.__subType = self.__data['subType']
         except:
             self.__subType = None
-        doc_id_query = c.execute("SELECT doc_id from facilities where doc_id LIKE ?", ("%{};entityType={}".format(self.__id, self.__entityType),)).fetchone()
-        self.__doc_id = doc_id_query[0] if doc_id_query is not None else None
-        self.__facilities_data = self.get_raw_facilities_data()
+
         try:
             self.__anc_dest_id = self.__data['ancestorDestination']['id'].split(';')[0]
-            self.__dest_code = c.execute("SELECT destination_code FROM facilities WHERE id = ?", (self.__anc_dest_id,)).fetchone()[0]
         except:
             self.__anc_dest_id = None
-            self.__dest_code = None
 
         try:
             self.__anc_park_id = self.__data['links']['ancestorThemePark']['href'].split('/')[-1].split('?')[0]
@@ -93,15 +85,21 @@ class Facility(object):
             except:
                 self.__anc_ev_id = None
 
-        conn.commit()
-        conn.close()
+    # There are just too many variations, could explore more
+    # def get_possible_ids(self):
+    #     """Returns a list of possible ids of this entityType"""
+    #     ids = []
 
-    def get_possible_ids(self):
-        """Returns a list of possible ids of this entityType"""
-        conn = sqlite3.connect(DisneyDatabase().db_path)
-        c = conn.cursor()
-        pos_ids = [row[0] for row in c.execute("SELECT id FROM facilities WHERE entityType ?", (self.__entityType,))]
-        return pos_ids
+    #     dest_data = requests.get("https://api.wdpro.disney.go.com/facility-service/destinations/{}".format(self.__anc_dest_id), headers=getHeaders()).json()
+    #     data = requests.get(dest_data['links']['facilities']['href'], headers=getHeaders()).json()
+
+    #     for entry in data['entries']:
+    #         try:
+    #             ids.append(entry['links']['self']['href'].split('/')[-1].split('?')[0])
+    #         except:
+    #             pass
+
+    #     return ids
 
     def get_id(self):
         """Return object id"""
@@ -119,13 +117,9 @@ class Facility(object):
         """Return object subType"""
         return self.__subType
 
-    def get_doc_id(self):
-        """Return object doc id"""
-        return self.__doc_id
-
-    def get_destination_code(self):
-        """Return object destination code"""
-        return self.__dest_code
+    def get_ancestor_destination_id(self):
+        """Return object ancestor destination id"""
+        return self.__anc_dest_id
 
     def get_ancestor_park_id(self):
         """Return object ancestor theme or water park id"""
@@ -151,107 +145,88 @@ class Facility(object):
         """Returns a dictionary of related links"""
         return self.__data['links']
 
-    def get_raw_facilities_data(self):
-        """Returns the raw facilities data currently stored in the database"""
-        conn = sqlite3.connect(self.__db.db_path)
-        c = conn.cursor()
-        data = c.execute("SELECT body FROM sync WHERE id = ?", (self.__doc_id,)).fetchone()
-        conn.commit()
-        conn.close()
-
-        if data is None:
-            return None
-        else:
-            return json.loads(data[0])
-
-    def get_status(self):
-        """Return current status of the object."""
-        if self.__db.channel_exists('{}.today.1_0'.format(self.__dest_code)):
-            self.__db.sync_today_channel()
-            # maybe just sync this channel? and do same for previous methods
-        else:
-            self.__db.create_today_channel('{}.today.1_0'.format(self.__dest_code))
-
-        conn = sqlite3.connect(self.__db.db_path)
-        c = conn.cursor()
-
-        today_data = c.execute("SELECT body FROM sync WHERE id = ?", ('{}.today.1_0.{}'.format(self.__dest_code, self.__entityType),)).fetchone()
-
-        if today_data is None:
-            return None
-        else:
-            body = json.loads(today_data[0])
-
-            return body['facilities'][self.__id + ';entityType=' + self.__entityType][0]['scheduleType']
-
-    def get_last_update(self):
-        """Returns facilities last update time as a datetime object"""
-        facility_data = self.get_raw_facilities_data()
-        if facility_data is None:
-            return None
-        else:
-            return datetime.strptime(facility_data['lastUpdate'], "%Y-%m-%dT%H:%M:%SZ")
-
     def get_coordinates(self):
         """Returns the object's latitude and longitude"""
-        facility_data = self.get_raw_facilities_data()
-        if facility_data is None:
+        try:
+            return self.__data['coordinates']['Guest Entrance']['gps']
+        except:
             return None
-        else:
-            return facility_data['latitude'], facility_data['longitude']
 
     def get_description(self):
-        """Returns the object's descriptions"""
-        facility_data = self.get_raw_facilities_data()
+        """Returns the object's description"""
+        facility_data = self.__data
         if facility_data is None:
             return None
         else:
-            return facility_data['description']
+            try:
+                return facility_data['descriptions']['shortDescription']['sections']['body']
+            except:
+                return None
 
-    def get_list_image(self):
-        """Returns the url to the object's list image"""
-        facility_data = self.get_raw_facilities_data()
+    def get_media(self):
+        """Returns a dictionary of dictionaries of media relating to the entity"""
+        facility_data = self.__data
         if facility_data is None:
             return None
         else:
-            return facility_data['listImageUrl']
+            return facility_data['media']
 
     def get_facets(self):
         """Returns a list of  dictionaries of the object's facets"""
-        facility_data = self.get_raw_facilities_data()
+        facility_data = self.__data
         if facility_data is None:
             return None
         else:
-            return facility_data['facets']
+            try:
+                return facility_data['facets']
+            except:
+                return None
 
-    def get_todays_hours(self):
-        """Returns the start and end times for the object. Will return None, None if closed"""
-        start_time = None
-        end_time = None
+    def get_todays_hours(self, date=""):
+        """
+        Gets the object's hours on a specific day and returns them as a datetime object.
+        Returns the object's hours in the following order: operating open, operating close, Extra Magic open, Extra Magic close.
+        Extra Magic hours will return None if there are none for today.
+        If all hours are None then Disney has no hours for that day.
+        date = "yyyy-mm-dd"
+        If you don't pass a date, it will get today's hours
+        """
 
-        if self.__db.channel_exists('{}.today.1_0'.format(self.__dest_code)):
-            self.__db.sync_today_channel()
-            # maybe just sync this channel? and do same for previous methods
+        if date == "":
+            DATE = datetime.today()
         else:
-            self.__db.create_today_channel('{}.today.1_0'.format(self.__dest_code))
+            year, month, day = date.split('-')
+            DATE = datetime(int(year), int(month), int(day))
 
-        conn = sqlite3.connect(self.__db.db_path)
-        c = conn.cursor()
+        s = requests.get("https://api.wdpro.disney.go.com/facility-service/schedules/{}?date={}-{}-{}".format(self.__id, DATE.year, self.__formatDate(str(DATE.month)), self.__formatDate(str(DATE.day))), headers=getHeaders())
+        data = json.loads(s.content)
 
-        today_data = c.execute("SELECT body FROM sync WHERE id = ?", ("{}.today.1_0.{}".format(self.__dest_code, self.__entityType),)).fetchone()
+        operating_hours_start = None
+        operating_hours_end = None
+        extra_hours_start = None
+        extra_hours_end = None
 
-        if today_data is None:
-            return start_time, end_time
-        else:
-            body = json.loads(today_data[0])
+        try:
+            for i in range(len(data['schedules'])):
+                if data['schedules'][i]['type'] == 'Operating':
+                    operating_hours_start = datetime(DATE.year, DATE.month, DATE.day, int(data['schedules'][i]['startTime'][0:2]), int(data['schedules'][i]['startTime'][3:5]))
+                    if int(data['schedules'][i]['endTime'][0:2]) >= 0 and int(data['schedules'][i]['endTime'][0:2]) <= 7:
+                        DATETEMP = DATE + timedelta(days=1)
+                        operating_hours_end = datetime(DATETEMP.year, DATETEMP.month, DATETEMP.day, int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
+                    else:
+                        operating_hours_end = datetime(DATE.year, DATE.month, DATE.day, int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
 
-            if body['facilities'][self.__id + ';entityType=' + self.__entityType][0]['scheduleType'] == 'Closed' or body['facilities'][self.__id + ';entityType=Attraction'][0]['scheduleType'] == 'Refurbishment':
-                return start_time, end_time
+                if data['schedules'][i]['type'] == "Special Ticketed Event":
+                    extra_hours_start = datetime(DATE.year, DATE.month, DATE.day, int(data['schedules'][i]['startTime'][0:2]), int(data['schedules'][i]['startTime'][3:5]))
+                    if int(data['schedules'][i]['endTime'][0:2]) >= 0 and int(data['schedules'][i]['endTime'][0:2]) <= 7:
+                        DATETEMP = DATE + timedelta(days=1)
+                        extra_hours_end = datetime(DATETEMP.year, DATETEMP.month, DATETEMP.day, int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
+                    else:
+                        operating_hours_end = datetime(DATE.year, DATE.month, DATE.day, int(data['schedules'][i]['endTime'][0:2]), int(data['schedules'][i]['endTime'][3:5]))
 
-            start_time = datetime.strptime(body['facilities'][self.__id + ';entityType=' + self.__entityType][0]['startTime'], "%Y-%m-%dT%H:%M:%SZ")
-            end_time = datetime.strptime(body['facilities'][self.__id + ';entityType=' + self.__entityType][0]['endTime'], "%Y-%m-%dT%H:%M:%SZ")
-
-            return start_time, end_time
+        except KeyError:
+            pass
+        return operating_hours_start, operating_hours_end, extra_hours_start, extra_hours_end
 
     def __eq__(self, other):
         """
