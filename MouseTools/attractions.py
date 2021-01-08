@@ -3,9 +3,10 @@ import json
 import sys
 import sqlite3
 from datetime import datetime, timedelta
-from .auth import getHeaders, couchbaseHeaders
+from .auth import getHeaders
 from .parks import Park
-from .database import DisneyDatabase
+from .ids import themeparkapi_ids
+
 
 
 class Attraction(object):
@@ -27,10 +28,6 @@ class Attraction(object):
         if error:
             raise ValueError('That attraction is not available. id: ' + str(id))
 
-        self.__db = DisneyDatabase(sync_on_init)
-        conn = sqlite3.connect(self.__db.db_path)
-        c = conn.cursor()
-
         self.__id = id
         self.__name = self.__data['name']
         self.__entityType = self.__data['type']
@@ -38,15 +35,11 @@ class Attraction(object):
             self.__subType = self.__data['subType']
         except:
             self.__subType = None
-        doc_id_query = c.execute("SELECT doc_id from facilities where doc_id LIKE ?", ("%{};entityType={}".format(self.__id, self.__entityType),)).fetchone()
-        self.__doc_id = doc_id_query[0] if doc_id_query is not None else None
-        self.__facilities_data = self.get_raw_facilities_data()
+
         try:
             self.__anc_dest_id = self.__data['ancestorDestination']['id'].split(';')[0]
-            self.__dest_code = c.execute("SELECT destination_code FROM facilities WHERE id = ?", (self.__anc_dest_id,)).fetchone()[0]
         except:
             self.__anc_dest_id = None
-            self.__dest_code = None
 
         try:
             self.__anc_park_id = self.__data['links']['ancestorThemePark']['href'].split('/')[-1].split('?')[0]
@@ -94,8 +87,6 @@ class Attraction(object):
             except:
                 self.__anc_ev_id = None
 
-        conn.commit()
-        conn.close()
 
     def get_possible_ids(self):
         """Returns a list of possible ids of this entityType"""
@@ -126,14 +117,6 @@ class Attraction(object):
     def get_subType(self):
         """Return object subType"""
         return self.__subType
-
-    def get_doc_id(self):
-        """Return object doc id"""
-        return self.__doc_id
-
-    def get_destination_code(self):
-        """Return object destination code"""
-        return self.__dest_code
 
     def get_ancestor_destination_id(self):
         """Return object ancestor destination id"""
@@ -167,115 +150,98 @@ class Attraction(object):
         """Returns the raw data from global-facility-service"""
         return self.__data
 
-    def get_raw_facilities_data(self):
-        """Returns the raw facilities data currently stored in the database"""
-        conn = sqlite3.connect(self.__db.db_path)
-        c = conn.cursor()
-        data = c.execute("SELECT body FROM sync WHERE id = ?", (self.__doc_id,)).fetchone()
-        conn.commit()
-        conn.close()
+    def get_themeparkapi_data(self):
+        """Returns the dictionary from the themepark api"""
+        park = themeparkapi_ids[self.__anc_park_id]
+        themepark_id = f"{park}_{self.__id}"
+        all_data = requests.get(f"https://api.themeparks.wiki/preview/parks/{park}/waittime").json()
+        for i in all_data:
+            if i["id"] == themepark_id:
+                return i
 
-        if data is None:
-            return None
-        else:
-            return json.loads(data[0])
-
-    def get_raw_facilitystatus_data(self):
-        """Returns the raw facilitystatus data from the database after syncing with Disney (returns most recent data)"""
-        if self.__db.channel_exists('{}.facilitystatus.1_0'.format(self.__dest_code)):
-            self.__db.sync_facilitystatus_channel()
-        else:
-            self.__db.create_facilitystatus_channel('{}.facilitystatus.1_0'.format(self.__dest_code))
-
-        conn = sqlite3.connect(self.__db.db_path)
-        c = conn.cursor()
-
-        data = c.execute("SELECT body FROM sync WHERE id = ?", ("{}.facilitystatus.1_0.{};entityType=Attraction".format(self.__dest_code, self.__id),)).fetchone()
-        if data is None:
-            return None
-        else:
-            return json.loads(data[0])
+        return None
 
     def get_wait_time(self):
         """Return current wait time of the object. Returns None if object doesn't have a wait time or no wait currently exists (eg. closed)"""
-        data = self.get_raw_facilitystatus_data()
+        data = self.get_themeparkapi_data()
         if data is None:
             return None
         else:
-            return data['waitMinutes']
+            return data['waitTime']
 
     def get_status(self):
         """Return current status of the object."""
-        data = self.get_raw_facilitystatus_data()
+        data = self.get_themeparkapi_data()
         if data is None:
             return None
         else:
             return data['status']
-        # TODO might have to change this from facilitystatus data to scheduleType from today, or test if none from status then get from today instead
 
     def fastpass_available(self):
         """Returns a boolean of whether this object has FastPass"""
-        data = self.get_raw_facilitystatus_data()
+        data = self.get_themeparkapi_data()
         if data is None:
             return False
         else:
-            return data['fastPassAvailable'] == 'true'
+            return data['fastPass']
 
-    def fastpass_times(self):
-        """Returns the current start and end time of the FastPass"""
-        start_time = None
-        end_time = None
-
-        if self.fastpass_available():
-            data = self.get_raw_facilitystatus_data()
-
-            start_time = datetime.strptime(data['fastPassStartTime'], "%Y-%m-%dT%H:%M:%SZ")
-            end_time = datetime.strptime(data['fastPassEndTime'], "%Y-%m-%dT%H:%M:%SZ")
-
-        return start_time, end_time
+    # Deprecated
+    # def fastpass_times(self):
+    #     """Returns the current start and end time of the FastPass"""
+    #     start_time = None
+    #     end_time = None
+    #
+    #     if self.fastpass_available():
+    #         data = self.get_raw_facilitystatus_data()
+    #
+    #         start_time = datetime.strptime(data['fastPassStartTime'], "%Y-%m-%dT%H:%M:%SZ")
+    #         end_time = datetime.strptime(data['fastPassEndTime'], "%Y-%m-%dT%H:%M:%SZ")
+    #
+    #     return start_time, end_time
 
     def get_last_update(self):
         """Returns facilities last update time as a datetime object"""
-        facility_data = self.get_raw_facilities_data()
+        facility_data = self.get_themeparkapi_data()
         if facility_data is None:
             return None
         else:
-            return datetime.strptime(facility_data['lastUpdate'], "%Y-%m-%dT%H:%M:%SZ")
+            return datetime.strptime(facility_data['lastUpdate'], "%Y-%m-%dT%H:%M:%S.%fZ")
 
     def get_coordinates(self):
         """Returns the object's latitude and longitude"""
-        facility_data = self.get_raw_facilities_data()
+        facility_data = self.get_themeparkapi_data()
         if facility_data is None:
             return None
         else:
-            return facility_data['latitude'], facility_data['longitude']
+            return facility_data['meta']['latitude'], facility_data['meta']['longitude']
 
-    def get_description(self):
-        """Returns the object's descriptions"""
-        facility_data = self.get_raw_facilities_data()
-        if facility_data is None:
-            return None
-        else:
-            return facility_data['description']
-
-    def get_list_image(self):
-        """Returns the url to the object's list image"""
-        facility_data = self.get_raw_facilities_data()
-        if facility_data is None:
-            return None
-        else:
-            return facility_data['listImageUrl']
-
-    def get_facets(self):
-        """Returns a list of  dictionaries of the object's facets"""
-        facility_data = self.get_raw_facilities_data()
-        if facility_data is None:
-            return None
-        else:
-            try:
-                return facility_data['facets']
-            except:
-                return None
+    # Check self.__data
+    # def get_description(self):
+    #     """Returns the object's descriptions"""
+    #     facility_data = self.get_raw_facilities_data()
+    #     if facility_data is None:
+    #         return None
+    #     else:
+    #         return facility_data['description']
+    #
+    # def get_list_image(self):
+    #     """Returns the url to the object's list image"""
+    #     facility_data = self.get_raw_facilities_data()
+    #     if facility_data is None:
+    #         return None
+    #     else:
+    #         return facility_data['listImageUrl']
+    #
+    # def get_facets(self):
+    #     """Returns a list of  dictionaries of the object's facets"""
+    #     facility_data = self.get_raw_facilities_data()
+    #     if facility_data is None:
+    #         return None
+    #     else:
+    #         try:
+    #             return facility_data['facets']
+    #         except:
+    #             return None
 
     def admission_required(self):
         """Returns boolean of admission required"""
