@@ -17,16 +17,13 @@ pip install git+https://github.com/scaratozzolo/MouseTools
 
 
 ### Example usage:
-The first time you load MouseTools in any project, it will take a while to load as the initial database is set up and created. There is a lot of data to load and parse so just be patient. After this it shouldn't take as long as syncing takes less time.
 ```python
 import MouseTools
 
 wdw_dest = MouseTools.Destination(80007798)
 print(wdw_dest.get_park_ids())
 
-# sync_on_init means sync the database with Disney on object instantiation. Default is True.
-# This parameter is helpful when creating many objects back to back as syncing only once is necessary.
-dlr_dest = MouseTools.Destination(80008297, sync_on_init=True)
+dlr_dest = MouseTools.Destination(80008297)
 print(dlr_dest.get_attraction_ids())
 
 mk = MouseTools.Park(80007944)
