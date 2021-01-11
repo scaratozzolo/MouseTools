@@ -1,6 +1,5 @@
 import setuptools
 from MouseTools.__init__ import __version__
-from MouseTools import DisneyDatabase
 
 
 
