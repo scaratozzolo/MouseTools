@@ -17,6 +17,9 @@ BB_ID = "80007834"
 WDW_PARK_IDS = [MK_ID, EPCOT_ID, HS_ID, AK_ID, TL_ID, BB_ID]
 DLR_PARK_IDS = [DLP_ID, CA_ID]
 
+themeparkapi_ids = {MK_ID: "WaltDisneyWorldMagicKingdom", EPCOT_ID: "WaltDisneyWorldEpcot", HS_ID: "WaltDisneyWorldHollywoodStudios",
+                    AK_ID: "WaltDisneyWorldAnimalKingdom", DLP_ID: "DisneylandResortMagicKingdom", CA_ID: "DisneylandResortCaliforniaAdventure"}
+
 
 def ids(dest, type):
     dest_data = requests.get("https://api.wdpro.disney.go.com/facility-service/destinations/{}".format(dest), headers=getHeaders()).json()

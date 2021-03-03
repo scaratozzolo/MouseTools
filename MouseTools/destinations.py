@@ -7,15 +7,12 @@ from .auth import getHeaders
 from .parks import Park
 from .entertainments import Entertainment
 from .attractions import Attraction
-from .database import DisneyDatabase
+from .ids import WDW_PARK_IDS, DLR_PARK_IDS, WDW_ID, DLR_ID, DESTINATION_IDS, themeparkapi_ids
 
-WDW_CODE = 'wdw'
-DLR_CODE = 'dlr'
-DEST_CODES = [WDW_CODE, DLR_CODE]
 
 class Destination(object):
 
-    def __init__(self, id = None, sync_on_init=True):
+    def __init__(self, id = None):
         """
         Constructor Function
         Allows access to various destination related data.
@@ -29,36 +26,18 @@ class Destination(object):
             pass
 
         if error:
-            raise ValueError('That destination is not available. id: ' + str(id) + '. Available destinations: {}'.format(", ".join(DEST_IDS)))
+            raise ValueError('That destination is not available. id: ' + str(id) + '. Available destinations: {}'.format(", ".join(DESTINATION_IDS)))
 
         self.__id = id
+        self.__name = self.__data['name']
+        self.__entityType = self.__data['type']
 
-        self.__db = DisneyDatabase(sync_on_init)
-        conn = sqlite3.connect(self.__db.db_path)
-        c = conn.cursor()
 
-        dest_data = c.execute("SELECT id, name, doc_id, destination_code, entityType FROM facilities WHERE entityType = 'destination' and id = ?", (self.__id,)).fetchone()
-        self.__id = dest_data[0]
-        self.__name = dest_data[1]
-        self.__doc_id = dest_data[2]
-        self.__dest_code = dest_data[3]
-        self.__entityType = dest_data[4]
-        self.__facilities_data = json.loads(c.execute("SELECT body FROM sync WHERE id = ?", (self.__doc_id,)).fetchone()[0])
-
-        conn.commit()
-        conn.close()
 
 
     def get_possible_ids(self):
         """Returns a list of possible ids of this entityType"""
-        conn = sqlite3.connect(DisneyDatabase().db_path)
-        c = conn.cursor()
-        pos_ids = [row[0] for row in c.execute("SELECT id FROM facilities WHERE entityType = 'destination'")]
-        return pos_ids
-
-    def get_destination_code(self):
-        """Returns the destination code"""
-        return self.__dest_code
+        return DESTINATION_IDS
 
     def get_id(self):
         """Returns the id of the destination"""
@@ -67,10 +46,6 @@ class Destination(object):
     def get_name(self):
         """Returns the name of the destination"""
         return self.__name
-
-    def get_doc_id(self):
-        """Returns the doc id"""
-        return self.__doc_id
 
     def get_entityType(self):
         """Returns the entityType"""
@@ -84,18 +59,6 @@ class Destination(object):
         """Returns the raw data from global-facility-service"""
         return self.__data
 
-    def get_raw_facilities_data(self):
-        """Returns the raw facilities data currently stored in the database"""
-        conn = sqlite3.connect(self.__db.db_path)
-        c = conn.cursor()
-        data = c.execute("SELECT body FROM sync WHERE id = ?", (self.__doc_id,)).fetchone()
-        conn.commit()
-        conn.close()
-
-        if data is None:
-            return None
-        else:
-            return json.loads(data[0])
 
     def get_attraction_ids(self):
         """
@@ -187,240 +150,215 @@ class Destination(object):
 
         return ids
 
-    def get_wait_times(self):
-        """Returns a list of dictionaries in the form of {rideid:time} for attractions and entertainments for this destination"""
-        if self.__db.channel_exists('{}.facilitystatus.1_0'.format(self.__dest_code)):
-            self.__db.sync_facilitystatus_channel()
+    def get_themeparkapi_data(self):
+        """Returns the list of dictionaries for all parks from the themeparks api"""
+
+        all_data = []
+
+        if self.__id == WDW_ID:
+            parks = WDW_PARK_IDS
         else:
-            self.__db.create_facilitystatus_channel('{}.facilitystatus.1_0'.format(self.__dest_code))
+            parks = DLR_PARK_IDS
 
-        conn = sqlite3.connect(self.__db.db_path)
-        c = conn.cursor()
-
-        ids = [row for row in c.execute("SELECT id, entityType FROM facilities WHERE destination_code = ? and (entityType = 'Attraction' or entityType = 'Entertainment')", (self.__dest_code,))]
-
-        data = {}
-        for row in ids:
-            status_data = c.execute("SELECT body FROM sync WHERE id = ?", ("{}.facilitystatus.1_0.{};entityType={}".format(self.__dest_code, row[0], row[1]),)).fetchone()
+        for id in parks:
             try:
-                if status_data is not None:
-                    body = json.loads(status_data[0])
-                    data[row[0]] = body['waitMinutes']
+                park = themeparkapi_ids[id]
+                all_data.extend(requests.get(f"https://api.themeparks.wiki/preview/parks/{park}/waittime").json())
             except:
                 continue
 
-        return data
+        return all_data
+            
+
+    def get_wait_times(self):
+        """Returns a list of dictionaries in the form of {rideid:time} for attractions and entertainments for this destination"""
+        data = self.get_themeparkapi_data()
+
+        times = {}
+
+        for i in data:
+            id = i['id'].split("_")[-1]
+            try:
+                if i['meta']['type'] != "RESTAURANT":
+                    times[id] = i['waitTime']
+            except:
+                times[id] = i['waitTime']
+
+        return times
 
     def get_wait_times_detailed(self):
         """Returns a list of dictionaries in the form of {rideid:{name, status, wait_time}} for attractions and entertainments for this destination"""
-        if self.__db.channel_exists('{}.facilitystatus.1_0'.format(self.__dest_code)):
-            self.__db.sync_facilitystatus_channel()
-        else:
-            self.__db.create_facilitystatus_channel('{}.facilitystatus.1_0'.format(self.__dest_code))
+        data = self.get_themeparkapi_data()
 
-        conn = sqlite3.connect(self.__db.db_path)
-        c = conn.cursor()
+        times = {}
 
-        ids = [row for row in c.execute("SELECT id, entityType FROM facilities WHERE destination_code = ? and (entityType = 'Attraction' or entityType = 'Entertainment')", (self.__dest_code,))]
-
-        data = {}
-        for row in ids:
-            status_data = c.execute("SELECT body FROM sync WHERE id = ?", ("{}.facilitystatus.1_0.{};entityType={}".format(self.__dest_code, row[0], row[1]),)).fetchone()
+        for i in data:
+            id = i['id'].split("_")[-1]
+            this = {}
             try:
-                if status_data is not None:
-                    body = json.loads(status_data[0])
-                    this = {}
-                    this['name'] = c.execute("SELECT name FROM facilities WHERE id = ?", (row[0],)).fetchone()[0]
-                    this['status'] = body['status']
-                    this['wait_time'] = body['waitMinutes']
-                    this['last_updated'] = datetime.strptime(body['lastUpdate'], "%Y-%m-%dT%H:%M:%SZ")
-                    this['entityType'] = row[1]
-                    data[row[0]] = this
-            except Exception as e:
-                # print(e)
-                continue
+                if i['meta']['type'] != "RESTAURANT":
+                    this['name'] = i['name']
+                    this['status'] = i['status']
+                    this['wait_time'] = i['waitTime']
+                    this['last_updated'] = datetime.strptime(i['lastUpdate'], "%Y-%m-%dT%H:%M:%S.%fZ")
+                    this['entityType'] = i['meta']['type'].capitalize()
+                    times[id] = this
+            except:
+                this['name'] = i['name']
+                this['status'] = i['status']
+                this['wait_time'] = i['waitTime']
+                this['last_updated'] = datetime.strptime(i['lastUpdate'], "%Y-%m-%dT%H:%M:%S.%fZ")
+                this['entityType'] = "Entertainment"
+                times[id] = this
 
-        return data
+        return times
 
     def get_attraction_wait_times(self):
         """Returns a list of dictionaries in the form of {rideid:time} for attractions for this destination"""
-        if self.__db.channel_exists('{}.facilitystatus.1_0'.format(self.__dest_code)):
-            self.__db.sync_facilitystatus_channel()
-        else:
-            self.__db.create_facilitystatus_channel('{}.facilitystatus.1_0'.format(self.__dest_code))
+        data = self.get_themeparkapi_data()
 
-        conn = sqlite3.connect(self.__db.db_path)
-        c = conn.cursor()
+        times = {}
 
-        ids = [row for row in c.execute("SELECT id, entityType FROM facilities WHERE destination_code = ? and entityType = 'Attraction'", (self.__dest_code,))]
-
-        data = {}
-        for row in ids:
-            status_data = c.execute("SELECT body FROM sync WHERE id = ?", ("{}.facilitystatus.1_0.{};entityType={}".format(self.__dest_code, row[0], row[1]),)).fetchone()
+        for i in data:
+            id = i['id'].split("_")[-1]
             try:
-                if status_data is not None:
-                    body = json.loads(status_data[0])
-                    data[row[0]] = body['waitMinutes']
+                if i['meta']['type'] == "ATTRACTION":
+                    times[id] = i['waitTime']
             except:
                 continue
 
-        return data
+        return times
 
     def get_attraction_wait_times_detailed(self):
         """Returns a list of dictionaries in the form of {rideid:{name, status, wait_time}} for attractions for this destination"""
-        if self.__db.channel_exists('{}.facilitystatus.1_0'.format(self.__dest_code)):
-            self.__db.sync_facilitystatus_channel()
-        else:
-            self.__db.create_facilitystatus_channel('{}.facilitystatus.1_0'.format(self.__dest_code))
+        data = self.get_themeparkapi_data()
 
-        conn = sqlite3.connect(self.__db.db_path)
-        c = conn.cursor()
+        times = {}
 
-        ids = [row for row in c.execute("SELECT id, entityType FROM facilities WHERE destination_code = ? and entityType = 'Attraction'", (self.__dest_code,))]
-
-        data = {}
-        for row in ids:
-            status_data = c.execute("SELECT body FROM sync WHERE id = ?", ("{}.facilitystatus.1_0.{};entityType={}".format(self.__dest_code, row[0], row[1]),)).fetchone()
+        for i in data:
+            id = i['id'].split("_")[-1]
+            this = {}
             try:
-                if status_data is not None:
-                    body = json.loads(status_data[0])
-                    this = {}
-                    this['name'] = c.execute("SELECT name FROM facilities WHERE id = ?", (row[0],)).fetchone()[0]
-                    this['status'] = body['status']
-                    this['wait_time'] = body['waitMinutes']
-                    this['last_updated'] = datetime.strptime(body['lastUpdate'], "%Y-%m-%dT%H:%M:%SZ")
-                    data[row[0]] = this
-            except Exception as e:
-                # print(e)
-                continue
-
-        return data
-
-    def get_entertainment_wait_times(self):
-        """Returns a list of dictionaries in the form of {rideid:time} for entertainments for this destination"""
-        if self.__db.channel_exists('{}.facilitystatus.1_0'.format(self.__dest_code)):
-            self.__db.sync_facilitystatus_channel()
-        else:
-            self.__db.create_facilitystatus_channel('{}.facilitystatus.1_0'.format(self.__dest_code))
-
-        conn = sqlite3.connect(self.__db.db_path)
-        c = conn.cursor()
-
-        ids = [row for row in c.execute("SELECT id, entityType FROM facilities WHERE destination_code = ? and entityType = 'Entertainment'", (self.__dest_code,))]
-
-        data = {}
-        for row in ids:
-            status_data = c.execute("SELECT body FROM sync WHERE id = ?", ("{}.facilitystatus.1_0.{};entityType={}".format(self.__dest_code, row[0], row[1]),)).fetchone()
-            try:
-                if status_data is not None:
-                    body = json.loads(status_data[0])
-                    data[row[0]] = body['waitMinutes']
+                if i['meta']['type'] == "ATTRACTION":
+                    this['name'] = i['name']
+                    this['status'] = i['status']
+                    this['wait_time'] = i['waitTime']
+                    this['last_updated'] = datetime.strptime(i['lastUpdate'], "%Y-%m-%dT%H:%M:%S.%fZ")
+                    this['entityType'] = i['meta']['type'].capitalize()
+                    times[id] = this
             except:
                 continue
 
-        return data
+        return times
+
+    def get_entertainment_wait_times(self):
+        """Returns a list of dictionaries in the form of {rideid:time} for entertainments for this destination"""
+        data = self.get_themeparkapi_data()
+
+        times = {}
+
+        for i in data:
+            id = i['id'].split("_")[-1]
+            if 'type' not in i['meta'].keys():
+                    times[id] = i['waitTime']
+
+        return times
 
     def get_entertainment_wait_times_detailed(self):
         """Returns a list of dictionaries in the form of {rideid:{name, status, wait_time}} for entertainments for this destination"""
-        if self.__db.channel_exists('{}.facilitystatus.1_0'.format(self.__dest_code)):
-            self.__db.sync_facilitystatus_channel()
-        else:
-            self.__db.create_facilitystatus_channel('{}.facilitystatus.1_0'.format(self.__dest_code))
+        data = self.get_themeparkapi_data()
 
-        conn = sqlite3.connect(self.__db.db_path)
-        c = conn.cursor()
+        times = {}
 
-        ids = [row for row in c.execute("SELECT id, entityType FROM facilities WHERE destination_code = ? and entityType = 'Entertainment'", (self.__dest_code,))]
+        for i in data:
+            id = i['id'].split("_")[-1]
+            this = {}
+            if 'type' not in i['meta'].keys():
+                this['name'] = i['name']
+                this['status'] = i['status']
+                this['wait_time'] = i['waitTime']
+                this['last_updated'] = datetime.strptime(i['lastUpdate'], "%Y-%m-%dT%H:%M:%S.%fZ")
+                this['entityType'] = "Entertainment"
+                times[id] = this
 
-        data = {}
-        for row in ids:
-            status_data = c.execute("SELECT body FROM sync WHERE id = ?", ("{}.facilitystatus.1_0.{};entityType={}".format(self.__dest_code, row[0], row[1]),)).fetchone()
-            try:
-                if status_data is not None:
-                    body = json.loads(status_data[0])
-                    this = {}
-                    this['name'] = c.execute("SELECT name FROM facilities WHERE id = ?", (row[0],)).fetchone()[0]
-                    this['status'] = body['status']
-                    this['wait_time'] = body['waitMinutes']
-                    this['last_updated'] = datetime.strptime(body['lastUpdate'], "%Y-%m-%dT%H:%M:%SZ")
-                    data[row[0]] = this
-            except Exception as e:
-                # print(e)
-                continue
+        return times
 
-        return data
+    
+    # Deprecated, remove or replace?
+    # Replace with all park hours
+    # def get_raw_calendar_data(self, date=""):
+    #     """
+    #     Returns raw calendar data on a date. Date should be in the form yyyy-mm-dd
+    #     """
+    #     if self.__db.channel_exists('{}.calendar.1_0'.format(self.__dest_code)):
+    #         self.__db.sync_calendar_channel()
+    #     else:
+    #         self.__db.create_calendar_channel('{}.calendar.1_0'.format(self.__dest_code))
 
-    def get_raw_calendar_data(self, date=""):
-        """
-        Returns raw calendar data on a date
-        """
-        if self.__db.channel_exists('{}.calendar.1_0'.format(self.__dest_code)):
-            self.__db.sync_calendar_channel()
-        else:
-            self.__db.create_calendar_channel('{}.calendar.1_0'.format(self.__dest_code))
+    #     conn = sqlite3.connect(self.__db.db_path)
+    #     c = conn.cursor()
+    #     data = c.execute("SELECT body FROM calendar WHERE date = ?", (date,)).fetchone()
+    #     conn.commit()
+    #     conn.close()
 
-        conn = sqlite3.connect(self.__db.db_path)
-        c = conn.cursor()
-        data = c.execute("SELECT body FROM calendar WHERE date = ?", (date,)).fetchone()
-        conn.commit()
-        conn.close()
+    #     if data is None:
+    #         return None
+    #     else:
+    #         return json.loads(data[0])
 
-        if data is None:
-            return None
-        else:
-            return json.loads(data[0])
+    # Can only get today's refurbishments now, will probably have to change this
+    # def get_refurbishments(self, date=""):
+    #     """
+    #     Returns a list of tuples in the form of (id, entityType) that are under refurbishment on a specified date
+    #     date = "YYY-MM-DD"
+    #     """
+    #     if date == "":
+    #         DATE = datetime.today()
+    #     else:
+    #         year, month, day = date.split('-')
+    #         DATE = datetime(int(year), int(month), int(day))
 
-    def get_refurbishments(self, date=""):
-        """
-        Returns a list of tuples in the form of (id, entityType) that are under refurbishment on a specified date
-        date = "YYY-MM-DD"
-        """
-        if date == "":
-            DATE = datetime.today()
-        else:
-            year, month, day = date.split('-')
-            DATE = datetime(int(year), int(month), int(day))
+    #     STRDATE = "{}-{}-{}".format(DATE.year, self.__formatDate(str(DATE.month)), self.__formatDate(str(DATE.day)))
+    #     date = self.get_raw_calendar_data(STRDATE)
 
-        STRDATE = "{}-{}-{}".format(DATE.year, self.__formatDate(str(DATE.month)), self.__formatDate(str(DATE.day)))
-        date = self.get_raw_calendar_data(STRDATE)
+    #     ids = []
+    #     try:
+    #         for i in date['refurbishments']:
+    #             split = i['facilityId'].split(";")
+    #             id = split[0]
+    #             entityType = split[1].split("=")[-1]
+    #             ids.append((id, entityType))
+    #     except Exception as e:
+    #         print(e)
 
-        ids = []
-        try:
-            for i in date['refurbishments']:
-                split = i['facilityId'].split(";")
-                id = split[0]
-                entityType = split[1].split("=")[-1]
-                ids.append((id, entityType))
-        except Exception as e:
-            print(e)
+    #     return ids
 
-        return ids
+    # Similar to refurbishments, can only get today's
+    # def get_closed(self, date=""):
+    #     """
+    #     Returns a list of tuples in the form of (id, entityType) that are under closed on a specified date
+    #     date = "YYY-MM-DD"
+    #     """
+    #     if date == "":
+    #         DATE = datetime.today()
+    #     else:
+    #         year, month, day = date.split('-')
+    #         DATE = datetime(int(year), int(month), int(day))
 
-    def get_closed(self, date=""):
-        """
-        Returns a list of tuples in the form of (id, entityType) that are under closed on a specified date
-        date = "YYY-MM-DD"
-        """
-        if date == "":
-            DATE = datetime.today()
-        else:
-            year, month, day = date.split('-')
-            DATE = datetime(int(year), int(month), int(day))
+    #     STRDATE = "{}-{}-{}".format(DATE.year, self.__formatDate(str(DATE.month)), self.__formatDate(str(DATE.day)))
+    #     date = self.get_raw_calendar_data(STRDATE)
 
-        STRDATE = "{}-{}-{}".format(DATE.year, self.__formatDate(str(DATE.month)), self.__formatDate(str(DATE.day)))
-        date = self.get_raw_calendar_data(STRDATE)
+    #     ids = []
+    #     try:
+    #         for i in date['closed']:
+    #             split = i['facilityId'].split(";")
+    #             id = split[0]
+    #             entityType = split[1].split("=")[-1]
+    #             ids.append((id, entityType))
+    #     except Exception as e:
+    #         print(e)
 
-        ids = []
-        try:
-            for i in date['closed']:
-                split = i['facilityId'].split(";")
-                id = split[0]
-                entityType = split[1].split("=")[-1]
-                ids.append((id, entityType))
-        except Exception as e:
-            print(e)
-
-        return ids
+    #     return ids
 
     def __formatDate(self, num):
         """

@@ -7,12 +7,12 @@ from .auth import getHeaders
 from .attractions import Attraction
 from .entertainments import Entertainment
 from .facilities import Facility
-from .database import DisneyDatabase
+
 
 
 class Character(object):
 
-    def __init__(self, id = None, sync_on_init=True):
+    def __init__(self, id = None):
         """
         Constructor Function
         Gets all character data available and stores various elements into variables.
@@ -29,10 +29,6 @@ class Character(object):
         if error:
             raise ValueError('That character is not available. id: ' + str(id))
 
-        self.__db = DisneyDatabase(sync_on_init)
-        conn = sqlite3.connect(self.__db.db_path)
-        c = conn.cursor()
-
         self.__id = id
         self.__name = self.__data['name']
         self.__entityType = self.__data['type']
@@ -40,15 +36,10 @@ class Character(object):
             self.__subType = self.__data['subType']
         except:
             self.__subType = None
-        doc_id_query = c.execute("SELECT doc_id from facilities where doc_id LIKE ?", ("%{};entityType={}".format(self.__id, self.__entityType),)).fetchone()
-        self.__doc_id = doc_id_query[0] if doc_id_query is not None else None
-        self.__facilities_data = self.get_raw_facilities_data()
         try:
             self.__anc_dest_id = self.__data['ancestorDestination']['id'].split(';')[0]
-            self.__dest_code = c.execute("SELECT destination_code FROM facilities WHERE id = ?", (self.__anc_dest_id,)).fetchone()[0]
         except:
             self.__anc_dest_id = None
-            self.__dest_code = None
 
         try:
             self.__anc_park_id = self.__data['links']['ancestorThemePark']['href'].split('/')[-1].split('?')[0]
@@ -96,24 +87,7 @@ class Character(object):
             except:
                 self.__anc_ev_id = None
 
-        conn.commit()
-        conn.close()
 
-
-
-    def get_possible_ids(self):
-        """Returns a list of possible ids of this entityType"""
-        ids = []
-
-        data = requests.get("https://api.wdpro.disney.go.com/facility-service/characters", headers=getHeaders()).json()
-
-        for entry in data['entries']:
-            try:
-                ids.append(entry['links']['self']['href'].split('/')[-1].split('?')[0])
-            except:
-                pass
-
-        return ids
 
     def get_id(self):
         """Return object id"""
@@ -130,14 +104,6 @@ class Character(object):
     def get_subType(self):
         """Return object subType"""
         return self.__subType
-
-    def get_doc_id(self):
-        """Return object doc id"""
-        return self.__doc_id
-
-    def get_destination_code(self):
-        """Return object destination code"""
-        return self.__dest_code
 
     def get_ancestor_destination_id(self):
         """Return object ancestor destination id"""
@@ -163,22 +129,14 @@ class Character(object):
         """Return object entertainment venue id"""
         return self.__anc_ev_id
 
+    def get_raw_data(self):
+        """Returns the raw data from global-facility-service"""
+        return self.__data
+
     def get_links(self):
         """Returns a dictionary of related links"""
         return self.__data['links']
 
-    def get_raw_facilities_data(self):
-        """Returns the raw facilities data currently stored in the database"""
-        conn = sqlite3.connect(self.__db.db_path)
-        c = conn.cursor()
-        data = c.execute("SELECT body FROM sync WHERE id = ?", (self.__doc_id,)).fetchone()
-        conn.commit()
-        conn.close()
-
-        if data is None:
-            return None
-        else:
-            return json.loads(data[0])
 
     def check_related_locations(self):
         """
