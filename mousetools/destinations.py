@@ -35,7 +35,7 @@ class Destination(object):
         elif self.__id == DLR_ID:
             self.__time_zone = pytz.timezone('US/Pacific')
         else:
-            self.__time_zone = pytz.timezone('US/UTC')
+            self.__time_zone = pytz.utc
 
 
 

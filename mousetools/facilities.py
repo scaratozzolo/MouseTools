@@ -89,7 +89,7 @@ class Facility(object):
         elif self.__anc_dest_id == DLR_ID:
             self.__time_zone = pytz.timezone('US/Pacific')
         else:
-            self.__time_zone = pytz.timezone('US/UTC')
+            self.__time_zone = pytz.utc
 
     # There are just too many variations, could explore more
     # def get_possible_ids(self):

@@ -92,12 +92,12 @@ class Park(object):
                 self.__anc_ev_id = None
 
         
-        if self.__id == WDW_ID:
+        if self.__anc_dest_id == WDW_ID:
             self.__time_zone = pytz.timezone('US/Eastern')
-        elif self.__id == DLR_ID:
+        elif self.__anc_dest_id == DLR_ID:
             self.__time_zone = pytz.timezone('US/Pacific')
         else:
-            self.__time_zone = pytz.timezone('US/UTC')
+            self.__time_zone = pytz.utc
 
 
     def get_possible_ids(self):
