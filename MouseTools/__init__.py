@@ -1,16 +1,26 @@
-from MouseTools.parks import Park
-from MouseTools.entertainmentvenues import EntertainmentVenue
-from MouseTools.attractions import Attraction
-from MouseTools.entertainments import Entertainment
-from MouseTools.characters import Character
-from MouseTools.facilities import Facility
-from MouseTools.pointsofinterest import PointOfInterest
-from MouseTools.destinations import Destination
-import MouseTools.ids
-
-
-name = "MouseTools"
+"""
+init
+expose classes and modules
+"""
+from mousetools.parks import Park
+from mousetools.entertainmentvenues import EntertainmentVenue
+from mousetools.attractions import Attraction
+from mousetools.entertainments import Entertainment
+from mousetools.characters import Character
+from mousetools.facilities import Facility
+from mousetools.pointsofinterest import PointOfInterest
+from mousetools.destinations import Destination
+import mousetools.ids as ids
 
 __version__ = "2.1.1"
 
-__all__ = ["Destination", "Park", "EntertainmentVenue", "Attraction", "Entertainment", "Facility", "Character", "PointOfInterest", "DisneyDatabase"]
+__all__ = [
+    "Destination",
+    "Park",
+    "EntertainmentVenue",
+    "Attraction",
+    "Entertainment",
+    "Facility",
+    "Character",
+    "PointOfInterest",
+    ]
