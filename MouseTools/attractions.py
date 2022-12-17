@@ -1,12 +1,11 @@
 """
 attractions module
 """
-import requests
 import json
 from datetime import datetime, timedelta
+import requests
 import pytz
 from .auth import get_headers
-from .parks import Park
 from .ids import themeparkapi_ids, WDW_ID, DLR_ID
 
 
@@ -164,35 +163,35 @@ class Attraction:
         data = self.get_themeparkapi_data()
         if data is None:
             return None
-        else:
-            return data['waitTime']
+
+        return data['waitTime']
 
     def get_status(self):
         """Return current status of the object."""
         data = self.get_themeparkapi_data()
         if data is None:
             return None
-        else:
-            return data['status']
+
+        return data['status']
 
     def fastpass_available(self):
         """Returns a boolean of whether this object has FastPass"""
         data = self.get_themeparkapi_data()
         if data is None:
             return False
-        else:
-            return data['fastPass']
+
+        return data['fastPass']
 
     def get_last_update_time(self):
         """Returns facilities last update time as a datetime object"""
         facility_data = self.get_themeparkapi_data()
         if facility_data is None:
             return None
-        else:
-            update_time = datetime.strptime(facility_data['lastUpdate'], "%Y-%m-%dT%H:%M:%S.%fZ")
-            update_time = update_time.replace(tzinfo=pytz.utc)
-            update_time = update_time.astimezone(self.__time_zone)
-            return update_time
+
+        update_time = datetime.strptime(facility_data['lastUpdate'], "%Y-%m-%dT%H:%M:%S.%fZ")
+        update_time = update_time.replace(tzinfo=pytz.utc)
+        update_time = update_time.astimezone(self.__time_zone)
+        return update_time
 
     def get_coordinates(self):
         """Returns the object's latitude and longitude"""
@@ -206,30 +205,30 @@ class Attraction:
         facility_data = self.__data
         if facility_data is None:
             return None
-        else:
-            try:
-                return facility_data['descriptions']['shortDescription']['sections']['body']
-            except:
-                return None
+
+        try:
+            return facility_data['descriptions']['shortDescription']['sections']['body']
+        except:
+            return None
 
     def get_media(self):
         """Returns a dictionary of dictionaries of media relating to the entity"""
         facility_data = self.__data
         if facility_data is None:
             return None
-        else:
-            return facility_data['media']
+
+        return facility_data['media']
 
     def get_facets(self):
         """Returns a list of  dictionaries of the object's facets"""
         facility_data = self.__data
         if facility_data is None:
             return None
-        else:
-            try:
-                return facility_data['facets']
-            except:
-                return None
+
+        try:
+            return facility_data['facets']
+        except:
+            return None
 
     def get_classifications(self):
         """Returns a dictionary of lists of classifications related to the entity"""
@@ -268,7 +267,7 @@ class Attraction:
             year, month, day = date.split('-')
             DATE = datetime(int(year), int(month), int(day))
 
-        s = requests.get("https://api.wdpro.disney.go.com/facility-service/schedules/{}?date={}-{}-{}".format(self.__id, DATE.year, self.__formatDate(str(DATE.month)), self.__formatDate(str(DATE.day))), headers=get_headers())
+        s = requests.get(f"https://api.wdpro.disney.go.com/facility-service/schedules/{self.__id}?date={DATE.year}-{self.__formatDate(str(DATE.month))}-{self.__formatDate(str(DATE.day))}", headers=get_headers())
         data = json.loads(s.content)
 
         operating_hours_start = None
@@ -340,7 +339,6 @@ class Attraction:
         """
         Returns a list of associated characters IDs
         """
-        from .characters import Character
         chars = []
 
         s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType={}".format(self.__id, self.__entityType), headers=get_headers())
