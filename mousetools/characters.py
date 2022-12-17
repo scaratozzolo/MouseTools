@@ -1,12 +1,11 @@
 import requests
-import json
-import sys
-import sqlite3
+import pytz
 from datetime import datetime, timedelta
-from .auth import getHeaders
+from .auth import get_headers
 from .attractions import Attraction
 from .entertainments import Entertainment
 from .facilities import Facility
+from .ids import WDW_ID, DLR_ID
 
 
 
@@ -19,7 +18,7 @@ class Character(object):
         """
 
         error = True
-        self.__data = requests.get("https://api.wdpro.disney.go.com/facility-service/characters/{}".format(id), headers=getHeaders()).json()
+        self.__data = requests.get("https://api.wdpro.disney.go.com/facility-service/characters/{}".format(id), headers=get_headers()).json()
         try:
             if self.__data['id'] is not None:
                 error = False
@@ -48,10 +47,10 @@ class Character(object):
                 self.__anc_park_id = self.__data['links']['ancestorWaterPark']['href'].split('/')[-1].split('?')[0]
             except:
                 try:
-                    self.__anc_park_id = self.__facilities_data['ancestorThemeParkId'].split(';')[0]
+                    self.__anc_park_id = self.__data['ancestorThemeParkId'].split(';')[0]
                 except:
                     try:
-                        self.__anc_park_id = self.__facilities_data['ancestorWaterParkId'].split(';')[0]
+                        self.__anc_park_id = self.__data['ancestorWaterParkId'].split(';')[0]
                     except:
                         self.__anc_park_id = None
 
@@ -59,7 +58,7 @@ class Character(object):
             self.__anc_resort_id = self.__data['links']['ancestorResort']['href'].split('/')[-1].split('?')[0]
         except:
             try:
-                self.__anc_resort_id = self.__facilities_data['ancestorResortId'].split(';')[0]
+                self.__anc_resort_id = self.__data['ancestorResortId'].split(';')[0]
             except:
                 self.__anc_resort_id = None
 
@@ -67,7 +66,7 @@ class Character(object):
             self.__anc_land_id = self.__data['links']['ancestorLand']['href'].split('/')[-1].split('?')[0]
         except:
             try:
-                self.__anc_land_id = self.__facilities_data['ancestorLandId'].split(';')[0]
+                self.__anc_land_id = self.__data['ancestorLandId'].split(';')[0]
             except:
                 self.__anc_land_id = None
 
@@ -75,7 +74,7 @@ class Character(object):
             self.__anc_ra_id = self.__data['links']['ancestorResortArea']['href'].split('/')[-1].split('?')[0]
         except:
             try:
-                self.__anc_ra_id = self.__facilities_data['ancestorResortAreaId'].split(';')[0]
+                self.__anc_ra_id = self.__data['ancestorResortAreaId'].split(';')[0]
             except:
                 self.__anc_ra_id = None
 
@@ -83,10 +82,16 @@ class Character(object):
             self.__anc_ev_id = self.__data['links']['ancestorEntertainmentVenue']['href'].split('/')[-1].split('?')[0]
         except:
             try:
-                self.__anc_ev_id = self.__facilities_data['ancestorEntertainmentVenueId'].split(';')[0]
+                self.__anc_ev_id = self.__data['ancestorEntertainmentVenueId'].split(';')[0]
             except:
                 self.__anc_ev_id = None
 
+        if self.__anc_dest_id == WDW_ID:
+            self.__time_zone = pytz.timezone('US/Eastern')
+        elif self.__anc_dest_id == DLR_ID:
+            self.__time_zone = pytz.timezone('US/Pacific')
+        else:
+            self.__time_zone = pytz.utc
 
 
     def get_id(self):
@@ -128,6 +133,10 @@ class Character(object):
     def get_ancestor_entertainment_venue_id(self):
         """Return object entertainment venue id"""
         return self.__anc_ev_id
+
+    def get_time_zone(self):
+        """Returns pytz timezone object"""
+        return self.__time_zone
 
     def get_raw_data(self):
         """Returns the raw data from global-facility-service"""

@@ -18,57 +18,57 @@ pip install git+https://github.com/scaratozzolo/MouseTools
 
 ### Example usage:
 ```python
-import MouseTools
+import mousetools
 
-wdw_dest = MouseTools.Destination(80007798)
+wdw_dest = mousetools.Destination(80007798)
 print(wdw_dest.get_park_ids())
 
-dlr_dest = MouseTools.Destination(80008297)
+dlr_dest = mousetools.Destination(80008297)
 print(dlr_dest.get_attraction_ids())
 
-mk = MouseTools.Park(80007944)
+mk = mousetools.Park(80007944)
 print(mk.get_wait_times())
 
-pirates = MouseTools.Attraction(80010177)
+pirates = mousetools.Attraction(80010177)
 print(pirates.get_wait_time())
 
 
 # You don't have to know any ids to get started.
-MouseTools.ids.WDW_ID     # Walt Disney World Resort
-MouseTools.ids.DLR_ID     # Disneyland Resort
+mousetools.ids.WDW_ID     # Walt Disney World Resort
+mousetools.ids.DLR_ID     # Disneyland Resort
 
 # Single park ids
-MouseTools.ids.MK_ID      # Magic Kingdom
-MouseTools.ids.EPCOT_ID   # EPCOT
-MouseTools.ids.HS_ID      # Hollywood Studios
-MouseTools.ids.AK_ID      # Animal Kingdom
-MouseTools.ids.TL_ID      # Typhoon Lagoon
-MouseTools.ids.BB_ID      # Blizzard Beach
-MouseTools.ids.DLP_ID     # Disneyland Park
-MouseTools.ids.CA_ID      # California Adventure
+mousetools.ids.MK_ID      # Magic Kingdom
+mousetools.ids.EPCOT_ID   # EPCOT
+mousetools.ids.HS_ID      # Hollywood Studios
+mousetools.ids.AK_ID      # Animal Kingdom
+mousetools.ids.TL_ID      # Typhoon Lagoon
+mousetools.ids.BB_ID      # Blizzard Beach
+mousetools.ids.DLP_ID     # Disneyland Park
+mousetools.ids.CA_ID      # California Adventure
 
 # List of ids
 # Parks
-MouseTools.ids.WDW_PARK_IDS
-MouseTools.ids.DLR_PARK_IDS
+mousetools.ids.WDW_PARK_IDS
+mousetools.ids.DLR_PARK_IDS
 
 # Entertainment Venues
-MouseTools.ids.WDW_EV_IDS
-MouseTools.ids.DLR_EV_IDS
+mousetools.ids.WDW_EV_IDS
+mousetools.ids.DLR_EV_IDS
 
 # Attractions
-MouseTools.ids.WDW_ATTRACTION_IDS
-MouseTools.ids.DLR_ATTRACTION_IDS
+mousetools.ids.WDW_ATTRACTION_IDS
+mousetools.ids.DLR_ATTRACTION_IDS
 
 # Entertainments
-MouseTools.ids.WDW_ENTERTAINMENT_IDS
-MouseTools.ids.DLR_ENTERTAINMENT_IDS
+mousetools.ids.WDW_ENTERTAINMENT_IDS
+mousetools.ids.DLR_ENTERTAINMENT_IDS
 
 ```
 
 For more documentation go to the [wiki](https://github.com/scaratozzolo/MouseTools/wiki) or run the following command from a termainal:
 ```Bash
-python -m pydoc MouseTools
+python -m pydoc mousetools
 ```
 
 

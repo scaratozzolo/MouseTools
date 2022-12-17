@@ -1,10 +1,9 @@
 import requests
 import json
-import sys
-import sqlite3
+import pytz
 from datetime import datetime, timedelta
-from .auth import getHeaders
-from .ids import themeparkapi_ids
+from .auth import get_headers
+from .ids import themeparkapi_ids, WDW_ID, DLR_ID
 
 
 class Park(object):
@@ -16,12 +15,12 @@ class Park(object):
         """
 
         error = True
-        self.__data = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/theme-parks/{}".format(id), headers=getHeaders()).json()
+        self.__data = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/theme-parks/{}".format(id), headers=get_headers()).json()
         try:
             if self.__data['id'] is not None:
                 error = False
         except:
-            self.__data = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/water-parks/{}".format(id), headers=getHeaders()).json()
+            self.__data = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/water-parks/{}".format(id), headers=get_headers()).json()
             try:
                 if self.__data['id'] is not None:
                     error = False
@@ -53,10 +52,10 @@ class Park(object):
                 self.__anc_park_id = self.__data['links']['ancestorWaterPark']['href'].split('/')[-1].split('?')[0]
             except:
                 try:
-                    self.__anc_park_id = self.__facilities_data['ancestorThemeParkId'].split(';')[0]
+                    self.__anc_park_id = self.__data['ancestorThemeParkId'].split(';')[0]
                 except:
                     try:
-                        self.__anc_park_id = self.__facilities_data['ancestorWaterParkId'].split(';')[0]
+                        self.__anc_park_id = self.__data['ancestorWaterParkId'].split(';')[0]
                     except:
                         self.__anc_park_id = None
 
@@ -64,7 +63,7 @@ class Park(object):
             self.__anc_resort_id = self.__data['links']['ancestorResort']['href'].split('/')[-1].split('?')[0]
         except:
             try:
-                self.__anc_resort_id = self.__facilities_data['ancestorResortId'].split(';')[0]
+                self.__anc_resort_id = self.__data['ancestorResortId'].split(';')[0]
             except:
                 self.__anc_resort_id = None
 
@@ -72,7 +71,7 @@ class Park(object):
             self.__anc_land_id = self.__data['links']['ancestorLand']['href'].split('/')[-1].split('?')[0]
         except:
             try:
-                self.__anc_land_id = self.__facilities_data['ancestorLandId'].split(';')[0]
+                self.__anc_land_id = self.__data['ancestorLandId'].split(';')[0]
             except:
                 self.__anc_land_id = None
 
@@ -80,7 +79,7 @@ class Park(object):
             self.__anc_ra_id = self.__data['links']['ancestorResortArea']['href'].split('/')[-1].split('?')[0]
         except:
             try:
-                self.__anc_ra_id = self.__facilities_data['ancestorResortAreaId'].split(';')[0]
+                self.__anc_ra_id = self.__data['ancestorResortAreaId'].split(';')[0]
             except:
                 self.__anc_ra_id = None
 
@@ -88,17 +87,25 @@ class Park(object):
             self.__anc_ev_id = self.__data['links']['ancestorEntertainmentVenue']['href'].split('/')[-1].split('?')[0]
         except:
             try:
-                self.__anc_ev_id = self.__facilities_data['ancestorEntertainmentVenueId'].split(';')[0]
+                self.__anc_ev_id = self.__data['ancestorEntertainmentVenueId'].split(';')[0]
             except:
                 self.__anc_ev_id = None
+
+        
+        if self.__anc_dest_id == WDW_ID:
+            self.__time_zone = pytz.timezone('US/Eastern')
+        elif self.__anc_dest_id == DLR_ID:
+            self.__time_zone = pytz.timezone('US/Pacific')
+        else:
+            self.__time_zone = pytz.utc
 
 
     def get_possible_ids(self):
         """Returns a list of possible ids of this entityType"""
         ids = []
 
-        dest_data = requests.get("https://api.wdpro.disney.go.com/facility-service/destinations/{}".format(self.__anc_dest_id), headers=getHeaders()).json()
-        data = requests.get(dest_data['links']['themeParks']['href'], headers=getHeaders()).json()
+        dest_data = requests.get("https://api.wdpro.disney.go.com/facility-service/destinations/{}".format(self.__anc_dest_id), headers=get_headers()).json()
+        data = requests.get(dest_data['links']['themeParks']['href'], headers=get_headers()).json()
 
         for entry in data['entries']:
             try:
@@ -106,7 +113,7 @@ class Park(object):
             except:
                 pass
 
-        data = requests.get(dest_data['links']['waterParks']['href'], headers=getHeaders()).json()
+        data = requests.get(dest_data['links']['waterParks']['href'], headers=get_headers()).json()
         try:
             for entry in data['entries']:
                 try:
@@ -162,6 +169,10 @@ class Park(object):
         """Returns a dictionary of related links"""
         return self.__data['links']
 
+    def get_time_zone(self):
+        """Returns pytz timezone object"""
+        return self.__time_zone
+
     def get_raw_data(self):
         """Returns the raw data from global-facility-service"""
         return self.__data
@@ -199,17 +210,27 @@ class Park(object):
             this = {}
             try:
                 if i['meta']['type'] != "RESTAURANT":
+
+                    update_time = datetime.strptime(i['lastUpdate'], "%Y-%m-%dT%H:%M:%S.%fZ")
+                    update_time = update_time.replace(tzinfo=pytz.utc)
+                    update_time = update_time.astimezone(self.__time_zone)
+
                     this['name'] = i['name']
                     this['status'] = i['status']
                     this['wait_time'] = i['waitTime']
-                    this['last_updated'] = datetime.strptime(i['lastUpdate'], "%Y-%m-%dT%H:%M:%S.%fZ")
+                    this['last_updated'] = update_time
                     this['entityType'] = i['meta']['type'].capitalize()
                     times[id] = this
             except:
+
+                update_time = datetime.strptime(i['lastUpdate'], "%Y-%m-%dT%H:%M:%S.%fZ")
+                update_time = update_time.replace(tzinfo=pytz.utc)
+                update_time = update_time.astimezone(self.__time_zone)
+
                 this['name'] = i['name']
                 this['status'] = i['status']
                 this['wait_time'] = i['waitTime']
-                this['last_updated'] = datetime.strptime(i['lastUpdate'], "%Y-%m-%dT%H:%M:%S.%fZ")
+                this['last_updated'] = update_time
                 this['entityType'] = "Entertainment"
                 times[id] = this
 
@@ -242,10 +263,15 @@ class Park(object):
             this = {}
             try:
                 if i['meta']['type'] == "ATTRACTION":
+
+                    update_time = datetime.strptime(i['lastUpdate'], "%Y-%m-%dT%H:%M:%S.%fZ")
+                    update_time = update_time.replace(tzinfo=pytz.utc)
+                    update_time = update_time.astimezone(self.__time_zone)
+
                     this['name'] = i['name']
                     this['status'] = i['status']
                     this['wait_time'] = i['waitTime']
-                    this['last_updated'] = datetime.strptime(i['lastUpdate'], "%Y-%m-%dT%H:%M:%S.%fZ")
+                    this['last_updated'] = update_time
                     this['entityType'] = i['meta']['type'].capitalize()
                     times[id] = this
             except:
@@ -276,10 +302,15 @@ class Park(object):
             id = i['id'].split("_")[-1]
             this = {}
             if 'type' not in i['meta'].keys():
+
+                update_time = datetime.strptime(i['lastUpdate'], "%Y-%m-%dT%H:%M:%S.%fZ")
+                update_time = update_time.replace(tzinfo=pytz.utc)
+                update_time = update_time.astimezone(self.__time_zone)
+
                 this['name'] = i['name']
                 this['status'] = i['status']
                 this['wait_time'] = i['waitTime']
-                this['last_updated'] = datetime.strptime(i['lastUpdate'], "%Y-%m-%dT%H:%M:%S.%fZ")
+                this['last_updated'] = update_time
                 this['entityType'] = "Entertainment"
                 times[id] = this
 
@@ -334,7 +365,7 @@ class Park(object):
             year, month, day = date.split('-')
             DATE = datetime(int(year), int(month), int(day))
 
-        s = requests.get("https://api.wdpro.disney.go.com/facility-service/schedules/{}?date={}-{}-{}".format(self.__id, DATE.year, self.__formatDate(str(DATE.month)), self.__formatDate(str(DATE.day))), headers=getHeaders())
+        s = requests.get("https://api.wdpro.disney.go.com/facility-service/schedules/{}?date={}-{}-{}".format(self.__id, DATE.year, self.__formatDate(str(DATE.month)), self.__formatDate(str(DATE.day))), headers=get_headers())
         data = json.loads(s.content)
 
         operating_hours_start = None
@@ -373,7 +404,7 @@ class Park(object):
         advisories = []
 
         for i in range(len(self.__data['advisories'])):
-            data = requests.get(self.__data['advisories'][i]['links']['self']['href'], headers=getHeaders()).json()
+            data = requests.get(self.__data['advisories'][i]['links']['self']['href'], headers=get_headers()).json()
             this = {}
             this['id'] = data['id']
             this['name'] = data['name']
@@ -385,7 +416,7 @@ class Park(object):
         """Returns a list of entertainments for this object"""
         ids = []
 
-        data = requests.get("https://api.wdpro.disney.go.com/facility-service/{}s/{}/entertainments?region=us".format(self.__entityType, self.__id), headers=getHeaders()).json()
+        data = requests.get("https://api.wdpro.disney.go.com/facility-service/{}s/{}/entertainments?region=us".format(self.__entityType, self.__id), headers=get_headers()).json()
 
         for entry in data['entries']:
             try:

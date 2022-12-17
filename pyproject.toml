@@ -1,0 +1,10 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "MouseTools"
+dynamic = ["version"]
+
+[tool.setuptools.dynamic]
+version = {attr = "MouseTools.__version__"}

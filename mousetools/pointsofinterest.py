@@ -1,9 +1,8 @@
 import requests
-import json
-import sys
-import sqlite3
+import pytz
 from datetime import datetime, timedelta
-from .auth import getHeaders
+from .auth import get_headers
+from .ids import WDW_ID, DLR_ID
 
 
 class PointOfInterest(object):
@@ -15,7 +14,7 @@ class PointOfInterest(object):
         """
 
         error = True
-        self.__data = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/points-of-interest/{}".format(id), headers=getHeaders()).json()
+        self.__data = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/points-of-interest/{}".format(id), headers=get_headers()).json()
         try:
             if self.__data['id'] is not None:
                 error = False
@@ -45,10 +44,10 @@ class PointOfInterest(object):
                 self.__anc_park_id = self.__data['links']['ancestorWaterPark']['href'].split('/')[-1].split('?')[0]
             except:
                 try:
-                    self.__anc_park_id = self.__facilities_data['ancestorThemeParkId'].split(';')[0]
+                    self.__anc_park_id = self.__data['ancestorThemeParkId'].split(';')[0]
                 except:
                     try:
-                        self.__anc_park_id = self.__facilities_data['ancestorWaterParkId'].split(';')[0]
+                        self.__anc_park_id = self.__data['ancestorWaterParkId'].split(';')[0]
                     except:
                         self.__anc_park_id = None
 
@@ -56,7 +55,7 @@ class PointOfInterest(object):
             self.__anc_resort_id = self.__data['links']['ancestorResort']['href'].split('/')[-1].split('?')[0]
         except:
             try:
-                self.__anc_resort_id = self.__facilities_data['ancestorResortId'].split(';')[0]
+                self.__anc_resort_id = self.__data['ancestorResortId'].split(';')[0]
             except:
                 self.__anc_resort_id = None
 
@@ -64,7 +63,7 @@ class PointOfInterest(object):
             self.__anc_land_id = self.__data['links']['ancestorLand']['href'].split('/')[-1].split('?')[0]
         except:
             try:
-                self.__anc_land_id = self.__facilities_data['ancestorLandId'].split(';')[0]
+                self.__anc_land_id = self.__data['ancestorLandId'].split(';')[0]
             except:
                 self.__anc_land_id = None
 
@@ -72,7 +71,7 @@ class PointOfInterest(object):
             self.__anc_ra_id = self.__data['links']['ancestorResortArea']['href'].split('/')[-1].split('?')[0]
         except:
             try:
-                self.__anc_ra_id = self.__facilities_data['ancestorResortAreaId'].split(';')[0]
+                self.__anc_ra_id = self.__data['ancestorResortAreaId'].split(';')[0]
             except:
                 self.__anc_ra_id = None
 
@@ -80,18 +79,18 @@ class PointOfInterest(object):
             self.__anc_ev_id = self.__data['links']['ancestorEntertainmentVenue']['href'].split('/')[-1].split('?')[0]
         except:
             try:
-                self.__anc_ev_id = self.__facilities_data['ancestorEntertainmentVenueId'].split(';')[0]
+                self.__anc_ev_id = self.__data['ancestorEntertainmentVenueId'].split(';')[0]
             except:
                 self.__anc_ev_id = None
 
+        if self.__anc_dest_id == WDW_ID:
+            self.__time_zone = pytz.timezone('US/Eastern')
+        elif self.__anc_dest_id == DLR_ID:
+            self.__time_zone = pytz.timezone('US/Pacific')
+        else:
+            self.__time_zone = pytz.utc
 
 
-    # def get_possible_ids(self):
-    #     """Returns a list of possible ids of this entityType"""
-    #     conn = sqlite3.connect(DisneyDatabase().db_path)
-    #     c = conn.cursor()
-    #     pos_ids = [row[0] for row in c.execute("SELECT id FROM facilities WHERE entityType = ?", (self.__entityType,))]
-    #     return pos_ids
 
     def get_id(self):
         """Return object id"""
@@ -136,6 +135,10 @@ class PointOfInterest(object):
     def get_links(self):
         """Returns a dictionary of related links"""
         return self.__data['links']
+
+    def get_time_zone(self):
+        """Returns pytz timezone object"""
+        return self.__time_zone
 
     def get_raw_data(self):
         """Returns the raw data from global-facility-service"""
