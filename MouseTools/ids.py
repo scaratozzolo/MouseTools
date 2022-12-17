@@ -1,4 +1,4 @@
-from auth import get_headers
+from .auth import get_headers
 import requests
 import json
 
