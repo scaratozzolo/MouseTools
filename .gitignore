@@ -1,3 +1,5 @@
 __pycache__/
 *.py[cod]
 .idea/*
+/dist/*
+MouseTools.egg-info/*
