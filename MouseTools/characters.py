@@ -1,12 +1,11 @@
 import requests
-import json
-import sys
-import sqlite3
+import pytz
 from datetime import datetime, timedelta
 from .auth import get_headers
 from .attractions import Attraction
 from .entertainments import Entertainment
 from .facilities import Facility
+from .ids import WDW_ID, DLR_ID
 
 
 
@@ -87,6 +86,12 @@ class Character(object):
             except:
                 self.__anc_ev_id = None
 
+        if self.__anc_dest_id == WDW_ID:
+            self.__time_zone = pytz.timezone('US/Eastern')
+        elif self.__anc_dest_id == DLR_ID:
+            self.__time_zone = pytz.timezone('US/Pacific')
+        else:
+            self.__time_zone = pytz.timezone('US/UTC')
 
 
     def get_id(self):
@@ -128,6 +133,10 @@ class Character(object):
     def get_ancestor_entertainment_venue_id(self):
         """Return object entertainment venue id"""
         return self.__anc_ev_id
+
+    def get_time_zone(self):
+        """Returns pytz timezone object"""
+        return self.__time_zone
 
     def get_raw_data(self):
         """Returns the raw data from global-facility-service"""

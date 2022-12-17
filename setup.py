@@ -12,7 +12,10 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/scaratozzolo/MouseTools",
     packages=setuptools.find_packages(),
-    install_requires=["requests"],
+    install_requires=[
+            "requests",
+            "pytz",
+        ],
     classifiers=(
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

@@ -1,9 +1,8 @@
 import requests
-import json
-import sys
-import sqlite3
+import pytz
 from datetime import datetime, timedelta
 from .auth import get_headers
+from .ids import WDW_ID, DLR_ID
 
 
 class PointOfInterest(object):
@@ -84,6 +83,13 @@ class PointOfInterest(object):
             except:
                 self.__anc_ev_id = None
 
+        if self.__anc_dest_id == WDW_ID:
+            self.__time_zone = pytz.timezone('US/Eastern')
+        elif self.__anc_dest_id == DLR_ID:
+            self.__time_zone = pytz.timezone('US/Pacific')
+        else:
+            self.__time_zone = pytz.timezone('US/UTC')
+
 
 
     def get_id(self):
@@ -129,6 +135,10 @@ class PointOfInterest(object):
     def get_links(self):
         """Returns a dictionary of related links"""
         return self.__data['links']
+
+    def get_time_zone(self):
+        """Returns pytz timezone object"""
+        return self.__time_zone
 
     def get_raw_data(self):
         """Returns the raw data from global-facility-service"""

@@ -1,10 +1,9 @@
 import requests
 import json
-import sys
-import sqlite3
+import pytz
 from datetime import datetime, timedelta
 from .auth import get_headers
-
+from .ids import WDW_ID, DLR_ID
 
 
 class Facility(object):
@@ -84,6 +83,13 @@ class Facility(object):
                 self.__anc_ev_id = self.__facilities_data['ancestorEntertainmentVenueId'].split(';')[0]
             except:
                 self.__anc_ev_id = None
+
+        if self.__anc_dest_id == WDW_ID:
+            self.__time_zone = pytz.timezone('US/Eastern')
+        elif self.__anc_dest_id == DLR_ID:
+            self.__time_zone = pytz.timezone('US/Pacific')
+        else:
+            self.__time_zone = pytz.timezone('US/UTC')
 
     # There are just too many variations, could explore more
     # def get_possible_ids(self):

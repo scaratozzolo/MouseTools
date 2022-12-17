@@ -1,10 +1,9 @@
 import requests
 import json
-import sys
-import sqlite3
+import pytz
 from datetime import datetime, timedelta
 from .auth import get_headers
-from .ids import themeparkapi_ids
+from .ids import themeparkapi_ids, WDW_ID, DLR_ID
 
 
 class Park(object):
@@ -92,6 +91,14 @@ class Park(object):
             except:
                 self.__anc_ev_id = None
 
+        
+        if self.__id == WDW_ID:
+            self.__time_zone = pytz.timezone('US/Eastern')
+        elif self.__id == DLR_ID:
+            self.__time_zone = pytz.timezone('US/Pacific')
+        else:
+            self.__time_zone = pytz.timezone('US/UTC')
+
 
     def get_possible_ids(self):
         """Returns a list of possible ids of this entityType"""
@@ -162,6 +169,10 @@ class Park(object):
         """Returns a dictionary of related links"""
         return self.__data['links']
 
+    def get_time_zone(self):
+        """Returns pytz timezone object"""
+        return self.__time_zone
+
     def get_raw_data(self):
         """Returns the raw data from global-facility-service"""
         return self.__data
@@ -199,17 +210,27 @@ class Park(object):
             this = {}
             try:
                 if i['meta']['type'] != "RESTAURANT":
+
+                    update_time = datetime.strptime(i['lastUpdate'], "%Y-%m-%dT%H:%M:%S.%fZ")
+                    update_time = update_time.replace(tzinfo=pytz.utc)
+                    update_time = update_time.astimezone(self.__time_zone)
+
                     this['name'] = i['name']
                     this['status'] = i['status']
                     this['wait_time'] = i['waitTime']
-                    this['last_updated'] = datetime.strptime(i['lastUpdate'], "%Y-%m-%dT%H:%M:%S.%fZ")
+                    this['last_updated'] = update_time
                     this['entityType'] = i['meta']['type'].capitalize()
                     times[id] = this
             except:
+
+                update_time = datetime.strptime(i['lastUpdate'], "%Y-%m-%dT%H:%M:%S.%fZ")
+                update_time = update_time.replace(tzinfo=pytz.utc)
+                update_time = update_time.astimezone(self.__time_zone)
+
                 this['name'] = i['name']
                 this['status'] = i['status']
                 this['wait_time'] = i['waitTime']
-                this['last_updated'] = datetime.strptime(i['lastUpdate'], "%Y-%m-%dT%H:%M:%S.%fZ")
+                this['last_updated'] = update_time
                 this['entityType'] = "Entertainment"
                 times[id] = this
 
@@ -242,10 +263,15 @@ class Park(object):
             this = {}
             try:
                 if i['meta']['type'] == "ATTRACTION":
+
+                    update_time = datetime.strptime(i['lastUpdate'], "%Y-%m-%dT%H:%M:%S.%fZ")
+                    update_time = update_time.replace(tzinfo=pytz.utc)
+                    update_time = update_time.astimezone(self.__time_zone)
+
                     this['name'] = i['name']
                     this['status'] = i['status']
                     this['wait_time'] = i['waitTime']
-                    this['last_updated'] = datetime.strptime(i['lastUpdate'], "%Y-%m-%dT%H:%M:%S.%fZ")
+                    this['last_updated'] = update_time
                     this['entityType'] = i['meta']['type'].capitalize()
                     times[id] = this
             except:
@@ -276,10 +302,15 @@ class Park(object):
             id = i['id'].split("_")[-1]
             this = {}
             if 'type' not in i['meta'].keys():
+
+                update_time = datetime.strptime(i['lastUpdate'], "%Y-%m-%dT%H:%M:%S.%fZ")
+                update_time = update_time.replace(tzinfo=pytz.utc)
+                update_time = update_time.astimezone(self.__time_zone)
+
                 this['name'] = i['name']
                 this['status'] = i['status']
                 this['wait_time'] = i['waitTime']
-                this['last_updated'] = datetime.strptime(i['lastUpdate'], "%Y-%m-%dT%H:%M:%S.%fZ")
+                this['last_updated'] = update_time
                 this['entityType'] = "Entertainment"
                 times[id] = this
 

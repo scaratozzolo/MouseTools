@@ -1,11 +1,10 @@
 import requests
 import json
-import sys
-import sqlite3
 from datetime import datetime, timedelta
+import pytz
 from .auth import get_headers
 from .parks import Park
-from .ids import themeparkapi_ids
+from .ids import themeparkapi_ids, WDW_ID, DLR_ID
 
 
 
@@ -87,6 +86,13 @@ class Attraction(object):
             except:
                 self.__anc_ev_id = None
 
+        if self.__anc_dest_id == WDW_ID:
+            self.__time_zone = pytz.timezone('US/Eastern')
+        elif self.__anc_dest_id == DLR_ID:
+            self.__time_zone = pytz.timezone('US/Pacific')
+        else:
+            self.__time_zone = pytz.timezone('US/UTC')
+
 
     def get_id(self):
         """Return object id"""
@@ -132,6 +138,10 @@ class Attraction(object):
         """Returns a dictionary of related links"""
         return self.__data['links']
 
+    def get_time_zone(self):
+        """Returns pytz timezone object"""
+        return self.__time_zone
+
     def get_raw_data(self):
         """Returns the raw data from global-facility-service"""
         return self.__data
@@ -170,14 +180,16 @@ class Attraction(object):
         else:
             return data['fastPass']
 
-    def get_last_update(self):
+    def get_last_update_time(self):
         """Returns facilities last update time as a datetime object"""
         facility_data = self.get_themeparkapi_data()
         if facility_data is None:
             return None
         else:
-            print(facility_data['lastUpdate'])
-            return datetime.strptime(facility_data['lastUpdate'], "%Y-%m-%dT%H:%M:%S.%fZ")
+            update_time = datetime.strptime(facility_data['lastUpdate'], "%Y-%m-%dT%H:%M:%S.%fZ")
+            update_time = update_time.replace(tzinfo=pytz.utc)
+            update_time = update_time.astimezone(self.__time_zone)
+            return update_time
 
     def get_coordinates(self):
         """Returns the object's latitude and longitude"""
