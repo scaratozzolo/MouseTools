@@ -47,10 +47,10 @@ class Character(object):
                 self.__anc_park_id = self.__data['links']['ancestorWaterPark']['href'].split('/')[-1].split('?')[0]
             except:
                 try:
-                    self.__anc_park_id = self.__facilities_data['ancestorThemeParkId'].split(';')[0]
+                    self.__anc_park_id = self.__data['ancestorThemeParkId'].split(';')[0]
                 except:
                     try:
-                        self.__anc_park_id = self.__facilities_data['ancestorWaterParkId'].split(';')[0]
+                        self.__anc_park_id = self.__data['ancestorWaterParkId'].split(';')[0]
                     except:
                         self.__anc_park_id = None
 
@@ -58,7 +58,7 @@ class Character(object):
             self.__anc_resort_id = self.__data['links']['ancestorResort']['href'].split('/')[-1].split('?')[0]
         except:
             try:
-                self.__anc_resort_id = self.__facilities_data['ancestorResortId'].split(';')[0]
+                self.__anc_resort_id = self.__data['ancestorResortId'].split(';')[0]
             except:
                 self.__anc_resort_id = None
 
@@ -66,7 +66,7 @@ class Character(object):
             self.__anc_land_id = self.__data['links']['ancestorLand']['href'].split('/')[-1].split('?')[0]
         except:
             try:
-                self.__anc_land_id = self.__facilities_data['ancestorLandId'].split(';')[0]
+                self.__anc_land_id = self.__data['ancestorLandId'].split(';')[0]
             except:
                 self.__anc_land_id = None
 
@@ -74,7 +74,7 @@ class Character(object):
             self.__anc_ra_id = self.__data['links']['ancestorResortArea']['href'].split('/')[-1].split('?')[0]
         except:
             try:
-                self.__anc_ra_id = self.__facilities_data['ancestorResortAreaId'].split(';')[0]
+                self.__anc_ra_id = self.__data['ancestorResortAreaId'].split(';')[0]
             except:
                 self.__anc_ra_id = None
 
@@ -82,7 +82,7 @@ class Character(object):
             self.__anc_ev_id = self.__data['links']['ancestorEntertainmentVenue']['href'].split('/')[-1].split('?')[0]
         except:
             try:
-                self.__anc_ev_id = self.__facilities_data['ancestorEntertainmentVenueId'].split(';')[0]
+                self.__anc_ev_id = self.__data['ancestorEntertainmentVenueId'].split(';')[0]
             except:
                 self.__anc_ev_id = None
 

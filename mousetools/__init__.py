@@ -14,6 +14,7 @@ import mousetools.ids as ids
 
 __version__ = "2.1.1"
 
+
 __all__ = [
     "Destination",
     "Park",
