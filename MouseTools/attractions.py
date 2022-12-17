@@ -1,3 +1,6 @@
+"""
+attractions module
+"""
 import requests
 import json
 from datetime import datetime, timedelta
@@ -8,7 +11,7 @@ from .ids import themeparkapi_ids, WDW_ID, DLR_ID
 
 
 
-class Attraction(object):
+class Attraction:
 
     def __init__(self, id = None):
         """
@@ -17,7 +20,7 @@ class Attraction(object):
         """
 
         error = True
-        self.__data = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/attractions/{}".format(id), headers=get_headers()).json()
+        self.__data = requests.get(f"https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/attractions/{id}", headers=get_headers()).json()
         try:
             if self.__data['id'] is not None:
                 error = False
@@ -47,10 +50,10 @@ class Attraction(object):
                 self.__anc_park_id = self.__data['links']['ancestorWaterPark']['href'].split('/')[-1].split('?')[0]
             except:
                 try:
-                    self.__anc_park_id = self.__facilities_data['ancestorThemeParkId'].split(';')[0]
+                    self.__anc_park_id = self.__data['ancestorThemeParkId'].split(';')[0]
                 except:
                     try:
-                        self.__anc_park_id = self.__facilities_data['ancestorWaterParkId'].split(';')[0]
+                        self.__anc_park_id = self.__data['ancestorWaterParkId'].split(';')[0]
                     except:
                         self.__anc_park_id = None
 
@@ -58,7 +61,7 @@ class Attraction(object):
             self.__anc_resort_id = self.__data['links']['ancestorResort']['href'].split('/')[-1].split('?')[0]
         except:
             try:
-                self.__anc_resort_id = self.__facilities_data['ancestorResortId'].split(';')[0]
+                self.__anc_resort_id = self.__data['ancestorResortId'].split(';')[0]
             except:
                 self.__anc_resort_id = None
 
@@ -66,7 +69,7 @@ class Attraction(object):
             self.__anc_land_id = self.__data['links']['ancestorLand']['href'].split('/')[-1].split('?')[0]
         except:
             try:
-                self.__anc_land_id = self.__facilities_data['ancestorLandId'].split(';')[0]
+                self.__anc_land_id = self.__data['ancestorLandId'].split(';')[0]
             except:
                 self.__anc_land_id = None
 
@@ -74,7 +77,7 @@ class Attraction(object):
             self.__anc_ra_id = self.__data['links']['ancestorResortArea']['href'].split('/')[-1].split('?')[0]
         except:
             try:
-                self.__anc_ra_id = self.__facilities_data['ancestorResortAreaId'].split(';')[0]
+                self.__anc_ra_id = self.__data['ancestorResortAreaId'].split(';')[0]
             except:
                 self.__anc_ra_id = None
 
@@ -82,7 +85,7 @@ class Attraction(object):
             self.__anc_ev_id = self.__data['links']['ancestorEntertainmentVenue']['href'].split('/')[-1].split('?')[0]
         except:
             try:
-                self.__anc_ev_id = self.__facilities_data['ancestorEntertainmentVenueId'].split(';')[0]
+                self.__anc_ev_id = self.__data['ancestorEntertainmentVenueId'].split(';')[0]
             except:
                 self.__anc_ev_id = None
 
@@ -311,7 +314,7 @@ class Attraction(object):
         """
         Gets the total number of characters associated with this object
         """
-        s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType={}".format(self.__id, self.__entityType), headers=get_headers())
+        s = requests.get("https://api.wdpro.disney.go.com/facility-service/associated-characters/{};entityType={}".format(self.__id, self.__entityType), headers=get_headers())
         data = json.loads(s.content)
 
         return data['total']
