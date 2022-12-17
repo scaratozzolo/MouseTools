@@ -1,4 +1,4 @@
-from .auth import getHeaders
+from auth import get_headers
 import requests
 import json
 
@@ -22,10 +22,10 @@ themeparkapi_ids = {MK_ID: "WaltDisneyWorldMagicKingdom", EPCOT_ID: "WaltDisneyW
 
 
 def ids(dest, type):
-    dest_data = requests.get("https://api.wdpro.disney.go.com/facility-service/destinations/{}".format(dest), headers=getHeaders()).json()
+    dest_data = requests.get("https://api.wdpro.disney.go.com/facility-service/destinations/{}".format(dest), headers=get_headers()).json()
     ids = []
 
-    data = requests.get(dest_data['links'][type]['href'], headers=getHeaders()).json()
+    data = requests.get(dest_data['links'][type]['href'], headers=get_headers()).json()
 
     for enter in data['entries']:
         try:

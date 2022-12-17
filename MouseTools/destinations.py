@@ -3,7 +3,7 @@ import json
 import sys
 import sqlite3
 from datetime import datetime, timedelta
-from .auth import getHeaders
+from .auth import get_headers
 from .parks import Park
 from .entertainments import Entertainment
 from .attractions import Attraction
@@ -18,7 +18,7 @@ class Destination(object):
         Allows access to various destination related data.
         """
         error = True
-        self.__data = requests.get("https://api.wdpro.disney.go.com/facility-service/destinations/{}".format(id), headers=getHeaders()).json()
+        self.__data = requests.get("https://api.wdpro.disney.go.com/facility-service/destinations/{}".format(id), headers=get_headers()).json()
         try:
             if self.__data['id'] is not None:
                 error = False
@@ -66,7 +66,7 @@ class Destination(object):
         """
         attractions = []
 
-        data = requests.get(self.__data['links']['attractions']['href'], headers=getHeaders()).json()
+        data = requests.get(self.__data['links']['attractions']['href'], headers=get_headers()).json()
 
         for attract in data['entries']:
             try:
@@ -81,7 +81,7 @@ class Destination(object):
         """
         entertainments = []
 
-        data = requests.get(self.__data['links']['entertainments']['href'], headers=getHeaders()).json()
+        data = requests.get(self.__data['links']['entertainments']['href'], headers=get_headers()).json()
 
         for enter in data['entries']:
             try:
@@ -96,7 +96,7 @@ class Destination(object):
         """
         ids = []
 
-        data = requests.get(self.__data['links']['themeParks']['href'], headers=getHeaders()).json()
+        data = requests.get(self.__data['links']['themeParks']['href'], headers=get_headers()).json()
 
         for entry in data['entries']:
             try:
@@ -104,7 +104,7 @@ class Destination(object):
             except:
                 pass
 
-        data = requests.get(self.__data['links']['waterParks']['href'], headers=getHeaders()).json()
+        data = requests.get(self.__data['links']['waterParks']['href'], headers=get_headers()).json()
         try:
             if data['errors'] is not None:
                 return ids
@@ -125,7 +125,7 @@ class Destination(object):
         """
         entertainments = []
 
-        data = requests.get(self.__data['links']['entertainmentVenues']['href'], headers=getHeaders()).json()
+        data = requests.get(self.__data['links']['entertainmentVenues']['href'], headers=get_headers()).json()
 
         for enter in data['entries']:
             try:
@@ -140,7 +140,7 @@ class Destination(object):
         """
         ids = []
 
-        data = requests.get("https://api.wdpro.disney.go.com/facility-service/characters", headers=getHeaders()).json()
+        data = requests.get("https://api.wdpro.disney.go.com/facility-service/characters", headers=get_headers()).json()
 
         for entry in data['entries']:
             try:

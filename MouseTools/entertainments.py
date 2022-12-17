@@ -3,7 +3,7 @@ import json
 import sys
 import sqlite3
 from datetime import datetime, timedelta
-from .auth import getHeaders
+from .auth import get_headers
 from .parks import Park
 from .pointsofinterest import PointOfInterest
 from .ids import themeparkapi_ids
@@ -19,7 +19,7 @@ class Entertainment(object):
         """
 
         error = True
-        self.__data = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/entertainments/{}".format(id), headers=getHeaders()).json()
+        self.__data = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/entertainments/{}".format(id), headers=get_headers()).json()
         try:
             if self.__data['id'] is not None:
                 error = False
@@ -94,8 +94,8 @@ class Entertainment(object):
         """Returns a list of possible ids of this entityType"""
         entertainments = []
 
-        dest_data = requests.get("https://api.wdpro.disney.go.com/facility-service/destinations/{}".format(self.__anc_dest_id), headers=getHeaders()).json()
-        data = requests.get(dest_data['links']['entertainments']['href'], headers=getHeaders()).json()
+        dest_data = requests.get("https://api.wdpro.disney.go.com/facility-service/destinations/{}".format(self.__anc_dest_id), headers=get_headers()).json()
+        data = requests.get(dest_data['links']['entertainments']['href'], headers=get_headers()).json()
 
         for enter in data['entries']:
             try:
@@ -257,7 +257,7 @@ class Entertainment(object):
         """
         Checks if object has any associated characters
         """
-        s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType={}".format(self.__id, self.__entityType), headers=getHeaders())
+        s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType={}".format(self.__id, self.__entityType), headers=get_headers())
         data = json.loads(s.content)
 
         if data['total'] > 0:
@@ -269,7 +269,7 @@ class Entertainment(object):
         """
         Gets the total number of characters associated with this object
         """
-        s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType={}".format(self.__id, self.__entityType), headers=getHeaders())
+        s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType={}".format(self.__id, self.__entityType), headers=get_headers())
         data = json.loads(s.content)
 
         return data['total']
@@ -281,7 +281,7 @@ class Entertainment(object):
         from .characters import Character
         chars = []
 
-        s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType={}".format(self.__id, self.__entityType), headers=getHeaders())
+        s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType={}".format(self.__id, self.__entityType), headers=get_headers())
         data = json.loads(s.content)
 
         for i in range(len(data['entries'])):
@@ -298,7 +298,7 @@ class Entertainment(object):
         """
         chars = []
 
-        s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType={}".format(self.__id, self.__entityType), headers=getHeaders())
+        s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType={}".format(self.__id, self.__entityType), headers=get_headers())
         data = json.loads(s.content)
 
         for i in range(len(data['entries'])):
@@ -414,7 +414,7 @@ class Entertainment(object):
             DATE = datetime(int(year), int(month), int(day))
 
         strdate = "{}-{}-{}".format(DATE.year, self.__formatDate(str(DATE.month)), self.__formatDate(str(DATE.day)))
-        data = requests.get("https://api.wdpro.disney.go.com/facility-service/schedules/{}?date={}".format(self.__id, strdate), headers=getHeaders()).json()
+        data = requests.get("https://api.wdpro.disney.go.com/facility-service/schedules/{}?date={}".format(self.__id, strdate), headers=get_headers()).json()
 
         schedule = []
 

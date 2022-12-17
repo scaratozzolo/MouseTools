@@ -3,7 +3,7 @@ import json
 import sys
 import sqlite3
 from datetime import datetime, timedelta
-from .auth import getHeaders
+from .auth import get_headers
 
 
 class PointOfInterest(object):
@@ -15,7 +15,7 @@ class PointOfInterest(object):
         """
 
         error = True
-        self.__data = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/points-of-interest/{}".format(id), headers=getHeaders()).json()
+        self.__data = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/points-of-interest/{}".format(id), headers=get_headers()).json()
         try:
             if self.__data['id'] is not None:
                 error = False
@@ -85,13 +85,6 @@ class PointOfInterest(object):
                 self.__anc_ev_id = None
 
 
-
-    # def get_possible_ids(self):
-    #     """Returns a list of possible ids of this entityType"""
-    #     conn = sqlite3.connect(DisneyDatabase().db_path)
-    #     c = conn.cursor()
-    #     pos_ids = [row[0] for row in c.execute("SELECT id FROM facilities WHERE entityType = ?", (self.__entityType,))]
-    #     return pos_ids
 
     def get_id(self):
         """Return object id"""

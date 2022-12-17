@@ -3,7 +3,7 @@ import json
 import sys
 import sqlite3
 from datetime import datetime, timedelta
-from .auth import getHeaders
+from .auth import get_headers
 
 
 class EntertainmentVenue(object):
@@ -15,7 +15,7 @@ class EntertainmentVenue(object):
         """
 
         error = True
-        self.__data = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/entertainment-venues/{}".format(id), headers=getHeaders()).json()
+        self.__data = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/entertainment-venues/{}".format(id), headers=get_headers()).json()
         try:
             if self.__data['id'] is not None:
                 error = False
@@ -89,8 +89,8 @@ class EntertainmentVenue(object):
         """Returns a list of possible ids of this entityType"""
         ids = []
 
-        dest_data = requests.get("https://api.wdpro.disney.go.com/facility-service/destinations/{}".format(self.__anc_dest_id), headers=getHeaders()).json()
-        data = requests.get(dest_data['links']['entertainmentVenues']['href'], headers=getHeaders()).json()
+        dest_data = requests.get("https://api.wdpro.disney.go.com/facility-service/destinations/{}".format(self.__anc_dest_id), headers=get_headers()).json()
+        data = requests.get(dest_data['links']['entertainmentVenues']['href'], headers=get_headers()).json()
 
         for entry in data['entries']:
             try:
@@ -187,7 +187,7 @@ class EntertainmentVenue(object):
             year, month, day = date.split('-')
             DATE = datetime(int(year), int(month), int(day))
 
-        s = requests.get("https://api.wdpro.disney.go.com/facility-service/schedules/{}?date={}-{}-{}".format(self.__id, DATE.year, self.__formatDate(str(DATE.month)), self.__formatDate(str(DATE.day))), headers=getHeaders())
+        s = requests.get("https://api.wdpro.disney.go.com/facility-service/schedules/{}?date={}-{}-{}".format(self.__id, DATE.year, self.__formatDate(str(DATE.month)), self.__formatDate(str(DATE.day))), headers=get_headers())
         data = json.loads(s.content)
 
         operating_hours_start = None
@@ -226,7 +226,7 @@ class EntertainmentVenue(object):
         advisories = []
 
         for i in range(len(self.__data['advisories'])):
-            data = requests.get(self.__data['advisories'][i]['links']['self']['href'], headers=getHeaders()).json()
+            data = requests.get(self.__data['advisories'][i]['links']['self']['href'], headers=get_headers()).json()
             this = {}
             this['id'] = data['id']
             this['name'] = data['name']

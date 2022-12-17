@@ -3,7 +3,7 @@ import json
 import sys
 import sqlite3
 from datetime import datetime, timedelta
-from .auth import getHeaders
+from .auth import get_headers
 from .parks import Park
 from .ids import themeparkapi_ids
 
@@ -18,7 +18,7 @@ class Attraction(object):
         """
 
         error = True
-        self.__data = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/attractions/{}".format(id), headers=getHeaders()).json()
+        self.__data = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/attractions/{}".format(id), headers=get_headers()).json()
         try:
             if self.__data['id'] is not None:
                 error = False
@@ -176,6 +176,7 @@ class Attraction(object):
         if facility_data is None:
             return None
         else:
+            print(facility_data['lastUpdate'])
             return datetime.strptime(facility_data['lastUpdate'], "%Y-%m-%dT%H:%M:%S.%fZ")
 
     def get_coordinates(self):
@@ -252,7 +253,7 @@ class Attraction(object):
             year, month, day = date.split('-')
             DATE = datetime(int(year), int(month), int(day))
 
-        s = requests.get("https://api.wdpro.disney.go.com/facility-service/schedules/{}?date={}-{}-{}".format(self.__id, DATE.year, self.__formatDate(str(DATE.month)), self.__formatDate(str(DATE.day))), headers=getHeaders())
+        s = requests.get("https://api.wdpro.disney.go.com/facility-service/schedules/{}?date={}-{}-{}".format(self.__id, DATE.year, self.__formatDate(str(DATE.month)), self.__formatDate(str(DATE.day))), headers=get_headers())
         data = json.loads(s.content)
 
         operating_hours_start = None
@@ -286,7 +287,7 @@ class Attraction(object):
         """
         Checks if object has any associated characters
         """
-        s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType={}".format(self.__id, self.__entityType), headers=getHeaders())
+        s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType={}".format(self.__id, self.__entityType), headers=get_headers())
         data = json.loads(s.content)
 
         if data['total'] > 0:
@@ -298,7 +299,7 @@ class Attraction(object):
         """
         Gets the total number of characters associated with this object
         """
-        s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType={}".format(self.__id, self.__entityType), headers=getHeaders())
+        s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType={}".format(self.__id, self.__entityType), headers=get_headers())
         data = json.loads(s.content)
 
         return data['total']
@@ -310,7 +311,7 @@ class Attraction(object):
         from .characters import Character
         chars = []
 
-        s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType={}".format(self.__id, self.__entityType), headers=getHeaders())
+        s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType={}".format(self.__id, self.__entityType), headers=get_headers())
         data = json.loads(s.content)
 
         for i in range(len(data['entries'])):
@@ -327,7 +328,7 @@ class Attraction(object):
         from .characters import Character
         chars = []
 
-        s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType={}".format(self.__id, self.__entityType), headers=getHeaders())
+        s = requests.get("https://api.wdpro.disney.go.com/global-pool-override-B/facility-service/associated-characters/{};entityType={}".format(self.__id, self.__entityType), headers=get_headers())
         data = json.loads(s.content)
 
         for i in range(len(data['entries'])):
