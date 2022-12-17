@@ -3,3 +3,4 @@ __pycache__/
 .idea/*
 /dist/*
 MouseTools.egg-info/*
+test.py
