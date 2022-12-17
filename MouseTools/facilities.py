@@ -151,6 +151,10 @@ class Facility(object):
         """Returns a dictionary of related links"""
         return self.__data['links']
 
+    def get_time_zone(self):
+        """Returns pytz timezone object"""
+        return self.__time_zone
+
     def get_coordinates(self):
         """Returns the object's latitude and longitude"""
         try:
