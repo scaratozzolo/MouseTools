@@ -10,7 +10,7 @@ def disney_authentication():
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36',
         'Accept-Language' : 'en_US',
         'Cache-Control' : '0',
-        'Accept' : 'application/json;apiversion=1',
+        'Accept' : 'application/json',
         'Content-Type' : 'application/x-www-form-urlencoded',
         'Connection' : 'keep-alive',
         'Proxy-Connection' : 'keep-alive',
