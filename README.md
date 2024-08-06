@@ -1,3 +1,6 @@
+# DEVELOPMENT HAS MOVED TO GITLAB https://gitlab.com/caratozzoloxyz/public/MouseTools
+
+
 # MouseTools
 [![PyPI version](https://badge.fury.io/py/MouseTools.svg)](https://badge.fury.io/py/MouseTools) [![Downloads](https://pepy.tech/badge/mousetools)](https://pepy.tech/project/mousetools)
 
